@@ -9,7 +9,7 @@ import java.util.Properties
 /**
  * Конфигурационный класс для тестового фреймворка.
  *
- * Загружает настройки из файла `config.properties` и предоставляет типизированный доступ
+ * Загружает настройки из системных свойств JVM (–D), если они не передано то из файла `config.properties` и предоставляет типизированный доступ
  * к параметрам запуска тестов, включая:
  * - Платформу тестирования (Android, iOS, Web)
  * - Настройки подключения к Appium-серверу
@@ -26,30 +26,60 @@ object AppConfig {
 
     private val properties = Properties().apply {
         try {
-            val resourceStream =
-                Thread.currentThread().contextClassLoader.getResourceAsStream("config.properties")
-                    ?: throw IllegalArgumentException("Файл config.properties не найден в директории test/resources")
+            val resourceStream = Thread.currentThread()
+                .contextClassLoader
+                .getResourceAsStream("config.properties")
+                ?: throw IllegalArgumentException(
+                    "Файл config.properties не найден в директории test/resources"
+                )
             load(resourceStream)
             logger.info("Конфигурация успешно загружена из config.properties")
         } catch (e: Exception) {
-            logger.error("Ошибка загрузки конфигурации: ${e.message}", e)
+            logger.error("Ошибка загрузки config.properties: ${e.message}", e)
             throw e
         }
     }
 
-    private val appiumUrl: URL = URI(properties.getProperty("appium.url", "http://localhost:4723/")).toURL()
+    // Helper: системное свойство или из файла или default
+    private fun prop(name: String, default: String): String =
+        System.getProperty(name)
+            ?: properties.getProperty(name, default)
+
+    // URL Appium
+    private val appiumUrl: URL = URI(prop("appium.url", "http://localhost:4723/")).toURL()
+
+    // Платформа
     private val platform: Platform = runCatching {
-        Platform.valueOf(properties.getProperty("platform")) }.getOrElse { Platform.ANDROID }
-    private val androidVersion: String = properties.getProperty("android.version", "14")
-    private val iosVersion: String = properties.getProperty("ios.version", "17.5")
-    private val androidDeviceName: String = properties.getProperty("android.device.name", "WBA_AVD_API35")
-    private val iosDeviceName: String = properties.getProperty("ios.device.name", "iPhone 15 Pro Max")
-    private val androidAppName: String = properties.getProperty("android.app.name", "android.apk")
-    private val iosAppName: String = properties.getProperty("ios.app.name", "ios.app")
-    private val appActivity: String = properties.getProperty("app.activity", "ru.wildberries.view.main.MainActivity")
-    private val appPackage: String = properties.getProperty("app.package", "com.wildberries.ru.dev")
-    private val browserType: String = properties.getProperty("playwright.browser.type", "chromium")
-    private val headless: Boolean = properties.getProperty("playwright.headless", "true").toBoolean()
+        Platform.valueOf(prop("platform", "ANDROID"))
+    }.getOrElse { Platform.ANDROID }
+
+    // Версии ОС
+    private val androidVersion: String = prop("android.version", "15")
+    private val iosVersion: String = prop("ios.version", "18.4")
+
+    // Имена устройств
+    private val androidDeviceName: String = prop("android.device.name", "WBA_AVD_API35")
+    private val iosDeviceName: String = prop("ios.device.name", "iPhone 16 Plus")
+
+    // Пути к приложениям
+    private val androidAppName: String = prop("android.app.name", "android.apk")
+    private val iosAppName: String = prop("ios.app.name", "ios.app")
+
+    // Активити и пакет Android
+    private val appActivity: String = prop(
+        "app.activity",
+        "ru.wildberries.view.main.MainActivity"
+    )
+    private val appPackage: String = prop(
+        "app.package",
+        "com.wildberries.ru.dev"
+    )
+
+    // Playwright
+    private val browserType: String = prop("playwright.browser.type", "chromium")
+    private val headless: Boolean = prop("playwright.headless", "true").toBoolean()
+
+    // API
 
     /**
      * @return true, если текущая платформа — Android.
@@ -62,6 +92,16 @@ object AppConfig {
     fun isiOS(): Boolean = platform == Platform.IOS
 
     /**
+     * @return Текущая целевая платформа тестов.
+     */
+    fun getPlatform(): Platform = platform
+
+    /**
+     * @return URL Appium-сервера.
+     */
+    fun getAppiumUrl(): URL = appiumUrl
+
+    /**
      * @return Версия Android для тестового окружения.
      */
     fun getAndroidVersion(): String = androidVersion
@@ -72,24 +112,14 @@ object AppConfig {
     fun getIosVersion(): String = iosVersion
 
     /**
-     * @return Имя устройства iOS, на котором будут выполняться тесты.
-     */
-    fun getIosDeviceName(): String = iosDeviceName
-
-    /**
      * @return Имя устройства Android, на котором будут выполняться тесты.
      */
     fun getAndroidDeviceName(): String = androidDeviceName
 
     /**
-     * @return URL Appium-сервера.
+     * @return Имя устройства iOS, на котором будут выполняться тесты.
      */
-    fun getAppiumUrl(): URL = appiumUrl
-
-    /**
-     * @return Текущая целевая платформа тестов.
-     */
-    fun getPlatform(): Platform = platform
+    fun getIosDeviceName(): String = iosDeviceName
 
     /**
      * @return Имя активности Android-приложения для запуска.

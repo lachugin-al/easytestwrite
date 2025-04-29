@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.1"
+version = "0.0.2"
 
 repositories {
     maven {
@@ -39,17 +39,49 @@ dependencies {
 }
 
 tasks.test {
-    val platform = if (project.hasProperty("platform")) project.property("platform") as String else ""
+    // Читаем все возможные Gradle-свойства
+    val platformProp = (project.findProperty("platform") as String?).orEmpty()
+    val appiumUrlProp = (project.findProperty("appium.url") as String?).orEmpty()
+    val androidVersionProp = (project.findProperty("android.version") as String?).orEmpty()
+    val iosVersionProp = (project.findProperty("ios.version") as String?).orEmpty()
+    val androidDeviceNameProp = (project.findProperty("android.device.name") as String?).orEmpty()
+    val iosDeviceNameProp = (project.findProperty("ios.device.name") as String?).orEmpty()
+    val androidAppNameProp = (project.findProperty("android.app.name") as String?).orEmpty()
+    val iosAppNameProp = (project.findProperty("ios.app.name") as String?).orEmpty()
+    val appActivityProp = (project.findProperty("app.activity") as String?).orEmpty()
+    val appPackageProp = (project.findProperty("app.package") as String?).orEmpty()
+    val browserTypeProp = (project.findProperty("playwright.browser.type") as String?).orEmpty()
+    val headlessProp = (project.findProperty("playwright.headless") as String?).orEmpty()
+    val tagProp = (project.findProperty("tag") as String?).orEmpty()
+
+    // Настраиваем JUnit Platform
     useJUnitPlatform {
-        if (project.hasProperty("tag") && project.property("tag") != "") {
-            val tags = project.property("tag").toString().split(",")
+        if (tagProp.isNotBlank()) {
+            val tags = tagProp.split(",")
             includeTags(*tags.toTypedArray())
         }
-        if (platform == "ios") {
-            excludeTags = mutableSetOf("androidOnly")
-        } else if (platform == "android") {
-            excludeTags = mutableSetOf("iosOnly")
+        when (platformProp.lowercase()) {
+            "ios" -> excludeTags = mutableSetOf("androidOnly")
+            "android" -> excludeTags = mutableSetOf("iosOnly")
         }
+    }
+
+    // Прокидываем в JVM-системные свойства все значения
+    listOf(
+        "platform" to platformProp,
+        "appium.url" to appiumUrlProp,
+        "android.version" to androidVersionProp,
+        "ios.version" to iosVersionProp,
+        "android.device.name" to androidDeviceNameProp,
+        "ios.device.name" to iosDeviceNameProp,
+        "android.app.name" to androidAppNameProp,
+        "ios.app.name" to iosAppNameProp,
+        "app.activity" to appActivityProp,
+        "app.package" to appPackageProp,
+        "playwright.browser.type" to browserTypeProp,
+        "playwright.headless" to headlessProp
+    ).forEach { (key, value) ->
+        if (value.isNotBlank()) systemProperty(key, value)
     }
 }
 
@@ -63,11 +95,11 @@ tasks.register<Jar>("javadocJar") {
     from(tasks.getByName("javadoc"))
 }
 
-// Публикация проекта
-val propUser     = findProperty("wbaNexusUser")     as String?
+// Настройки публикации проекта
+val propUser = findProperty("wbaNexusUser") as String?
 val propPassword = findProperty("wbaNexusPassword") as String?
-val envUser      = System.getenv("WBA_NEXUS_USER")
-val envPassword  = System.getenv("WBA_NEXUS_PASSWORD")
+val envUser = System.getenv("WBA_NEXUS_USER")
+val envPassword = System.getenv("WBA_NEXUS_PASSWORD")
 
 val wbaNexusUser: String = propUser
     ?: envUser
@@ -91,15 +123,15 @@ publishing {
             from(components["java"])
             artifact(tasks["sourcesJar"])
             artifact(tasks["javadocJar"])
-            groupId    = "wba"
+            groupId = "wba"
             artifactId = "easytestwrite"
-            version    = project.version.toString()
+            version = project.version.toString()
         }
     }
     repositories {
         maven {
             name = "wba-maven"
-            url  = uri("https://wba-nexus.wb.ru/repository/wba-maven/")
+            url = uri("https://wba-nexus.wb.ru/repository/wba-maven/")
             credentials {
                 username = wbaNexusUser
                 password = wbaNexusPassword
