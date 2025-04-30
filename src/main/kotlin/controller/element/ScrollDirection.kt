@@ -1,4 +1,4 @@
-package controller
+package controller.element
 
 /**
  * Перечисление направлений скролла на мобильных устройствах и веб интерфейсах.

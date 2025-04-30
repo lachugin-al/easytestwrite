@@ -1,8 +1,10 @@
-package controller
+package controller.web
 
 import app.App
 import com.microsoft.playwright.ElementHandle
 import com.microsoft.playwright.Page
+import controller.element.PageElement
+import controller.element.ScrollDirection
 import dsl.testing.StepContext
 import dsl.testing.TestingContext
 import org.slf4j.Logger

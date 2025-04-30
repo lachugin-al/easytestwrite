@@ -1,5 +1,10 @@
 package app
 
+import app.config.AppConfig
+import app.driver.AndroidDriver
+import app.driver.IosDriver
+import app.driver.WebDriver
+import app.model.Platform
 import com.microsoft.playwright.Page
 import io.appium.java_client.AppiumDriver
 import io.appium.java_client.MobileElement
@@ -63,7 +68,7 @@ class App() : AutoCloseable {
     }
 
     /**
-     * Создаёт новый экземпляр драйвера в зависимости от платформы, указанной в [AppConfig].
+     * Создаёт новый экземпляр драйвера в зависимости от платформы, указанной в [app.config.AppConfig].
      *
      * Поддерживаемые платформы:
      * - Android (AppiumDriver)

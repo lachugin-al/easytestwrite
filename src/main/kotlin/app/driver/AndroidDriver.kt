@@ -1,5 +1,6 @@
-package app
+package app.driver
 
+import app.config.AppConfig
 import io.appium.java_client.AppiumDriver
 import io.appium.java_client.MobileElement
 import io.appium.java_client.android.AndroidDriver
@@ -11,7 +12,6 @@ import org.openqa.selenium.WebDriverException
 import org.openqa.selenium.remote.DesiredCapabilities
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import java.io.File
 import java.net.MalformedURLException
 
@@ -28,13 +28,13 @@ class AndroidDriver(private val autoLaunch: Boolean) {
     private val logger: Logger = LoggerFactory.getLogger(AndroidDriver::class.java)
 
     /**
-     * Инициализирует экземпляр [AppiumDriver] для работы с Android-платформой.
+     * Инициализирует экземпляр [io.appium.java_client.AppiumDriver] для работы с Android-платформой.
      *
      * При возникновении ошибки создания сессии (SessionNotCreatedException) метод выполнит повторные попытки
      * согласно значению [retryCount]. В случае других типов ошибок производится немедленная обработка.
      *
      * @param retryCount количество оставшихся попыток инициализации драйвера
-     * @return корректно инициализированный экземпляр [AppiumDriver]<[MobileElement]>
+     * @return корректно инициализированный экземпляр [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]>
      * @throws RuntimeException если создать сессию не удалось после всех попыток
      */
     fun getAndroidDriver(retryCount: Int): AppiumDriver<MobileElement> {
@@ -60,12 +60,12 @@ class AndroidDriver(private val autoLaunch: Boolean) {
     }
 
     /**
-     * Формирует и возвращает объект [DesiredCapabilities] для конфигурации подключения к Android-устройству.
+     * Формирует и возвращает объект [org.openqa.selenium.remote.DesiredCapabilities] для конфигурации подключения к Android-устройству.
      *
      * В рамках настройки устанавливаются параметры пути к APK-файлу, версии платформы, имени устройства,
      * настройки поведения сессии (таймауты, автозапуск, автоматическая выдача разрешений и прочее).
      *
-     * @return экземпляр [DesiredCapabilities], готовый к использованию для создания сессии Appium
+     * @return экземпляр [org.openqa.selenium.remote.DesiredCapabilities], готовый к использованию для создания сессии Appium
      * @throws RuntimeException если APK-файл приложения не найден в ожидаемом месте
      */
     private fun getCapabilities(): DesiredCapabilities {

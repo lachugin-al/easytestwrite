@@ -1,5 +1,6 @@
-package app
+package app.config
 
+import app.model.Platform
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI

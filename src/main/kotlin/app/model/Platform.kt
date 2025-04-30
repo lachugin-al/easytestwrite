@@ -1,4 +1,4 @@
-package app
+package app.model
 
 /**
  * Перечисление, описывающее поддерживаемые платформы для запуска тестов.
@@ -6,10 +6,10 @@ package app
  * Используется для определения типа окружения при инициализации драйверов
  * и выбора соответствующей логики работы тестового фреймворка.
  *
- * @see AppConfig
- * @see AndroidDriver
- * @see IosDriver
- * @see WebDriver
+ * @see app.config.AppConfig
+ * @see app.driver.AndroidDriver
+ * @see app.driver.IosDriver
+ * @see app.driver.WebDriver
  */
 enum class Platform {
     /** Платформа Android (тестирование через Appium). */

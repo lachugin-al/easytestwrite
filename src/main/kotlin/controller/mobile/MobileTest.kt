@@ -1,9 +1,11 @@
-package controller
+package controller.mobile
 
 import app.App
-import app.AppConfig
-import app.Platform
+import app.config.AppConfig
+import app.model.Platform
 import com.google.common.collect.ImmutableList
+import controller.element.PageElement
+import controller.element.ScrollDirection
 import dsl.testing.ExpectationContext
 import dsl.testing.StepContext
 import dsl.testing.TestingContext

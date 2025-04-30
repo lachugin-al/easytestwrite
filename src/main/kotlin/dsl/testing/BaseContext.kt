@@ -1,7 +1,7 @@
 package dsl.testing
 
-import app.AppConfig
-import app.Platform
+import app.config.AppConfig
+import app.model.Platform
 import java.lang.Exception
 
 /**
