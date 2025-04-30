@@ -58,7 +58,7 @@ object AppConfig {
     private val iosVersion: String = prop("ios.version", "18.4")
 
     // Имена устройств
-    private val androidDeviceName: String = prop("android.device.name", "WBA_AVD_API35")
+    private val androidDeviceName: String = prop("android.device.name", "Pixel_XL_API_35")
     private val iosDeviceName: String = prop("ios.device.name", "iPhone 16 Plus")
 
     // Пути к приложениям
