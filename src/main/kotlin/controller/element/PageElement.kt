@@ -20,9 +20,9 @@ import org.openqa.selenium.internal.FindsByXPath
  * @property web Селектор для Web-платформы (CSS/XPath).
  */
 data class PageElement(
-    private val android: By?,
-    private val ios: By?,
-    private val web: String?
+    private val android: By? = null,
+    private val ios: By? = null,
+    private val web: String? = null
 ) {
     /**
      * Получить локатор для текущей платформы.
@@ -30,9 +30,9 @@ data class PageElement(
      * @return Локатор типа [By] для мобильных платформ или [String] для Web.
      */
     fun get(): Any? = when (AppConfig.getPlatform()) {
-        Platform.ANDROID -> android
-        Platform.IOS -> ios
-        Platform.WEB -> web
+        Platform.ANDROID -> android ?: error("Локатор для Android не задан")
+        Platform.IOS -> ios ?: error("Локатор для iOS не задан")
+        Platform.WEB -> web ?: error("Локатор для Web не задан")
     }
 
     private companion object {

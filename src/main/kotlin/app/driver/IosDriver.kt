@@ -94,7 +94,7 @@ class IosDriver(private val autoLaunch: Boolean) {
         logger.info("Формирование DesiredCapabilities для iOS-драйвера")
         val capabilities = DesiredCapabilities()
         capabilities.setCapability(MobileCapabilityType.APP, appFile.absolutePath)
-        capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCuiTest")
+        capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest")
         capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, Platform.IOS)
         capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, AppConfig.getIosVersion())
         capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, AppConfig.getIosDeviceName())

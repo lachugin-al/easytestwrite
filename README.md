@@ -22,10 +22,15 @@
 ## Структура проекта
 Вся кодовая база находится в папке `src/main/` и разделена по пакетам:
 * `app` - классы для подключения и запуска приложения для тестирования
+  * `config` - классы конфигурации
+  * `driver` - классы драйверов для Android, iOS и Web
+  * `model` - модели данных
 * `controller` - классы с контроллерами
-* `dsl` - классы DSL
-* `events` - классы работы с событиями
-* `proxy` - классы прокси сервера
+  * `mobile` - контроллеры для мобильных тестов
+  * `element` - классы для работы с элементами UI
+* `dsl` - классы DSL для написания тестов
+* `events` - классы работы с событиями и аналитикой
+* `proxy` - классы прокси сервера для перехвата и анализа сетевого трафика
 * `utils` - классы с утилитами
 
 Все тесты находятся в папке `src/test/` и разделены по пакетам:
@@ -34,22 +39,33 @@
   * `uitests` - классы с UI тестами
 
 ## Локальный запуск E2E тестов
-1. Необходимо запустить Appium сервер, в терминале выполнить команду `appium server --allow-cors`
+1. Для мобильных тестов необходимо запустить Appium сервер, в терминале выполнить команду `appium server --allow-cors`
 
-### Локальный запуск E2E тестов на Android либо iOS:
+### Локальный запуск E2E тестов на Android, iOS или Web:
 1. В папке `test/resources` создать файл конфигурации `config.properties`:
 2. Заполнить конфигурационные настройки (либо будут применены настройки по умолчанию)
 ```config.properties
+   # URL Appium-сервера (для мобильных тестов)
    appium.url=http://localhost:4723/
+
+   # Выбор платформы: ANDROID, IOS или WEB
    platform=ANDROID
+
+   # Настройки для Android
    android.version=15
-   ios.version=18.4
-   android.device.name=Pixel_2_API_34
-   ios.device.name=iPhone 16 Plus
+   android.device.name=Pixel_XL_API_35
    android.app.name=android.apk
-   ios.app.name=ios.app
-   app.activity=ru.wildberries.view.main.MainActivity
+   app.activity=ru.wildberries.main.activity.ui.MainActivity
    app.package=com.wildberries.ru.dev
+
+   # Настройки для iOS
+   ios.version=18.4
+   ios.device.name=iPhone 16 Plus
+   ios.app.name=ios.app
+
+   # Настройки для Web-тестирования (Playwright)
+   playwright.browser.type=chromium
+   playwright.headless=false
 ```
 3. Выбрать папку с тестами или отдельные тесты для запуска, вызвать меню и нажать `Run ...`
 
@@ -58,6 +74,14 @@
 Тесты должны находиться в папке `test/kotlin/uitests/` и использовать PageObject модель с разметкой элементов.
 Тесты необходимо разделять по пакетам, в зависимости от того, к какому функционалу относится тот или иной тест.
 Каждый тест должен помечаться аннотацией `@Test`.
+
+### Специальные блоки для организации тестов
+Фреймворк предоставляет специальные блоки для организации тестов:
+
+- `context.run { ... }` - Основной блок выполнения теста
+- `onlyAndroid { ... }` - Блок кода, который выполняется только на платформе Android
+- `onlyIos { ... }` - Блок кода, который выполняется только на платформе iOS
+- `optional { ... }` - Опциональный блок кода, если не выполнится, то тест не упадет (полезно для проверки элементов, которые могут отображаться не всегда)
 
 Пример структуры теста:
 ```kotlin
@@ -75,7 +99,7 @@ class ExampleTest : MobileTest() {
                  // ...
               }
             }
-            
+
             onlyAndroid {
                 "Шаг выполняемый только на Android" {
                     // ...
@@ -125,7 +149,7 @@ class SmokeTest : MobileTest() {
 
             "Выбрать регион" {
                 click(ExampleScreen.ruRegion)
-               
+
                 "Кнопка 'Home' на навигационной панели отображается" {
                     checkVisible(ExampleScreen.homeNavBar)
                 }
@@ -139,7 +163,7 @@ class SmokeTest : MobileTest() {
                     checkVisible(ExampleScreen.profileNavBar)
                 }
             }
-           
+
             "Пробежимся по навбару" {
                 click(ExampleScreen.profileNavBar)
                 click(ExampleScreen.cartNavBar)
@@ -214,6 +238,7 @@ object ExampleScreen {
    - `getAttributeValue()` - Получить значение [attribute] из [element] найденном на экране;
  - StepContext:
    - `click()` - Найти элемент на экране по его [element] и кликнуть по нему;
+   - `click(eventName, eventData)` - Найти и кликнуть по элементу, связанному с событием [eventName] и данными [eventData];
    - `typeText()` - Найти элемент на экране по его [element] и ввести [text];
    - `tapArea()` - Нажать в области экрана по [x] и [y];
    - `tapElementArea()` - Нажать в области [element] по его [x] и [y];
@@ -225,11 +250,15 @@ object ExampleScreen {
    - `swipeUp()` - Выполнить свайп в [element] вверх;
    - `swipeRight()` - Выполнить свайп в [element] вправо;
    - `swipeLeft()` - Выполнить свайп в [element] влево;
-   - `openDeeplink()` - Выполняет открытие переданной в параметры ссылки диплинка;
+   - `openDeeplink(deeplink)` - Выполняет открытие переданной в параметры ссылки диплинка (поддерживается для Android и iOS);
  - ExpectationContext:
    - `checkVisible()` - Проверить виден ли [element] на экране;
-   - `checkHasEvent()` - Проверяет наличие события и данных в EventStorage;
-   - `checkHasEventAsync()` - Проверяет событие и данные асинхронно в EventStorage исходя из производимых после вызова функции действий пользователя;
+   - `checkHasEvent(eventName, eventData)` - Проверяет наличие события [eventName] и данных [eventData] в EventStorage;
+   - `checkHasEvent(eventName, eventDataFile)` - Проверяет наличие события [eventName] и данных из файла [eventDataFile] в EventStorage;
+   - `checkHasEventAsync(eventName, eventData)` - Проверяет событие [eventName] и данные [eventData] асинхронно в EventStorage исходя из производимых после вызова функции действий пользователя;
+   - `checkHasEventAsync(eventName, eventDataFile)` - Проверяет событие [eventName] и данные из файла [eventDataFile] асинхронно в EventStorage;
+ - Вспомогательные методы:
+   - `awaitAllEventChecks()` - Ожидает завершения всех асинхронных проверок событий (вызывается в методе tearDown());
 
 ### Описание возможных параметров, допустимых для передачи в функции (к каждой параметру добавлена документация с подробным описанием):
    - `element: PageElement?` - элемент;
@@ -241,6 +270,35 @@ object ExampleScreen {
    - `scrollCapacity: Double` - модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
    - `scrollDirection: ScrollDirection` - направление скроллировая экрана;
    - `x: Int`, `y: Int` - передача точки `x` и `y` на экране для функций `tapArea()` и `tapElementArea()`;
+   - `eventName: String` - название события для поиска в EventStorage;
+   - `eventData: String` - JSON-строка с данными для проверки в событии;
+   - `eventDataFile: File` - файл с JSON-данными для проверки в событии;
+   - `deeplink: String` - строка с диплинком для открытия в приложении.
+
+## Работа с событиями и аналитикой
+Фреймворк предоставляет возможность проверки событий аналитики, отправляемых приложением. Для этого используется класс `EventStorage`, который хранит все события, перехваченные прокси-сервером.
+
+### Проверка событий
+Для проверки событий используются методы:
+- `checkHasEvent(eventName, eventData)` - синхронная проверка наличия события
+- `checkHasEventAsync(eventName, eventData)` - асинхронная проверка, которая не блокирует выполнение теста
+
+Пример проверки события:
+```kotlin
+"Проверка отправки события при клике на товар" {
+    checkHasEvent(
+        eventName = "product_click",
+        eventData = """
+            {
+                "product_id": "12345",
+                "category": "electronics"
+            }
+        """
+    )
+}
+```
+
+При использовании асинхронных проверок необходимо вызвать метод `awaitAllEventChecks()` в методе `tearDown()` для ожидания завершения всех проверок.
 
 ## Allure
 В ходе прогонов, генерируется отчет и записывается в Allure
