@@ -75,6 +75,10 @@ object AppConfig {
         "app.package",
         "com.wildberries.ru.dev"
     )
+    private val bundleId: String = prop(
+        "bundle.id",
+        "RU.WILDBERRIES.MOBILEAPP.DEV"
+    )
 
     // Playwright
     private val browserType: String = prop("playwright.browser.type", "chromium")
@@ -131,6 +135,11 @@ object AppConfig {
      * @return Имя пакета Android-приложения.
      */
     fun getAppPackage(): String = appPackage
+
+    /**
+     * @return Bundle ID для iOS-приложения.
+     */
+    fun getBundleId(): String = bundleId
 
     /**
      * @return Имя APK или .app файла в зависимости от выбранной платформы.
