@@ -107,7 +107,7 @@ class App() : AutoCloseable {
             Platform.ANDROID, Platform.IOS -> {
                 driver?.let {
                     try {
-                        it.terminateApp("com.wildberries.ru.dev")
+                        it.terminateApp(AppConfig.getAppPackage())
                         it.quit()
                     } catch (e: WebDriverException) {
                         logger.error("Ошибка при завершении сессии Appium-драйвера", e)
