@@ -104,13 +104,27 @@ class App() : AutoCloseable {
      */
     override fun close() {
         when (AppConfig.getPlatform()) {
-            Platform.ANDROID, Platform.IOS -> {
+            Platform.ANDROID -> {
                 driver?.let {
                     try {
                         it.terminateApp(AppConfig.getAppPackage())
                         it.quit()
                     } catch (e: WebDriverException) {
-                        logger.error("Ошибка при завершении сессии Appium-драйвера", e)
+                        logger.error("Ошибка при завершении сессии Appium-драйвера на Android", e)
+                    } finally {
+                        driver = null
+                    }
+                }
+                webServer.close()
+            }
+
+            Platform.IOS -> {
+                driver?.let {
+                    try {
+                        it.terminateApp(AppConfig.getBundleId())
+                        it.quit()
+                    } catch (e: WebDriverException) {
+                        logger.error("Ошибка при завершении сессии Appium-драйвера на iOS", e)
                     } finally {
                         driver = null
                     }
