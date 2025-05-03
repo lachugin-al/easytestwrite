@@ -6,6 +6,7 @@ import app.model.Platform
 import com.google.common.collect.ImmutableList
 import controller.element.PageElement
 import controller.element.ScrollDirection
+import controller.handler.AlertHandler
 import dsl.testing.ExpectationContext
 import dsl.testing.StepContext
 import dsl.testing.TestingContext
@@ -1255,6 +1256,27 @@ open class MobileTest {
 
             else -> throw IllegalArgumentException("Неподдерживаемая платформа")
         }
+    }
+
+    /**
+     * DSL-метод для работы с системными алертами из контекста шага.
+     *
+     * @param accept если true — нажать «Accept» (accept), иначе — «Cancel» (dismiss).
+     * @param timeoutExpectation сколько секунд ждать появления алерта.
+     * @param pollingInterval Частота опроса элемента в миллисекундах.
+     *
+     * Пример:
+     * ```
+     * "Обработка системного алерта" {
+     *     alert(accept = true)
+     * }
+     * ```
+     */
+    fun StepContext.alert(
+        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
+        pollingInterval: Long = DEFAULT_POLLING_INTERVAL
+    ): AlertHandler {
+        return AlertHandler(driver, timeoutExpectation, pollingInterval)
     }
 
     // Функционал выполняемый перед каждым тестом
