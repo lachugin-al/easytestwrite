@@ -2,7 +2,14 @@ package dsl.testing
 
 import app.config.AppConfig
 import app.model.Platform
-import java.lang.Exception
+import com.microsoft.playwright.Page
+import io.appium.java_client.AppiumDriver
+import io.qameta.allure.Allure.addAttachment
+import utils.screenshot.AppiumScreenshotProvider
+import utils.screenshot.ImageProcessor
+import utils.screenshot.PlaywrightScreenshotProvider
+import utils.screenshot.ScreenshotProvider
+import java.io.ByteArrayInputStream
 
 /**
  * Базовый класс всех контекстов тестирования.
@@ -12,7 +19,13 @@ import java.lang.Exception
  *
  * @see TestingDslMarker
  */
-open class BaseContext {
+@TestingDslMarker
+abstract class BaseContext {
+
+    /**
+     * Драйвер, предоставляемый потомками для скриншотов.
+     */
+    protected abstract val driver: Any
 
     /**
      * Выполняет переданный блок кода только в случае, если целевая платформа — iOS.
@@ -49,6 +62,33 @@ open class BaseContext {
         } catch (e: Exception) {
             // Ошибки подавляются, чтобы тест продолжал выполнение
         }
+    }
+
+    /**
+     * Снимает скриншот и прикрепляет его к Allure-отчёту.
+     * Выполняется в {@link #optional}.
+     *
+     * @param name      Название вложения в отчёте.
+     * @param scale     Масштаб изображения (0.1–1.0).
+     * @param quality   Качество PNG (1–100).
+     */
+    fun takeScreenshot(
+        name: String,
+        scale: Double = 0.5,
+        quality: Int = 100
+    ) = optional {
+        val provider: ScreenshotProvider = when (driver) {
+            is AppiumDriver<*> -> AppiumScreenshotProvider(driver as AppiumDriver<*>)
+            is Page -> PlaywrightScreenshotProvider(driver as Page)
+            else -> return@optional
+        }
+
+        val raw = provider.getRawScreenshot()
+        val processed = if (scale < 1.0 || quality < 100)
+            ImageProcessor.processImage(raw, scale.coerceIn(0.1, 1.0), quality.coerceIn(1, 100))
+        else raw
+
+        addAttachment(name, "image/png", ByteArrayInputStream(processed), "png")
     }
 
     /**

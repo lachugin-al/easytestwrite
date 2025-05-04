@@ -16,7 +16,7 @@ import io.qameta.allure.Allure.ThrowableRunnable
  * @see ExpectationContext
  */
 @TestingDslMarker
-class StepContext() : BaseContext() {
+class StepContext(override val driver: Any) : BaseContext() {
 
     /** Счётчик проверок внутри одного шага для отображения в Allure-отчёте. */
     private var currentCheck: Int = 1
@@ -37,14 +37,25 @@ class StepContext() : BaseContext() {
      * @receiver Название создаваемого шага.
      * @param expectationRunnable Лямбда с проверками внутри шага.
      */
-    operator fun String.invoke(expectationRunnable: ExpectationContext.() -> Unit) {
+    operator fun String.invoke(
+        screenshotOnSuccess: Boolean = true,
+        screenshotOnFailure: Boolean = true,
+        screenshotScale: Double = 0.5,
+        screenshotQuality: Int = 100,
+        expectationRunnable: ExpectationContext.() -> Unit
+    ) {
         val title = "Проверка №$currentCheck. $this"
-
-        step(
-            title,
-            ThrowableRunnable {
-                expectationRunnable(ExpectationContext())
-            })
+        step(title, ThrowableRunnable {
+            val ctx = ExpectationContext(driver)
+            runCatching { ctx.expectationRunnable() }
+                .onSuccess {
+                    if (screenshotOnSuccess) ctx.takeScreenshot("$title — успех", screenshotScale, screenshotQuality)
+                }
+                .onFailure { t ->
+                    if (screenshotOnFailure) ctx.takeScreenshot("$title — ошибка", screenshotScale, screenshotQuality)
+                    throw t
+                }
+        })
         currentCheck++
     }
 }

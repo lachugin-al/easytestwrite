@@ -13,4 +13,4 @@ package dsl.testing
  * @see StepContext
  */
 @TestingDslMarker
-class ExpectationContext : BaseContext()
+class ExpectationContext(override val driver: Any) : BaseContext()
