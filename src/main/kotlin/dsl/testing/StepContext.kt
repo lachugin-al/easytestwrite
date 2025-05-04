@@ -1,7 +1,7 @@
 package dsl.testing
 
-import io.qameta.allure.Allure.ThrowableRunnable
 import io.qameta.allure.Allure.step
+import io.qameta.allure.Allure.ThrowableRunnable
 
 /**
  * Контекст выполнения тестового шага.
@@ -38,14 +38,13 @@ class StepContext() : BaseContext() {
      * @param expectationRunnable Лямбда с проверками внутри шага.
      */
     operator fun String.invoke(expectationRunnable: ExpectationContext.() -> Unit) {
+        val title = "Проверка №$currentCheck. $this"
+
         step(
-            "Проверка №$currentCheck. $this",
+            title,
             ThrowableRunnable {
                 expectationRunnable(ExpectationContext())
-
-            }).also {
-            // TODO: добавить автоматический скриншот при падении проверки
-        }
+            })
         currentCheck++
     }
 }
