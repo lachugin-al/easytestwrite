@@ -99,8 +99,8 @@ class IosDriver(private val autoLaunch: Boolean) {
         capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, AppConfig.getIosVersion())
         capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, AppConfig.getIosDeviceName())
         capabilities.setCapability(IOSMobileCapabilityType.CONNECT_HARDWARE_KEYBOARD, false)
-        capabilities.setCapability(IOSMobileCapabilityType.AUTO_ACCEPT_ALERTS, true)
-        capabilities.setCapability(IOSMobileCapabilityType.AUTO_DISMISS_ALERTS, false)
+        capabilities.setCapability(IOSMobileCapabilityType.AUTO_ACCEPT_ALERTS, AppConfig.getIosAutoAcceptAlerts())
+        capabilities.setCapability(IOSMobileCapabilityType.AUTO_DISMISS_ALERTS, AppConfig.getIosAutoDismissAlerts())
         capabilities.setCapability(IOSMobileCapabilityType.SHOW_IOS_LOG, false)
         capabilities.setCapability("appium:autoLaunch", autoLaunch)
 

@@ -46,6 +46,12 @@ object AppConfig {
         System.getProperty(name)
             ?: properties.getProperty(name, default)
 
+    // Helper: системное свойство или из файла или default для boolean
+    private fun propBoolean(name: String, default: Boolean): Boolean =
+        System.getProperty(name)?.toBoolean()
+            ?: properties.getProperty(name)?.toBoolean()
+            ?: default
+
     // URL Appium
     private val appiumUrl: URL = URI(prop("appium.url", "http://localhost:4723/")).toURL()
 
@@ -79,6 +85,10 @@ object AppConfig {
         "bundle.id",
         "RU.WILDBERRIES.MOBILEAPP.DEV"
     )
+
+    // iOS alerts configuration - оба значения false по умолчанию
+    private val iosAutoAcceptAlerts: Boolean = propBoolean("ios.auto_accept_alerts", false)
+    private val iosAutoDismissAlerts: Boolean = propBoolean("ios.auto_dismiss_alerts", false)
 
     // Playwright
     private val browserType: String = prop("playwright.browser.type", "chromium")
@@ -140,6 +150,18 @@ object AppConfig {
      * @return Bundle ID для iOS-приложения.
      */
     fun getBundleId(): String = bundleId
+
+    /**
+     * @return Значение для IOSMobileCapabilityType.AUTO_ACCEPT_ALERTS.
+     * По умолчанию false, если не указано в конфигурации.
+     */
+    fun getIosAutoAcceptAlerts(): Boolean = iosAutoAcceptAlerts
+
+    /**
+     * @return Значение для IOSMobileCapabilityType.AUTO_DISMISS_ALERTS.
+     * По умолчанию false, если не указано в конфигурации.
+     */
+    fun getIosAutoDismissAlerts(): Boolean = iosAutoDismissAlerts
 
     /**
      * @return Имя APK или .app файла в зависимости от выбранной платформы.

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.7"
+version = "0.0.8"
 
 repositories {
     maven {
@@ -50,6 +50,8 @@ tasks.test {
     val iosAppNameProp = (project.findProperty("ios.app.name") as String?).orEmpty()
     val appActivityProp = (project.findProperty("app.activity") as String?).orEmpty()
     val appPackageProp = (project.findProperty("app.package") as String?).orEmpty()
+    val iosAutoAcceptAlertsProp = (project.findProperty("ios.auto_accept_alerts") as String?).orEmpty()
+    val iosAutoDismissAlertsProp = (project.findProperty("ios.auto_dismiss_alerts") as String?).orEmpty()
     val browserTypeProp = (project.findProperty("playwright.browser.type") as String?).orEmpty()
     val headlessProp = (project.findProperty("playwright.headless") as String?).orEmpty()
     val tagProp = (project.findProperty("tag") as String?).orEmpty()
@@ -78,6 +80,8 @@ tasks.test {
         "ios.app.name" to iosAppNameProp,
         "app.activity" to appActivityProp,
         "app.package" to appPackageProp,
+        "ios.auto_accept_alerts" to iosAutoAcceptAlertsProp,
+        "ios.auto_dismiss_alerts" to iosAutoDismissAlertsProp,
         "playwright.browser.type" to browserTypeProp,
         "playwright.headless" to headlessProp
     ).forEach { (key, value) ->
