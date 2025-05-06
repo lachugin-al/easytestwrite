@@ -203,6 +203,54 @@ open class MobileTest {
     }
 
     /**
+     * Найти элемент на экране, содержащий указанный текст, и кликнуть по нему.
+     *
+     * Метод построит локатор по стратегии `PageElement.Contains` на всех платформах (Android, iOS, Web)
+     * и выполнит поиск элемента с возможностью скроллирования. Если элемент найден, выполняется клик.
+     *
+     * Метод полезен в ситуациях, когда необходимо кликнуть по элементу, содержащему определённую подстроку
+     * (например, часть названия товара, кнопку с динамическим текстом и т.д.), без необходимости заранее
+     * знать точное имя или локатор элемента.
+     *
+     * @param contains текст, который должен содержаться в целевом элементе;
+     * @param elementNumber номер найденного элемента, начиная с 1. Если null, будет использован первый найденный;
+     * @param timeoutBeforeExpectation задержка перед началом поиска, в секундах;
+     * @param timeoutExpectation максимальное время ожидания появления элемента, в секундах;
+     * @param pollingInterval интервал между попытками поиска элемента, в миллисекундах;
+     * @param scrollCount количество попыток скроллирования при неудачном поиске;
+     * @param scrollCapacity доля экрана, на которую производится один скролл [0.0 - 1.0];
+     * @param scrollDirection направление скроллирования (вниз, вверх и т.п.);
+     *
+     * @throws java.util.NoSuchElementException если элемент, содержащий указанный текст, не найден после всех попыток.
+     */
+    fun StepContext.click(
+        text: String,
+        elementNumber: Int? = null,
+        timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
+        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
+        pollingInterval: Long = DEFAULT_POLLING_INTERVAL,
+        scrollCount: Int = DEFAULT_SCROLL_COUNT,
+        scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
+        scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
+    ) {
+        val element = PageElement(
+            android = PageElement.Contains(text),
+            ios = PageElement.Contains(text)
+        )
+
+        waitForElements(
+            element = element,
+            elementNumber = elementNumber,
+            timeoutBeforeExpectation = timeoutBeforeExpectation,
+            timeoutExpectation = timeoutExpectation,
+            pollingInterval = pollingInterval,
+            scrollCount = scrollCount,
+            scrollCapacity = scrollCapacity,
+            scrollDirection = scrollDirection
+        ).click()
+    }
+
+    /**
      * Нажать в области экрана по [x] [y]
      * @param x точка по [x] в области экрана;
      * @param y точка по [y] в области экрана;
@@ -328,6 +376,53 @@ open class MobileTest {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ) {
+        waitForElements(
+            element = element,
+            elementNumber = elementNumber,
+            timeoutBeforeExpectation = timeoutBeforeExpectation,
+            timeoutExpectation = timeoutExpectation,
+            pollingInterval = pollingInterval,
+            scrollCount = scrollCount,
+            scrollCapacity = scrollCapacity,
+            scrollDirection = scrollDirection
+        ).isDisplayed
+    }
+
+    /**
+     * Проверить, виден ли на экране элемент, содержащий указанный текст.
+     *
+     * Метод построит локатор по стратегии `PageElement.Contains` на всех платформах (Android, iOS, Web)
+     * и выполнит поиск элемента с возможностью скроллирования. Если элемент найден, будет проверена его видимость.
+     *
+     * Метод полезен для DSL, когда известна только часть текста (например, кнопки, лейбла и т.п.),
+     * а точный локатор не задан или изменяется динамически.
+     *
+     * @param contains текст, который должен содержаться в элементе;
+     * @param elementNumber порядковый номер совпавшего элемента (начиная с 1);
+     * @param timeoutBeforeExpectation задержка перед началом ожидания;
+     * @param timeoutExpectation максимальное время ожидания элемента;
+     * @param pollingInterval интервал между попытками;
+     * @param scrollCount количество скроллов при отсутствии элемента;
+     * @param scrollCapacity доля экрана, на которую происходит один скролл [0.0 - 1.0];
+     * @param scrollDirection направление скроллирования;
+     *
+     * @throws java.util.NoSuchElementException если элемент не найден или не отображается.
+     */
+    fun ExpectationContext.checkVisible(
+        contains: String,
+        elementNumber: Int? = null,
+        timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
+        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
+        pollingInterval: Long = DEFAULT_POLLING_INTERVAL,
+        scrollCount: Int = DEFAULT_SCROLL_COUNT,
+        scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
+        scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
+    ) {
+        val element = PageElement(
+            android = PageElement.Contains(contains),
+            ios = PageElement.Contains(contains)
+        )
+
         waitForElements(
             element = element,
             elementNumber = elementNumber,

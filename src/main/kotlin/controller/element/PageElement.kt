@@ -102,11 +102,11 @@ data class PageElement(
     }
 
     /**
-     * Поиск по частичному совпадению текста элемента.
+     * Поиск по частичному совпадению пути элемента.
      */
-    class ContainsText(text: String?) : BaseBy(text, "text") {
+    class Contains(text: String?) : BaseBy(text, "text") {
         override fun buildXPath(value: String): String {
-            return ".//*[contains(@text,'$value') or contains(@name,'$value') or contains(@label,'$value') or contains(@value,'$value')]"
+            return ".//*[contains(@text,'$value') or contains(@id,'$value') or contains(@resource-id,'$value') or contains(@content-desc,'$value') or contains(@name,'$value') or contains(@label,'$value') or contains(@value,'$value')]"
         }
     }
 
