@@ -111,6 +111,15 @@ data class PageElement(
     }
 
     /**
+     * Поиск по точному совпадению пути элемента.
+     */
+    class ExactMatch(text: String?) : BaseBy(text, "text") {
+        override fun buildXPath(value: String): String {
+            return ".//*[(@text='$value' or @id='$value' or @resource-id='$value' or @content-desc='$value' or @name='$value' or @label='$value' or @value='$value')]"
+        }
+    }
+
+    /**
      * Поиск по атрибуту content-desc (Android).
      */
     class ContentDesc(contentDesc: String?) : BaseBy(contentDesc, "content-desc") {

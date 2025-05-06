@@ -212,7 +212,8 @@ open class MobileTest {
      * (например, часть названия товара, кнопку с динамическим текстом и т.д.), без необходимости заранее
      * знать точное имя или локатор элемента.
      *
-     * @param contains текст, который должен содержаться в целевом элементе;
+     * @param text текст, который точно соответствует в целевом элементе;
+     * @param containsText текст, который должен содержаться в целевом элементе;
      * @param elementNumber номер найденного элемента, начиная с 1. Если null, будет использован первый найденный;
      * @param timeoutBeforeExpectation задержка перед началом поиска, в секундах;
      * @param timeoutExpectation максимальное время ожидания появления элемента, в секундах;
@@ -224,7 +225,8 @@ open class MobileTest {
      * @throws java.util.NoSuchElementException если элемент, содержащий указанный текст, не найден после всех попыток.
      */
     fun StepContext.click(
-        text: String,
+        text: String? = null,
+        containsText: String? = null,
         elementNumber: Int? = null,
         timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
         timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
@@ -233,10 +235,23 @@ open class MobileTest {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ) {
-        val element = PageElement(
-            android = PageElement.Contains(text),
-            ios = PageElement.Contains(text)
-        )
+        require(!(text == null && containsText == null)) {
+            "Необходимо указать либо 'text', либо 'contains'"
+        }
+        require(!(text != null && containsText != null)) {
+            "Нельзя одновременно использовать 'text' и 'contains'"
+        }
+        val element = when {
+            text != null -> PageElement(
+                android = PageElement.ExactMatch(text),
+                ios = PageElement.ExactMatch(text)
+            )
+            containsText != null -> PageElement(
+                android = PageElement.Contains(containsText),
+                ios = PageElement.Contains(containsText),
+            )
+            else -> error("Указан и не text и не containsText")
+        }
 
         waitForElements(
             element = element,
@@ -397,7 +412,8 @@ open class MobileTest {
      * Метод полезен для DSL, когда известна только часть текста (например, кнопки, лейбла и т.п.),
      * а точный локатор не задан или изменяется динамически.
      *
-     * @param contains текст, который должен содержаться в элементе;
+     * @param text текст, который точно соответствует в целевом элементе;
+     * @param containsText текст, который должен содержаться в элементе;
      * @param elementNumber порядковый номер совпавшего элемента (начиная с 1);
      * @param timeoutBeforeExpectation задержка перед началом ожидания;
      * @param timeoutExpectation максимальное время ожидания элемента;
@@ -409,7 +425,8 @@ open class MobileTest {
      * @throws java.util.NoSuchElementException если элемент не найден или не отображается.
      */
     fun ExpectationContext.checkVisible(
-        contains: String,
+        text: String? = null,
+        containsText: String? = null,
         elementNumber: Int? = null,
         timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
         timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
@@ -418,10 +435,23 @@ open class MobileTest {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ) {
-        val element = PageElement(
-            android = PageElement.Contains(contains),
-            ios = PageElement.Contains(contains)
-        )
+        require(!(text == null && containsText == null)) {
+            "Необходимо указать либо 'text', либо 'contains'"
+        }
+        require(!(text != null && containsText != null)) {
+            "Нельзя одновременно использовать 'text' и 'contains'"
+        }
+        val element = when {
+            text != null -> PageElement(
+                android = PageElement.ExactMatch(text),
+                ios = PageElement.ExactMatch(text)
+            )
+            containsText != null -> PageElement(
+                android = PageElement.Contains(containsText),
+                ios = PageElement.Contains(containsText),
+            )
+            else -> error("Указан и не text и не containsText")
+        }
 
         waitForElements(
             element = element,
