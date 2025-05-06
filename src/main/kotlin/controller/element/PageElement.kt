@@ -106,7 +106,7 @@ data class PageElement(
      */
     class ContainsText(text: String?) : BaseBy(text, "text") {
         override fun buildXPath(value: String): String {
-            return ".//*[contains(@text,'$value')]"
+            return ".//*[contains(@text,'$value') or contains(@name,'$value') or contains(@label,'$value') or contains(@value,'$value')]"
         }
     }
 
