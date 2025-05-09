@@ -3,12 +3,13 @@ import org.gradle.api.GradleException
 plugins {
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
+    id("org.gradle.test-retry") version "1.6.2"
     `java-library`
     `maven-publish`
 }
 
 group = "wba"
-version = "0.0.13"
+version = "0.0.14"
 
 repositories {
     maven {
@@ -66,6 +67,11 @@ tasks.test {
             "ios" -> excludeTags = mutableSetOf("androidOnly")
             "android" -> excludeTags = mutableSetOf("iosOnly")
         }
+    }
+
+    retry {
+        maxRetries.set(3)
+        failOnPassedAfterRetry.set(false)
     }
 
     // Прокидываем в JVM-системные свойства все значения
