@@ -133,4 +133,64 @@ abstract class BaseContext {
     private fun (() -> Unit).invokeIfRequiredPlatform(platform: Platform) {
         if (AppConfig.getPlatform() == platform) invoke()
     }
+
+    /**
+     * Выполняет несколько блоков кода в безопасном режиме только для iOS платформы.
+     *
+     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
+     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
+     * со следующего блока. Блоки будут выполнены только если текущая платформа - iOS.
+     *
+     * Пример использования:
+     * ```
+     * optionalIos(
+     *     { "Шаг 1" { действие1() } },
+     *     { "Шаг 2" { действие2() } }
+     * )
+     * ```
+     *
+     * @param actions Набор лямбд с необязательной логикой выполнения.
+     */
+    @Suppress("SwallowedException")
+    fun optionalIos(vararg actions: () -> Unit) {
+        if (AppConfig.getPlatform() != Platform.IOS) return
+
+        actions.forEach { action ->
+            try {
+                action.invoke()
+            } catch (e: Exception) {
+                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
+            }
+        }
+    }
+
+    /**
+     * Выполняет несколько блоков кода в безопасном режиме только для Android платформы.
+     *
+     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
+     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
+     * со следующего блока. Блоки будут выполнены только если текущая платформа - Android.
+     *
+     * Пример использования:
+     * ```
+     * optionalAndroid(
+     *     { "Шаг 1" { действие1() } },
+     *     { "Шаг 2" { действие2() } }
+     * )
+     * ```
+     *
+     * @param actions Набор лямбд с необязательной логикой выполнения.
+     */
+    @Suppress("SwallowedException")
+    fun optionalAndroid(vararg actions: () -> Unit) {
+        if (AppConfig.getPlatform() != Platform.ANDROID) return
+
+        actions.forEach { action ->
+            try {
+                action.invoke()
+            } catch (e: Exception) {
+                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
+            }
+        }
+    }
 }
