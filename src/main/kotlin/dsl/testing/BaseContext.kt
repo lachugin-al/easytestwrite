@@ -46,95 +46,6 @@ abstract class BaseContext {
     fun onlyAndroid(action: () -> Unit) = action.invokeIfRequiredPlatform(Platform.ANDROID)
 
     /**
-     * Выполняет переданный блок кода в безопасном режиме.
-     *
-     * Если внутри [action] произойдёт ошибка — тест продолжит выполнение без прерывания.
-     * Исключение будет проглочено без дополнительной обработки.
-     *
-     * Используется для необязательных проверок, скриншотов или вспомогательных операций.
-     *
-     * Примечание: Если внутри блока [action] содержится несколько шагов, и один из них завершится с ошибкой,
-     * последующие шаги не будут выполнены. Для выполнения нескольких независимых шагов используйте
-     * перегруженную версию [optional] с vararg параметром.
-     *
-     * @param action Лямбда с необязательной логикой выполнения.
-     * @see optional(vararg actions: () -> Unit)
-     */
-    @Suppress("SwallowedException")
-    fun optional(action: () -> Unit) {
-        try {
-            action.invoke()
-        } catch (e: Exception) {
-            // Ошибки подавляются, чтобы тест продолжал выполнение
-        }
-    }
-
-    /**
-     * Выполняет несколько блоков кода в безопасном режиме.
-     *
-     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
-     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
-     * со следующего блока.
-     *
-     * Пример использования:
-     * ```
-     * optional(
-     *     { step1() },
-     *     { step2() },
-     *     { step3() }
-     * )
-     * ```
-     *
-     * @param actions Набор лямбд с необязательной логикой выполнения.
-     */
-    @Suppress("SwallowedException")
-    fun optional(vararg actions: () -> Unit) {
-        actions.forEach { action ->
-            try {
-                action.invoke()
-            } catch (e: Exception) {
-                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
-            }
-        }
-    }
-
-    /**
-     * Снимает скриншот и прикрепляет его к Allure-отчёту.
-     * Выполняется в {@link #optional}.
-     *
-     * @param name      Название вложения в отчёте.
-     * @param scale     Масштаб изображения (0.1–1.0).
-     * @param quality   Качество PNG (1–100).
-     */
-    fun takeScreenshot(
-        name: String,
-        scale: Double = 0.5,
-        quality: Int = 100
-    ) = optional {
-        val provider: ScreenshotProvider = when (driver) {
-            is AppiumDriver<*> -> AppiumScreenshotProvider(driver as AppiumDriver<*>)
-            is Page -> PlaywrightScreenshotProvider(driver as Page)
-            else -> return@optional
-        }
-
-        val raw = provider.getRawScreenshot()
-        val processed = if (scale < 1.0 || quality < 100)
-            ImageProcessor.processImage(raw, scale.coerceIn(0.1, 1.0), quality.coerceIn(1, 100))
-        else raw
-
-        addAttachment(name, "image/png", ByteArrayInputStream(processed), "png")
-    }
-
-    /**
-     * Вспомогательная функция для условного выполнения блока кода в зависимости от платформы.
-     *
-     * @param platform Платформа, для которой необходимо выполнить код.
-     */
-    private fun (() -> Unit).invokeIfRequiredPlatform(platform: Platform) {
-        if (AppConfig.getPlatform() == platform) invoke()
-    }
-
-    /**
      * Выполняет несколько блоков кода в безопасном режиме только для iOS платформы.
      *
      * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
@@ -192,5 +103,74 @@ abstract class BaseContext {
                 // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
             }
         }
+    }
+
+    /**
+     * Выполняет несколько блоков кода в безопасном режиме.
+     *
+     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
+     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
+     * со следующего блока.
+     *
+     * Пример использования:
+     * ```
+     * optional(
+     *     { step1() },
+     *     { step2() },
+     *     { step3() }
+     * )
+     * ```
+     *
+     * @param actions Набор лямбд с необязательной логикой выполнения.
+     */
+    @Suppress("SwallowedException")
+    fun optional(vararg actions: () -> Unit) {
+        actions.forEach { action ->
+            try {
+                action.invoke()
+            } catch (e: Exception) {
+                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
+            }
+        }
+    }
+
+    /**
+     * Снимает скриншот и прикрепляет его к Allure-отчёту.
+     * Выполняется в {@link #optional}.
+     *
+     * @param name      Название вложения в отчёте.
+     * @param scale     Масштаб изображения (0.1–1.0).
+     * @param quality   Качество PNG (1–100).
+     */
+    fun takeScreenshot(
+        name: String,
+        scale: Double = 0.5,
+        quality: Int = 100
+    ) {
+        optional(
+            {
+                val provider: ScreenshotProvider = when (driver) {
+                    is AppiumDriver<*> -> AppiumScreenshotProvider(driver as AppiumDriver<*>)
+                    is Page -> PlaywrightScreenshotProvider(driver as Page)
+                    else -> null
+                } ?: return@optional
+
+                val raw = provider.getRawScreenshot()
+                val processed = if (scale < 1.0 || quality < 100)
+                    ImageProcessor.processImage(raw, scale.coerceIn(0.1, 1.0), quality.coerceIn(1, 100))
+                else raw
+
+                addAttachment(name, "image/png", ByteArrayInputStream(processed), "png")
+            }
+        )
+    }
+
+    /**
+     * Вспомогательная функция для условного выполнения блока кода в зависимости от платформы.
+     *
+     * @param platform Платформа, для которой необходимо выполнить код.
+     */
+    private fun (() -> Unit).invokeIfRequiredPlatform(platform: Platform) {
+        if (AppConfig.getPlatform() == platform) invoke()
     }
 }
