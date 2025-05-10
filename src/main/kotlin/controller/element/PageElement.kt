@@ -2,6 +2,7 @@ package controller.element
 
 import app.config.AppConfig
 import app.model.Platform
+import io.appium.java_client.MobileBy
 import org.openqa.selenium.By
 import org.openqa.selenium.SearchContext
 import org.openqa.selenium.WebElement
@@ -12,6 +13,12 @@ import org.openqa.selenium.internal.FindsByXPath
  *
  * Объединяет способы поиска элементов для разных платформ:
  * Android ([org.openqa.selenium.By]), iOS ([org.openqa.selenium.By]) и Web (селектор в формате [String]).
+ *
+ * Поддерживает специальные стратегии поиска для мобильных платформ:
+ * - Accessibility ID (Android и iOS)
+ * - UIAutomator (только Android)
+ * - iOS Class Chain (только iOS)
+ * - iOS Predicate String (только iOS)
  *
  * Используется для построения кроссплатформенных тестов без необходимости дублирования локаторов.
  *
@@ -35,11 +42,72 @@ data class PageElement(
         Platform.WEB -> web ?: error("Локатор для Web не задан")
     }
 
-    private companion object {
+    companion object {
         /**
          * Формирует полный идентификатор ресурса для Android на основе имени элемента.
          */
-        fun fullPackageId(value: String) = "${AppConfig.getAppPackage()}:id/$value"
+        private fun fullPackageId(value: String) = "${AppConfig.getAppPackage()}:id/$value"
+
+        /**
+         * Создает PageElement с локатором по accessibility id для обеих платформ.
+         *
+         * @param accessibilityId Значение accessibility id.
+         * @return PageElement с локатором по accessibility id.
+         */
+        fun byAccessibilityId(accessibilityId: String): PageElement {
+            val locator = AccessibilityId(accessibilityId)
+            return PageElement(android = locator, ios = locator)
+        }
+
+        /**
+         * Создает PageElement с локатором по accessibility id для Android.
+         *
+         * @param accessibilityId Значение accessibility id.
+         * @return PageElement с локатором по accessibility id для Android.
+         */
+        fun byAndroidAccessibilityId(accessibilityId: String): PageElement {
+            return PageElement(android = AccessibilityId(accessibilityId))
+        }
+
+        /**
+         * Создает PageElement с локатором по accessibility id для iOS.
+         *
+         * @param accessibilityId Значение accessibility id.
+         * @return PageElement с локатором по accessibility id для iOS.
+         */
+        fun byIOSAccessibilityId(accessibilityId: String): PageElement {
+            return PageElement(ios = AccessibilityId(accessibilityId))
+        }
+
+        /**
+         * Создает PageElement с локатором по UIAutomator для Android.
+         *
+         * @param uiAutomatorExpression Выражение для UIAutomator.
+         * @return PageElement с локатором по UIAutomator для Android.
+         */
+        fun byAndroidUIAutomator(uiAutomatorExpression: String): PageElement {
+            return PageElement(android = AndroidUIAutomator(uiAutomatorExpression))
+        }
+
+        /**
+         * Создает PageElement с локатором по Class Chain для iOS.
+         *
+         * @param classChainExpression Выражение для Class Chain.
+         * @return PageElement с локатором по Class Chain для iOS.
+         */
+        fun byIOSClassChain(classChainExpression: String): PageElement {
+            return PageElement(ios = IOSClassChain(classChainExpression))
+        }
+
+        /**
+         * Создает PageElement с локатором по Predicate String для iOS.
+         *
+         * @param predicateExpression Выражение для Predicate String.
+         * @return PageElement с локатором по Predicate String для iOS.
+         */
+        fun byIOSPredicateString(predicateExpression: String): PageElement {
+            return PageElement(ios = IOSPredicateString(predicateExpression))
+        }
     }
 
     /**
@@ -160,5 +228,109 @@ data class PageElement(
         override fun buildXPath(value: String): String {
             return ".//*[contains(@label,'$value')]"
         }
+    }
+
+    /**
+     * Поиск по accessibility id (Android и iOS).
+     * 
+     * Использует стратегию поиска MobileBy.AccessibilityId.
+     */
+    class AccessibilityId(accessibilityId: String?) : By() {
+        private val accessibilityId: String?
+        private val mobileBy: By
+
+        init {
+            requireNotNull(accessibilityId) { "Элемент по accessibility id не задан и имеет значение null." }
+            this.accessibilityId = accessibilityId
+            this.mobileBy = MobileBy.AccessibilityId(accessibilityId)
+        }
+
+        override fun findElements(context: SearchContext): List<WebElement> {
+            return context.findElements(mobileBy)
+        }
+
+        override fun findElement(context: SearchContext): WebElement {
+            return context.findElement(mobileBy)
+        }
+
+        override fun toString(): String = "accessibility id: $accessibilityId"
+    }
+
+    /**
+     * Поиск с использованием UIAutomator (только для Android).
+     * 
+     * Использует стратегию поиска MobileBy.AndroidUIAutomator.
+     */
+    class AndroidUIAutomator(uiAutomatorExpression: String?) : By() {
+        private val uiAutomatorExpression: String?
+        private val mobileBy: By
+
+        init {
+            requireNotNull(uiAutomatorExpression) { "Элемент по UIAutomator не задан и имеет значение null." }
+            this.uiAutomatorExpression = uiAutomatorExpression
+            this.mobileBy = MobileBy.AndroidUIAutomator(uiAutomatorExpression)
+        }
+
+        override fun findElements(context: SearchContext): List<WebElement> {
+            return context.findElements(mobileBy)
+        }
+
+        override fun findElement(context: SearchContext): WebElement {
+            return context.findElement(mobileBy)
+        }
+
+        override fun toString(): String = "android uiautomator: $uiAutomatorExpression"
+    }
+
+    /**
+     * Поиск с использованием Class Chain (только для iOS).
+     * 
+     * Использует стратегию поиска MobileBy.iOSClassChain.
+     */
+    class IOSClassChain(classChainExpression: String?) : By() {
+        private val classChainExpression: String?
+        private val mobileBy: By
+
+        init {
+            requireNotNull(classChainExpression) { "Элемент по Class Chain не задан и имеет значение null." }
+            this.classChainExpression = classChainExpression
+            this.mobileBy = MobileBy.iOSClassChain(classChainExpression)
+        }
+
+        override fun findElements(context: SearchContext): List<WebElement> {
+            return context.findElements(mobileBy)
+        }
+
+        override fun findElement(context: SearchContext): WebElement {
+            return context.findElement(mobileBy)
+        }
+
+        override fun toString(): String = "ios class chain: $classChainExpression"
+    }
+
+    /**
+     * Поиск с использованием Predicate String (только для iOS).
+     * 
+     * Использует стратегию поиска MobileBy.iOSNsPredicateString.
+     */
+    class IOSPredicateString(predicateExpression: String?) : By() {
+        private val predicateExpression: String?
+        private val mobileBy: By
+
+        init {
+            requireNotNull(predicateExpression) { "Элемент по Predicate String не задан и имеет значение null." }
+            this.predicateExpression = predicateExpression
+            this.mobileBy = MobileBy.iOSNsPredicateString(predicateExpression)
+        }
+
+        override fun findElements(context: SearchContext): List<WebElement> {
+            return context.findElements(mobileBy)
+        }
+
+        override fun findElement(context: SearchContext): WebElement {
+            return context.findElement(mobileBy)
+        }
+
+        override fun toString(): String = "ios predicate string: $predicateExpression"
     }
 }
