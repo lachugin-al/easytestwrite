@@ -38,8 +38,8 @@ class StepContext(override val driver: Any) : BaseContext() {
      * @param expectationRunnable Лямбда с проверками внутри шага.
      */
     operator fun String.invoke(
-        screenshotOnSuccess: Boolean = true,
-        screenshotOnFailure: Boolean = true,
+        screenshotOnSuccess: Boolean = false,
+        screenshotOnFailure: Boolean = false,
         screenshotScale: Double = 0.5,
         screenshotQuality: Int = 100,
         expectationRunnable: ExpectationContext.() -> Unit
