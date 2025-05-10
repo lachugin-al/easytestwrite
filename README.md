@@ -253,9 +253,30 @@ object ExampleScreen {
         android = ContentDesc("Добавить в отложенные"),
         ios = Name("IconDual/24/Stroke/heartEmptyWhiteBlack")
     )
+
+    // Использование AccessibilityId для обеих платформ
+    val accessebilityIdLocator = PageElement(
+        android = AccessibilityId("Поиск"),
+        ios = AccessibilityId("Поиск")
+    )
+
+    // Использование UIAutomator для Android
+    val androidUIAutomatorLocator = PageElement(
+        android = AndroidUIAutomator("new UiSelector().text(\"Поиск\")")
+    )
+        
+    // Использование Class Chain для iOS
+    val iOSClassChainLocator = PageElement(
+        ios = IOSClassChain("**/XCUIElementTypeStaticText[`name == \"Поиск\"`]")
+    )
+
+    // Использование Predicate String для iOS
+    val iOSPredicateStringLocator = PageElement(
+        ios = IOSPredicateString("name == \"Поиск\"")
+    )
 }
 ```
-Поиск элементов на странице доступно по аттрибутам: `id`, `resource-id`, `text`, `contains-text`, `content-desc`, `xpath`, `value`, `name`, `label`
+Поиск элементов на странице доступно по аттрибутам: `id`, `resource-id`, `text`, `contains-text`, `content-desc`, `xpath`, `value`, `name`, `label`, `accessibility-id`, `android-uiautomator`, `ios-class-chain`, `ios-predicate-string`
 
 ### Описание методов (к каждой функции добавлена документация с подробным описанием)
  - Методы извлечения данных:
