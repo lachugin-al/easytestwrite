@@ -46,6 +46,7 @@ import utils.DEFAULT_SCROLL_DIRECTION
 import utils.DEFAULT_SWIPE_COEFFICIENT
 import utils.DEFAULT_TIMEOUT_BEFORE_EXPECTATION
 import utils.DEFAULT_TIMEOUT_EXPECTATION
+import utils.LogCapture
 import utils.TerminalUtils
 import utils.TerminalUtils.runCommand
 import java.io.File
@@ -1469,12 +1470,20 @@ open class MobileTest {
     // Функционал, выполняемый перед каждым тестом
     @BeforeEach
     fun setUp() {
+        // Инициализация системы захвата логов
+        LogCapture.initialize()
     }
 
     // Функционал, выполняемый после каждого теста
     @AfterEach
     fun tearDown() {
+        // Ожидание завершения всех проверок событий
         awaitAllEventChecks()
+
+        // Прикрепление логов к отчету Allure
+        LogCapture.attachLogsToAllureReport()
+
+        // Закрытие приложения
         app.close()
     }
 }
