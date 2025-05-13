@@ -188,7 +188,7 @@ open class MobileTest {
         // Построить локатор и выполнить обычный click с ожиданиями и скроллом
         val locator = PageElement(
             android = PageElement.Text(itemName),
-            ios = PageElement.Name(itemName),
+            ios = PageElement.Label(itemName),
             web = null
         )
 
