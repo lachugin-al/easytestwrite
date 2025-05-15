@@ -59,17 +59,18 @@ object VideoRecorder {
             val safeTestName = testName.replace(Regex("[^a-zA-Z0-9_-]"), "_")
             currentVideoPath = "${AppConfig.getVideoRecordingOutputDir()}/${safeTestName}_$timestamp.mp4"
 
-            // Начинаем запись с указанным размером и качеством
+            // Начинаем запись с указанным размером, качеством и битрейтом
             val options = mapOf(
                 "videoSize" to AppConfig.getVideoRecordingSize(),
                 "videoQuality" to AppConfig.getVideoRecordingQuality().toString(),
                 "timeLimit" to "1800", // максимум 30 минут
-                "forceRestart" to "true"
+                "forceRestart" to "true",
+                "bitRate" to AppConfig.getVideoRecordingBitrate().toString() // Используем настраиваемый битрейт для уменьшения размера файла
             )
 
             driver.executeScript("mobile:startMediaProjectionRecording", options)
             isRecording = true
-            logger.info("Запись видео начата с размером: ${AppConfig.getVideoRecordingSize()}, качеством: ${AppConfig.getVideoRecordingQuality()}")
+            logger.info("Запись видео начата с размером: ${AppConfig.getVideoRecordingSize()}, качеством: ${AppConfig.getVideoRecordingQuality()}, битрейтом: ${AppConfig.getVideoRecordingBitrate() / 1000} Kbps")
             return true
         } catch (e: Exception) {
             logger.error("Не удалось начать запись видео: ${e.message}", e)

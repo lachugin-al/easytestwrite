@@ -59,6 +59,7 @@ tasks.test {
     val videoRecordingEnabledProp = (project.findProperty("video.recording.enabled") as String?).orEmpty()
     val videoRecordingSizeProp = (project.findProperty("video.recording.size") as String?).orEmpty()
     val videoRecordingQualityProp = (project.findProperty("video.recording.quality") as String?).orEmpty()
+    val videoRecordingBitrateProp = (project.findProperty("video.recording.bitrate") as String?).orEmpty()
     val videoRecordingOutputDirProp = (project.findProperty("video.recording.output.dir") as String?).orEmpty()
 
     // Настраиваем JUnit Platform
@@ -97,6 +98,7 @@ tasks.test {
         "video.recording.enabled" to videoRecordingEnabledProp,
         "video.recording.size" to videoRecordingSizeProp,
         "video.recording.quality" to videoRecordingQualityProp,
+        "video.recording.bitrate" to videoRecordingBitrateProp,
         "video.recording.output.dir" to videoRecordingOutputDirProp
     ).forEach { (key, value) ->
         if (value.isNotBlank()) systemProperty(key, value)

@@ -96,8 +96,9 @@ object AppConfig {
 
     // Настройки записи видео
     private val videoRecordingEnabled: Boolean = propBoolean("video.recording.enabled", true)
-    private val videoRecordingSize: String = prop("video.recording.size", "1280x720")
+    private val videoRecordingSize: String = prop("video.recording.size", "640x360")
     private val videoRecordingQuality: Int = prop("video.recording.quality", "70").toInt()
+    private val videoRecordingBitrate: Int = prop("video.recording.bitrate", "50000").toInt()
     private val videoRecordingOutputDir: String = prop("video.recording.output.dir", "build/videos")
 
     // API
@@ -210,4 +211,9 @@ object AppConfig {
      * @return Директория для сохранения видеозаписей.
      */
     fun getVideoRecordingOutputDir(): String = videoRecordingOutputDir
+
+    /**
+     * @return Битрейт для записи видео (в битах в секунду).
+     */
+    fun getVideoRecordingBitrate(): Int = videoRecordingBitrate
 }

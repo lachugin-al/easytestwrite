@@ -350,3 +350,42 @@ object ExampleScreen {
 ## Allure
 В ходе прогонов, генерируется отчет и записывается в Allure
 Для генерации отчета в командной строке необходимо выполнить команду `allure serve build/allure-results`
+
+## Настройки записи видео
+В проект добавлена возможность настройки параметров записи видео через файл `build.gradle.kts`. Это позволяет задавать параметры записи видео при запуске тестов через командную строку, не изменяя файл `config.properties`.
+
+### Доступные параметры
+
+В `build.gradle.kts` добавлены следующие параметры для настройки записи видео:
+
+- `video.recording.enabled` - включение/отключение записи видео (true/false)
+- `video.recording.size` - размер записываемого видео (например, "1280x720")
+- `video.recording.quality` - качество записываемого видео (0-100)
+- `video.recording.output.dir` - директория для сохранения видеозаписей
+
+### Использование
+
+Параметры можно задать при запуске тестов через командную строку с помощью флага `-P`:
+
+```bash
+./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1920x1080 -Pvideo.recording.quality=80 -Pvideo.recording.output.dir=build/custom-videos
+```
+
+Если параметры не заданы, будут использованы значения из файла `config.properties` или значения по умолчанию:
+
+- `video.recording.enabled` - true
+- `video.recording.size` - "1280x720"
+- `video.recording.quality` - 70
+- `video.recording.output.dir` - "build/videos"
+
+### Пример использования в CI/CD
+
+```yaml
+# Пример для GitLab CI
+test:
+  script:
+    - ./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.output.dir=build/videos
+  artifacts:
+    paths:
+      - build/videos/
+```
