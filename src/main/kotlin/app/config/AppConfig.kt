@@ -94,7 +94,7 @@ object AppConfig {
     private val browserType: String = prop("playwright.browser.type", "chromium")
     private val headless: Boolean = prop("playwright.headless", "true").toBoolean()
 
-    // Video Recording
+    // Настройки записи видео
     private val videoRecordingEnabled: Boolean = propBoolean("video.recording.enabled", true)
     private val videoRecordingSize: String = prop("video.recording.size", "1280x720")
     private val videoRecordingQuality: Int = prop("video.recording.quality", "70").toInt()

@@ -56,6 +56,10 @@ tasks.test {
     val browserTypeProp = (project.findProperty("playwright.browser.type") as String?).orEmpty()
     val headlessProp = (project.findProperty("playwright.headless") as String?).orEmpty()
     val tagProp = (project.findProperty("tag") as String?).orEmpty()
+    val videoRecordingEnabledProp = (project.findProperty("video.recording.enabled") as String?).orEmpty()
+    val videoRecordingSizeProp = (project.findProperty("video.recording.size") as String?).orEmpty()
+    val videoRecordingQualityProp = (project.findProperty("video.recording.quality") as String?).orEmpty()
+    val videoRecordingOutputDirProp = (project.findProperty("video.recording.output.dir") as String?).orEmpty()
 
     // Настраиваем JUnit Platform
     useJUnitPlatform {
@@ -89,7 +93,11 @@ tasks.test {
         "ios.auto_accept_alerts" to iosAutoAcceptAlertsProp,
         "ios.auto_dismiss_alerts" to iosAutoDismissAlertsProp,
         "playwright.browser.type" to browserTypeProp,
-        "playwright.headless" to headlessProp
+        "playwright.headless" to headlessProp,
+        "video.recording.enabled" to videoRecordingEnabledProp,
+        "video.recording.size" to videoRecordingSizeProp,
+        "video.recording.quality" to videoRecordingQualityProp,
+        "video.recording.output.dir" to videoRecordingOutputDirProp
     ).forEach { (key, value) ->
         if (value.isNotBlank()) systemProperty(key, value)
     }
