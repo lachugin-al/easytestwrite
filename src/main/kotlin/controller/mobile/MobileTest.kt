@@ -49,6 +49,8 @@ import utils.DEFAULT_TIMEOUT_EXPECTATION
 import utils.LogCapture
 import utils.TerminalUtils
 import utils.TerminalUtils.runCommand
+import utils.VideoRecorder
+import org.junit.jupiter.api.TestInfo
 import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -1469,20 +1471,28 @@ open class MobileTest {
 
     // Функционал, выполняемый перед каждым тестом
     @BeforeEach
-    fun setUp() {
+    fun setUp(testInfo: TestInfo) {
         // Очистка логов перед началом теста
         LogCapture.clearLogs()
         // Инициализация системы захвата логов
         LogCapture.initialize()
         // Очистка хранилища событий перед началом теста
         EventStorage.clear()
+
+        // Запуск записи видео
+        val testName = testInfo.displayName
+        VideoRecorder.startRecording(driver, testName)
     }
 
     // Функционал, выполняемый после каждого теста
     @AfterEach
-    fun tearDown() {
+    fun tearDown(testInfo: TestInfo) {
         // Ожидание завершения всех проверок событий
         awaitAllEventChecks()
+
+        // Остановка записи видео
+        val testName = testInfo.displayName
+        VideoRecorder.stopRecording(driver, testName)
 
         // Прикрепление логов к отчету Allure
         LogCapture.attachLogsToAllureReport()

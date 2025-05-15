@@ -94,6 +94,12 @@ object AppConfig {
     private val browserType: String = prop("playwright.browser.type", "chromium")
     private val headless: Boolean = prop("playwright.headless", "true").toBoolean()
 
+    // Video Recording
+    private val videoRecordingEnabled: Boolean = propBoolean("video.recording.enabled", true)
+    private val videoRecordingSize: String = prop("video.recording.size", "1280x720")
+    private val videoRecordingQuality: Int = prop("video.recording.quality", "70").toInt()
+    private val videoRecordingOutputDir: String = prop("video.recording.output.dir", "build/videos")
+
     // API
 
     /**
@@ -184,4 +190,24 @@ object AppConfig {
      * @return true, если Playwright запускается в headless-режиме.
      */
     fun isHeadless(): Boolean = headless
+
+    /**
+     * @return true, если запись видео включена.
+     */
+    fun isVideoRecordingEnabled(): Boolean = videoRecordingEnabled
+
+    /**
+     * @return Размер записываемого видео (например, "1280x720").
+     */
+    fun getVideoRecordingSize(): String = videoRecordingSize
+
+    /**
+     * @return Качество записываемого видео (0-100).
+     */
+    fun getVideoRecordingQuality(): Int = videoRecordingQuality
+
+    /**
+     * @return Директория для сохранения видеозаписей.
+     */
+    fun getVideoRecordingOutputDir(): String = videoRecordingOutputDir
 }
