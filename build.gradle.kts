@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.20"
+version = "0.0.21"
 
 repositories {
     maven {
@@ -32,6 +32,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
     testImplementation("io.qameta.allure:allure-junit5:2.28.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 
