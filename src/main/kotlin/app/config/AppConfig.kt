@@ -98,7 +98,7 @@ object AppConfig {
     private val videoRecordingEnabled: Boolean = propBoolean("video.recording.enabled", true)
     private val videoRecordingSize: String = prop("video.recording.size", "640x360")
     private val videoRecordingQuality: Int = prop("video.recording.quality", "70").toInt()
-    private val videoRecordingBitrate: Int = prop("video.recording.bitrate", "50000").toInt()
+    private val videoRecordingBitrate: Int = prop("video.recording.bitrate", "100000").toInt()
     private val videoRecordingOutputDir: String = prop("video.recording.output.dir", "build/videos")
 
     // API

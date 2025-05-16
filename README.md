@@ -373,10 +373,13 @@ object ExampleScreen {
 
 Если параметры не заданы, будут использованы значения из файла `config.properties` или значения по умолчанию:
 
-- `video.recording.enabled` - true
-- `video.recording.size` - "1280x720"
-- `video.recording.quality` - 70
-- `video.recording.output.dir` - "build/videos"
+```properties
+video.recording.enabled=true
+video.recording.size=640x360
+video.recording.quality=20
+video.recording.bitrate=500000
+video.recording.output.dir=build/videos
+```
 
 ### Пример использования в CI/CD
 
@@ -384,7 +387,7 @@ object ExampleScreen {
 # Пример для GitLab CI
 test:
   script:
-    - ./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.output.dir=build/videos
+    - ./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.output.dir=build/videos -Pvideo.recording.bitrate=500000
   artifacts:
     paths:
       - build/videos/

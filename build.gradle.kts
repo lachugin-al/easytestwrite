@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.19"
+version = "0.0.20"
 
 repositories {
     maven {
@@ -114,6 +114,35 @@ tasks.register<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
     from(tasks.getByName("javadoc"))
 }
+
+tasks.register("checkFfmpeg") {
+    doLast {
+        val osName = System.getProperty("os.name").lowercase()
+        val ffmpegCommand = if (osName.contains("win")) "where" else "which"
+
+        val result = exec {
+            isIgnoreExitValue = true
+            commandLine(ffmpegCommand, "ffmpeg")
+        }
+        if (result.exitValue != 0) {
+            throw GradleException("""
+                FFmpeg is not installed or not found in PATH!
+                Для работы записи видео требуется ffmpeg. 
+                Установите его:
+                - Mac:     brew install ffmpeg
+                - Linux:   sudo apt install ffmpeg
+                - Windows: choco install ffmpeg или winget install ffmpeg
+            """.trimIndent())
+        } else {
+            println("FFmpeg найден, запись видео будет работать.")
+        }
+    }
+}
+
+tasks.named("test") {
+    dependsOn("checkFfmpeg")
+}
+
 
 // Настройки публикации проекта
 val propUser = findProperty("wbaNexusUser") as String?
