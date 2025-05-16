@@ -264,7 +264,7 @@ object ExampleScreen {
     val androidUIAutomatorLocator = PageElement(
         android = AndroidUIAutomator("new UiSelector().text(\"Поиск\")")
     )
-        
+
     // Использование Class Chain для iOS
     val iOSClassChainLocator = PageElement(
         ios = IOSClassChain("**/XCUIElementTypeStaticText[`name == \"Поиск\"`]")
@@ -352,15 +352,23 @@ object ExampleScreen {
 Для генерации отчета в командной строке необходимо выполнить команду `allure serve build/allure-results`
 
 ## Настройки записи видео
-В проект добавлена возможность настройки параметров записи видео через файл `build.gradle.kts`. Это позволяет задавать параметры записи видео при запуске тестов через командную строку, не изменяя файл `config.properties`.
+В проект добавлена возможность записи видео во время выполнения тестов с использованием класса `VideoRecorder`. Это позволяет записывать видео выполнения тестов на мобильных устройствах для отладки, документирования и демонстрации работы приложения.
+
+### Основные возможности
+
+- Автоматическая запись видео во время выполнения тестов
+- Настройка размера, качества и битрейта видео
+- Интеграция с отчетами Allure
+- Поддержка платформ Android и iOS (с ограничениями)
 
 ### Доступные параметры
 
-В `build.gradle.kts` добавлены следующие параметры для настройки записи видео:
+В `config.properties` или через командную строку можно настроить следующие параметры:
 
 - `video.recording.enabled` - включение/отключение записи видео (true/false)
 - `video.recording.size` - размер записываемого видео (например, "1280x720")
 - `video.recording.quality` - качество записываемого видео (0-100)
+- `video.recording.bitrate` - битрейт видео (бит/с)
 - `video.recording.output.dir` - директория для сохранения видеозаписей
 
 ### Использование
@@ -368,7 +376,7 @@ object ExampleScreen {
 Параметры можно задать при запуске тестов через командную строку с помощью флага `-P`:
 
 ```bash
-./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1920x1080 -Pvideo.recording.quality=80 -Pvideo.recording.output.dir=build/custom-videos
+./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.bitrate=1000000
 ```
 
 Если параметры не заданы, будут использованы значения из файла `config.properties` или значения по умолчанию:
