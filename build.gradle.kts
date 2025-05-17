@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.21"
+version = "0.0.22"
 
 repositories {
     maven {
@@ -57,7 +57,8 @@ tasks.test {
     val browserTypeProp = (project.findProperty("playwright.browser.type") as String?).orEmpty()
     val headlessProp = (project.findProperty("playwright.headless") as String?).orEmpty()
     val tagProp = (project.findProperty("tag") as String?).orEmpty()
-    val videoRecordingEnabledProp = (project.findProperty("video.recording.enabled") as String?).orEmpty()
+    val androidVideoRecordingEnabledProp = (project.findProperty("android.video.recording.enabled") as String?).orEmpty()
+    val iosVideoRecordingEnabledProp = (project.findProperty("ios.video.recording.enabled") as String?).orEmpty()
     val videoRecordingSizeProp = (project.findProperty("video.recording.size") as String?).orEmpty()
     val videoRecordingQualityProp = (project.findProperty("video.recording.quality") as String?).orEmpty()
     val videoRecordingBitrateProp = (project.findProperty("video.recording.bitrate") as String?).orEmpty()
@@ -96,7 +97,8 @@ tasks.test {
         "ios.auto_dismiss_alerts" to iosAutoDismissAlertsProp,
         "playwright.browser.type" to browserTypeProp,
         "playwright.headless" to headlessProp,
-        "video.recording.enabled" to videoRecordingEnabledProp,
+        "android.video.recording.enabled" to androidVideoRecordingEnabledProp,
+        "ios.video.recording.enabled" to iosVideoRecordingEnabledProp,
         "video.recording.size" to videoRecordingSizeProp,
         "video.recording.quality" to videoRecordingQualityProp,
         "video.recording.bitrate" to videoRecordingBitrateProp,

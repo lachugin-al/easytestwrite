@@ -95,7 +95,8 @@ object AppConfig {
     private val headless: Boolean = prop("playwright.headless", "true").toBoolean()
 
     // Настройки записи видео
-    private val videoRecordingEnabled: Boolean = propBoolean("video.recording.enabled", true)
+    private val androidVideoRecordingEnabled: Boolean = propBoolean("android.video.recording.enabled", false)
+    private val iosVideoRecordingEnabled: Boolean = propBoolean("ios.video.recording.enabled", false)
     private val videoRecordingSize: String = prop("video.recording.size", "640x360")
     private val videoRecordingQuality: Int = prop("video.recording.quality", "70").toInt()
     private val videoRecordingBitrate: Int = prop("video.recording.bitrate", "100000").toInt()
@@ -193,9 +194,21 @@ object AppConfig {
     fun isHeadless(): Boolean = headless
 
     /**
-     * @return true, если запись видео включена.
+     * Проверяет, включена ли запись видео для текущей платформы.
+     * 
+     * Для Android и iOS используются платформо-специфичные параметры:
+     * - android.video.recording.enabled
+     * - ios.video.recording.enabled
+     * 
+     * Для других платформ запись видео не поддерживается и всегда возвращается false.
+     *
+     * @return true, если запись видео включена для текущей платформы.
      */
-    fun isVideoRecordingEnabled(): Boolean = videoRecordingEnabled
+    fun isVideoRecordingEnabled(): Boolean = when (platform) {
+        Platform.ANDROID -> androidVideoRecordingEnabled
+        Platform.IOS -> iosVideoRecordingEnabled
+        else -> false
+    }
 
     /**
      * @return Размер записываемого видео (например, "1280x720").

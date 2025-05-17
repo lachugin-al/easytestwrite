@@ -41,7 +41,8 @@ object VideoRecorder {
      */
     fun startRecording(driver: AppiumDriver<MobileElement>, testName: String): Boolean {
         if (!AppConfig.isVideoRecordingEnabled()) {
-            logger.info("Запись видео отключена. Пропускаем.")
+            val platform = AppConfig.getPlatform()
+            logger.info("Запись видео отключена для платформы $platform. Для включения используйте параметр ${platform.name.lowercase()}.video.recording.enabled=true")
             return false
         }
 
@@ -118,7 +119,7 @@ object VideoRecorder {
         attachToAllure: Boolean = true
     ): Boolean {
         if (!isRecording) {
-            logger.warn("Запись видео не выполняется. Игнорируем запрос на остановку.")
+            logger.warn("Запись видео не была включена в настройках.")
             return false
         }
 
@@ -175,10 +176,14 @@ object VideoRecorder {
     /**
      * Проверяет, включена ли запись видео в текущей конфигурации.
      *
-     * Метод обращается к AppConfig для получения значения параметра video.recording.enabled,
-     * который может быть установлен в config.properties или передан через командную строку.
+     * Метод обращается к AppConfig для получения значения параметра для текущей платформы.
+     * Для Android и iOS используются платформо-специфичные параметры:
+     * - android.video.recording.enabled
+     * - ios.video.recording.enabled
      *
-     * @return True, если запись видео включена в конфигурации, иначе false
+     * Для других платформ запись видео не поддерживается и всегда возвращается false.
+     *
+     * @return True, если запись видео включена в конфигурации для текущей платформы, иначе false
      */
     fun isEnabled(): Boolean = AppConfig.isVideoRecordingEnabled()
 

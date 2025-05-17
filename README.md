@@ -365,7 +365,8 @@ object ExampleScreen {
 
 В `config.properties` или через командную строку можно настроить следующие параметры:
 
-- `video.recording.enabled` - включение/отключение записи видео (true/false)
+- `android.video.recording.enabled` - включение/отключение записи видео для Android (true/false)
+- `ios.video.recording.enabled` - включение/отключение записи видео для iOS (true/false)
 - `video.recording.size` - размер записываемого видео (например, "1280x720")
 - `video.recording.quality` - качество записываемого видео (0-100)
 - `video.recording.bitrate` - битрейт видео (бит/с)
@@ -376,13 +377,14 @@ object ExampleScreen {
 Параметры можно задать при запуске тестов через командную строку с помощью флага `-P`:
 
 ```bash
-./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.bitrate=1000000
+./gradlew test -Pandroid.video.recording.enabled=true -Pios.video.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.bitrate=1000000
 ```
 
 Если параметры не заданы, будут использованы значения из файла `config.properties` или значения по умолчанию:
 
 ```properties
-video.recording.enabled=true
+android.video.recording.enabled=true
+ios.video.recording.enabled=true
 video.recording.size=640x360
 video.recording.quality=20
 video.recording.bitrate=500000
@@ -395,7 +397,7 @@ video.recording.output.dir=build/videos
 # Пример для GitLab CI
 test:
   script:
-    - ./gradlew test -Pvideo.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.output.dir=build/videos -Pvideo.recording.bitrate=500000
+    - ./gradlew test -Pandroid.video.recording.enabled=true -Pios.video.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.output.dir=build/videos -Pvideo.recording.bitrate=500000
   artifacts:
     paths:
       - build/videos/
