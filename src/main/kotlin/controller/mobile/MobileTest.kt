@@ -51,6 +51,7 @@ import utils.TerminalUtils
 import utils.TerminalUtils.runCommand
 import utils.VideoRecorder
 import org.junit.jupiter.api.TestInfo
+import utils.DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
 import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -490,7 +491,7 @@ open class MobileTest {
     fun ExpectationContext.checkHasEvent(
         eventName: String,
         eventData: String? = null,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION
+        timeoutExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
         // Вызов основной функции с уже подготовленной строкой JSON
         checkHasEventInternal(eventName, eventData, timeoutExpectation)
@@ -518,7 +519,7 @@ open class MobileTest {
     fun ExpectationContext.checkHasEvent(
         eventName: String,
         eventData: File?,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION
+        timeoutExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
         val jsonData = eventData?.readText()
         checkHasEventInternal(eventName, jsonData, timeoutExpectation)

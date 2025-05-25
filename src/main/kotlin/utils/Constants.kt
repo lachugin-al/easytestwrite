@@ -21,6 +21,13 @@ const val DEFAULT_TIMEOUT_BEFORE_EXPECTATION: Long = 0
 const val DEFAULT_TIMEOUT_EXPECTATION: Long = 10
 
 /**
+ * Максимальное количество секунд, в течение которых осуществляется проверка.
+ *
+ * После превышения таймаута будет выброшено исключение [Exception].
+ */
+const val DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION: Long = 15
+
+/**
  * Коэффициент для расчёта отступов от края экрана при скроллинге.
  *
  * Значение определяет, на какую часть экрана будет рассчитан свайп при прокрутке.
