@@ -52,6 +52,7 @@ import utils.TerminalUtils.runCommand
 import utils.VideoRecorder
 import org.junit.jupiter.api.TestInfo
 import utils.DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
+import utils.AnrWatcher
 import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -1483,6 +1484,12 @@ open class MobileTest {
         // Запуск записи видео
         val testName = testInfo.displayName
         VideoRecorder.startRecording(driver, testName)
+
+        // Запуск AnrWatcher для Android
+        if (AppConfig.getPlatform() == Platform.ANDROID) {
+            val androidDriver = driver as? AndroidDriver<MobileElement>
+            androidDriver?.let { AnrWatcher.start(it) }
+        }
     }
 
     // Функционал, выполняемый после каждого теста
@@ -1494,6 +1501,11 @@ open class MobileTest {
         // Остановка записи видео
         val testName = testInfo.displayName
         VideoRecorder.stopRecording(driver, testName)
+
+        // Остановка AnrWatcher для Android
+        if (AppConfig.getPlatform() == Platform.ANDROID) {
+            AnrWatcher.stop()
+        }
 
         // Прикрепление логов к отчету Allure
         LogCapture.attachLogsToAllureReport()
