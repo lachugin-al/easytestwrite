@@ -39,6 +39,7 @@ class WebServer : AutoCloseable {
     private var webServer: HttpServer? = null
     private var serverUrl: String? = null
     private var paused: Boolean = false
+    private lateinit var proxyServer: ProxyServer
 
     init {
         // Регистрируем shutdown hook для корректного завершения
@@ -46,9 +47,10 @@ class WebServer : AutoCloseable {
     }
 
     /**
-     * Запускает веб-сервер.
+     * Запускает веб-сервер и прокси-сервер.
      *
-     * Сервер стартует на локальном IP-адресе и фиксированном порту 8000.
+     * Веб-сервер стартует на локальном IP-адресе и фиксированном порту 8000.
+     * Прокси-сервер стартует на настроенном IP-адресе и порту.
      */
     fun start() {
         val host = NetworkUtils.getLocalAddress()
@@ -69,6 +71,16 @@ class WebServer : AutoCloseable {
 
         serverUrl = "http://$host:${webServer?.address?.port}"
         logger.info("Веб-сервер запущен на $serverUrl")
+
+        // Инициализация и запуск прокси-сервера на том же хосте
+        try {
+            proxyServer = ProxyServer(host ?: "127.0.0.1", 9090)
+            proxyServer.start()
+            logger.info("Прокси-сервер запущен на ${host ?: "127.0.0.1"}:9090")
+        } catch (e: Exception) {
+            logger.error("Не удалось запустить прокси-сервер", e)
+            // Продолжаем работу даже если прокси-сервер не запустился
+        }
     }
 
     /**
@@ -82,11 +94,17 @@ class WebServer : AutoCloseable {
     fun getHostingUrl(): String? { return "$serverUrl/file/" }
 
     /**
-     * Останавливает веб-сервер.
+     * Останавливает веб-сервер и прокси-сервер.
      */
     override fun close() {
         webServer?.stop(0)
         logger.info("Веб-сервер остановлен на $serverUrl")
+
+        try {
+            proxyServer.close()
+        } catch (e: Exception) {
+            logger.error("Ошибка при остановке прокси-сервера", e)
+        }
     }
 
     /**

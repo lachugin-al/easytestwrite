@@ -38,6 +38,13 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.microsoft.playwright/playwright
     implementation("com.microsoft.playwright:playwright:1.47.0")
+
+    // OkHttp dependencies for proxy server
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.squareup.okhttp3:okhttp-tls:4.12.0") // для поддержки HTTPS
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
 }
 
 tasks.test {
