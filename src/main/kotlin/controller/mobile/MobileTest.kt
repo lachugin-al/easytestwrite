@@ -115,8 +115,10 @@ open class MobileTest {
     }
 
     /**
-     * Расширение для StepContext: клик по первому item из события,
+     * Расширение для StepContext: клик по item из события,
      * у которого где-нибудь в data встречаются все пары из eventData.
+     * 
+     * @param eventPosition позиция события для обработки: "first" - первое найденное, "last" - последнее найденное
      */
     fun StepContext.click(
         eventName: String,
@@ -126,7 +128,8 @@ open class MobileTest {
         pollingInterval: Long = DEFAULT_POLLING_INTERVAL,
         scrollCount: Int = 3,
         scrollCapacity: Double = 0.7,
-        scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
+        scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION,
+        eventPosition: String = "first"
     ) {
         var matchedEvent: Event? = null
 
@@ -143,14 +146,19 @@ open class MobileTest {
                 }
             }
 
-            matchedEvent = EventStorage.getEvents()
-                .firstOrNull {
+            val matchedEvents = EventStorage.getEvents()
+                .filter {
                     it.name == eventName &&
                             it.data?.let { d ->
                                 val json = Json.encodeToString(EventData.serializer(), d)
                                 containsJsonData(json, eventData)
                             } ?: false
                 }
+
+            matchedEvent = when (eventPosition.lowercase()) {
+                "last" -> matchedEvents.lastOrNull()
+                else -> matchedEvents.firstOrNull()
+            }
 
             if (matchedEvent != null) {
                 break
@@ -167,8 +175,9 @@ open class MobileTest {
             }
         }
 
+        val positionText = if (eventPosition.lowercase() == "last") "последнее" else "первое"
         val ev = matchedEvent
-            ?: throw NoSuchElementException("Событие '$eventName' с данными '$eventData' не найдено после $scrollCount скроллов")
+            ?: throw NoSuchElementException("$positionText событие '$eventName' с данными '$eventData' не найдено после $scrollCount скроллов")
 
         // Извлечь массив items из body → event → data
         val bodyObj = Json.parseToJsonElement(ev.data!!.body).jsonObject
@@ -187,7 +196,8 @@ open class MobileTest {
 
         // Достать у найденного item его поле "name"
         val itemName = matched.jsonObject["name"]!!.jsonPrimitive.content
-        logger.info("Найден подходящий товар: '$itemName' по фильтрам (eventName=$eventName, filter=$eventData)")
+        val positionTextCase = if (eventPosition.lowercase() == "last") "последнем" else "первом"
+        logger.info("Найден подходящий товар: '$itemName' в $positionTextCase событии по фильтрам (eventName=$eventName, filter=$eventData, position=$eventPosition)")
 
         // Построить локатор и выполнить обычный click с ожиданиями и скроллом
         val locator = PageElement(
