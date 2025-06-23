@@ -94,11 +94,21 @@ object EmulatorManager {
             .redirectErrorStream(true)
             .start()
 
-        // Ждем некоторое время, чтобы эмулятор успел запуститься и получить ID
-        Thread.sleep(25000)
+        // Ждем, пока эмулятор запустится и получит ID, с таймаутом
+        val maxAttempts = 30 // Максимальное количество попыток (30 * 2 секунды = 60 секунд максимум)
+        var newEmulatorId: String? = null
 
-        // Проверяем, запустился ли эмулятор
-        val newEmulatorId = TerminalUtils.getEmulatorId()
+        for (i in 1..maxAttempts) {
+            newEmulatorId = TerminalUtils.getEmulatorId()
+            if (newEmulatorId != null) {
+                logger.info("Эмулятор Android запущен с ID: $newEmulatorId после $i попыток")
+                break
+            } else {
+                logger.info("Ожидание запуска эмулятора Android, попытка $i/$maxAttempts")
+                Thread.sleep(2000) // Пауза 2 секунды между проверками
+            }
+        }
+
         if (newEmulatorId != null) {
             logger.info("Эмулятор Android запущен с ID: $newEmulatorId")
             // Ждем полной загрузки эмулятора
