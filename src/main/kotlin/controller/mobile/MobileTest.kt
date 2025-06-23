@@ -30,7 +30,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.openqa.selenium.By
 import org.openqa.selenium.interactions.Pause
@@ -55,6 +57,7 @@ import utils.VideoRecorder
 import org.junit.jupiter.api.TestInfo
 import utils.DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
 import utils.AnrWatcher
+import utils.EmulatorManager
 import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -81,6 +84,26 @@ open class MobileTest {
     // Create your own CoroutineScope for coroutine lifecycle management
     private val scope = CoroutineScope(Dispatchers.Default)
     private val jobs = mutableListOf<Deferred<*>>()
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(MobileTest::class.java)
+
+        @BeforeAll
+        @JvmStatic
+        fun setUpAll() {
+            // Запуск эмулятора перед всеми тестами
+            logger.info("Запуск эмулятора перед всеми тестами")
+            EmulatorManager.startEmulator()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun tearDownAll() {
+            // Остановка эмулятора после всех тестов
+            logger.info("Остановка эмулятора после всех тестов")
+            EmulatorManager.stopEmulator()
+        }
+    }
 
     /**
      * Найти элемент на экране по его [element] и кликнуть по нему
