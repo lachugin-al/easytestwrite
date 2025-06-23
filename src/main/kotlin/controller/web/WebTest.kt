@@ -5,8 +5,10 @@ import com.microsoft.playwright.ElementHandle
 import com.microsoft.playwright.Page
 import controller.element.PageElement
 import controller.element.ScrollDirection
+import dsl.testing.SkipConditionExtension
 import dsl.testing.StepContext
 import dsl.testing.TestingContext
+import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import utils.DEFAULT_SCROLL_CAPACITY
@@ -24,6 +26,7 @@ import java.util.NoSuchElementException
  *
  * Данный класс наследуют все тестовые классы для WEB.
  */
+@ExtendWith(SkipConditionExtension::class)
 open class WebTest {
     protected var app: App = App().launch()
     protected var context: TestingContext = TestingContext(page)

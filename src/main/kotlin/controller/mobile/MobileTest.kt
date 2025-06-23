@@ -8,8 +8,10 @@ import controller.element.PageElement
 import controller.element.ScrollDirection
 import controller.handler.AlertHandler
 import dsl.testing.ExpectationContext
+import dsl.testing.SkipConditionExtension
 import dsl.testing.StepContext
 import dsl.testing.TestingContext
+import org.junit.jupiter.api.extension.ExtendWith
 import events.Event
 import events.EventData
 import events.EventStorage
@@ -67,6 +69,7 @@ import java.time.Duration
  *
  * Данный класс должен наследоваться всеми тестовыми классами.
  */
+@ExtendWith(SkipConditionExtension::class)
 open class MobileTest {
     private val logger: Logger = LoggerFactory.getLogger(MobileTest::class.java)
     protected var app: App = App().launch()
