@@ -31,17 +31,19 @@ class SkipConditionExtension : ExecutionCondition {
             // Проверяем наличие аннотации Skip на тестовом методе
             val skipAnnotation = testMethod.getAnnotation(Skip::class.java)
             if (skipAnnotation != null && shouldSkip(skipAnnotation)) {
-                return ConditionEvaluationResult.disabled("Test method has @Skip annotation that matches current conditions")
+                val reason = if (skipAnnotation.reason.isNotEmpty()) ": ${skipAnnotation.reason}" else ""
+                return ConditionEvaluationResult.disabled("Тестовый метод содержит аннотацию @Skip, подходящую под текущие условия$reason")
             }
         } else {
             // Если это тестовый метод, проверяем наличие аннотации Skip на нем
             val skipAnnotation = currentMethod.getAnnotation(Skip::class.java)
             if (skipAnnotation != null && shouldSkip(skipAnnotation)) {
-                return ConditionEvaluationResult.disabled("Test method has @Skip annotation that matches current conditions")
+                val reason = if (skipAnnotation.reason.isNotEmpty()) ": ${skipAnnotation.reason}" else ""
+                return ConditionEvaluationResult.disabled("Тестовый метод содержит аннотацию @Skip, подходящую под текущие условия$reason")
             }
         }
 
-        return ConditionEvaluationResult.enabled("No @Skip annotation found or conditions don't match")
+        return ConditionEvaluationResult.enabled("Аннотация @Skip не найдена или условия не соответствуют")
     }
 
     /**

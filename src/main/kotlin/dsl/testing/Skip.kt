@@ -25,12 +25,23 @@ import java.lang.annotation.Inherited
  * @Skip(platform = "ios")
  * @Test
  * fun androidOnlyTest() { ... }
+ *
+ * // Пропустить тест с указанием причины
+ * @Skip(reason = "Функциональность временно отключена")
+ * @Test
+ * fun temporarilyDisabledTest() { ... }
+ *
+ * // Пропустить тест на определенной платформе с указанием причины
+ * @Skip(platform = "android", reason = "Функциональность не поддерживается на Android")
+ * @Test
+ * fun notSupportedOnAndroidTest() { ... }
  * ```
  *
  * @param platform Платформа, на которой тест должен быть пропущен.
  *                 Если не указана (пустая строка), тест будет пропущен на всех платформах.
+ * @param reason Причина пропуска теста. Если указана, будет отображена в отчете о выполнении теста.
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 @Inherited
-annotation class Skip(val platform: String = "")
+annotation class Skip(val platform: String = "", val reason: String = "")
