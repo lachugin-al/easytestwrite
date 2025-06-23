@@ -46,6 +46,29 @@ object EmulatorManager {
     }
 
     /**
+     * Ожидает полной загрузки эмулятора Android.
+     *
+     * @param deviceId ID эмулятора, загрузку которого нужно дождаться.
+     * @return `true`, если эмулятор успешно загрузился, иначе `false`.
+     */
+    private fun waitForEmulatorBoot(deviceId: String): Boolean {
+        val maxAttempts = 60
+        for (i in 1..maxAttempts) {
+            val bootCompleted = TerminalUtils.runCommand(listOf("adb", "-s", deviceId, "shell", "getprop", "sys.boot_completed"))
+                .trim()
+            if (bootCompleted == "1") {
+                logger.info("Эмулятор $deviceId полностью загружен и готов к работе.")
+                return true
+            } else {
+                logger.info("Эмулятор $deviceId ещё не готов (sys.boot_completed=$bootCompleted), попытка $i/$maxAttempts")
+                Thread.sleep(2000)
+            }
+        }
+        logger.error("Эмулятор $deviceId так и не загрузился (sys.boot_completed != 1)")
+        return false
+    }
+
+    /**
      * Запускает эмулятор Android.
      *
      * @return `true`, если запуск успешен, иначе `false`.
@@ -53,33 +76,35 @@ object EmulatorManager {
     private fun startAndroidEmulator(): Boolean {
         val deviceName = AppConfig.getAndroidDeviceName()
         logger.info("Запуск Android эмулятора: $deviceName")
-        
+
         // Проверяем, не запущен ли уже эмулятор
         val emulatorId = TerminalUtils.getEmulatorId()
         if (emulatorId != null) {
             logger.info("Эмулятор Android уже запущен с ID: $emulatorId")
-            return true
+            // Проверяем, полностью ли загружен эмулятор
+            return waitForEmulatorBoot(emulatorId)
         }
-        
+
         // Запускаем эмулятор
         val command = listOf("emulator", "-avd", deviceName, "-no-snapshot-load", "-no-boot-anim")
         val errorMessage = "Не удалось запустить эмулятор Android"
-        
+
         // Запускаем эмулятор в отдельном процессе, чтобы не блокировать выполнение тестов
         val process = ProcessBuilder(command)
             .redirectErrorStream(true)
             .start()
-        
-        // Ждем некоторое время, чтобы эмулятор успел запуститься
-        Thread.sleep(10000)
-        
+
+        // Ждем некоторое время, чтобы эмулятор успел запуститься и получить ID
+        Thread.sleep(5000)
+
         // Проверяем, запустился ли эмулятор
         val newEmulatorId = TerminalUtils.getEmulatorId()
         if (newEmulatorId != null) {
-            logger.info("Эмулятор Android успешно запущен с ID: $newEmulatorId")
-            return true
+            logger.info("Эмулятор Android запущен с ID: $newEmulatorId")
+            // Ждем полной загрузки эмулятора
+            return waitForEmulatorBoot(newEmulatorId)
         }
-        
+
         logger.error("Не удалось запустить эмулятор Android")
         return false
     }
@@ -95,11 +120,11 @@ object EmulatorManager {
             logger.info("Эмулятор Android не запущен, остановка не требуется")
             return true
         }
-        
+
         logger.info("Остановка эмулятора Android с ID: $emulatorId")
         val command = listOf("adb", "-s", emulatorId, "emu", "kill")
         val errorMessage = "Не удалось остановить эмулятор Android"
-        
+
         return TerminalUtils.runCommand(command, errorMessage)
     }
 
@@ -111,28 +136,28 @@ object EmulatorManager {
     private fun startIosSimulator(): Boolean {
         val deviceName = AppConfig.getIosDeviceName()
         logger.info("Запуск iOS симулятора: $deviceName")
-        
+
         // Проверяем, не запущен ли уже симулятор
         val simulatorId = TerminalUtils.getSimulatorId(deviceName)
         if (simulatorId != null) {
             logger.info("Симулятор iOS уже запущен с ID: $simulatorId")
             return true
         }
-        
+
         // Получаем ID симулятора (в выключенном состоянии)
         val command1 = listOf("xcrun", "simctl", "list", "--json")
         val process = ProcessBuilder(command1)
             .redirectErrorStream(true)
             .start()
-        
+
         val output = process.inputStream.bufferedReader().use { it.readText() }
         val json = kotlinx.serialization.json.Json {
             ignoreUnknownKeys = true
         }
-        
+
         try {
             val simulatorsResponse = json.decodeFromString<TerminalUtils.SimulatorsResponse>(output)
-            
+
             // Ищем симулятор с нужным именем
             for (runtime in simulatorsResponse.devices.values) {
                 val simulator = runtime.find { it.name == deviceName }
@@ -140,14 +165,14 @@ object EmulatorManager {
                     // Запускаем симулятор
                     val command2 = listOf("xcrun", "simctl", "boot", simulator.udid)
                     val errorMessage = "Не удалось запустить симулятор iOS"
-                    
+
                     if (TerminalUtils.runCommand(command2, errorMessage)) {
                         logger.info("Симулятор iOS успешно запущен с ID: ${simulator.udid}")
                         return true
                     }
                 }
             }
-            
+
             logger.error("Не найден симулятор iOS с именем: $deviceName")
             return false
         } catch (e: Exception) {
@@ -164,16 +189,16 @@ object EmulatorManager {
     private fun stopIosSimulator(): Boolean {
         val deviceName = AppConfig.getIosDeviceName()
         val simulatorId = TerminalUtils.getSimulatorId(deviceName)
-        
+
         if (simulatorId == null) {
             logger.info("Симулятор iOS не запущен, остановка не требуется")
             return true
         }
-        
+
         logger.info("Остановка симулятора iOS с ID: $simulatorId")
         val command = listOf("xcrun", "simctl", "shutdown", simulatorId)
         val errorMessage = "Не удалось остановить симулятор iOS"
-        
+
         return TerminalUtils.runCommand(command, errorMessage)
     }
 }

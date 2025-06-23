@@ -77,6 +77,27 @@ object TerminalUtils {
     }
 
     /**
+     * Выполняет системную команду и возвращает результат выполнения в виде строки.
+     *
+     * @param command Список строк, представляющий команду и её аргументы.
+     * @return Строка с результатом выполнения команды.
+     */
+    fun runCommand(command: List<String>): String {
+        return try {
+            val process = ProcessBuilder(command)
+                .redirectErrorStream(true)
+                .start()
+
+            val result = process.inputStream.bufferedReader().use { it.readText() }
+            process.waitFor()
+            result
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ""
+        }
+    }
+
+    /**
      * Получает ID эмулятора Android по его имени.
      *
      * Использует `adb devices` для получения списка всех подключённых устройств и выбирает нужный эмулятор.
