@@ -95,7 +95,7 @@ object EmulatorManager {
             .start()
 
         // Ждем некоторое время, чтобы эмулятор успел запуститься и получить ID
-        Thread.sleep(5000)
+        Thread.sleep(25000)
 
         // Проверяем, запустился ли эмулятор
         val newEmulatorId = TerminalUtils.getEmulatorId()
