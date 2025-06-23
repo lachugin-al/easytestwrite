@@ -1,9 +1,12 @@
 package dsl.testing
 
+import app.App
 import app.config.AppConfig
+import controller.mobile.MobileTest
 import org.junit.jupiter.api.extension.ConditionEvaluationResult
 import org.junit.jupiter.api.extension.ExecutionCondition
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.slf4j.LoggerFactory
 
 /**
  * JUnit расширение для обработки аннотации [Skip].
@@ -15,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
  * при выполнении методов с аннотацией @BeforeEach.
  */
 class SkipConditionExtension : ExecutionCondition {
+    private val logger = LoggerFactory.getLogger(SkipConditionExtension::class.java)
 
     override fun evaluateExecutionCondition(context: ExtensionContext): ConditionEvaluationResult {
         // Получаем текущий метод (тестовый или @BeforeEach)
@@ -32,6 +36,8 @@ class SkipConditionExtension : ExecutionCondition {
             val skipAnnotation = testMethod.getAnnotation(Skip::class.java)
             if (skipAnnotation != null && shouldSkip(skipAnnotation)) {
                 val reason = if (skipAnnotation.reason.isNotEmpty()) ": ${skipAnnotation.reason}" else ""
+                // Закрываем приложение при пропуске теста
+                closeAppIfNeeded(context)
                 return ConditionEvaluationResult.disabled("Тестовый метод содержит аннотацию @Skip, подходящую под текущие условия$reason")
             }
         } else {
@@ -39,6 +45,8 @@ class SkipConditionExtension : ExecutionCondition {
             val skipAnnotation = currentMethod.getAnnotation(Skip::class.java)
             if (skipAnnotation != null && shouldSkip(skipAnnotation)) {
                 val reason = if (skipAnnotation.reason.isNotEmpty()) ": ${skipAnnotation.reason}" else ""
+                // Закрываем приложение при пропуске теста
+                closeAppIfNeeded(context)
                 return ConditionEvaluationResult.disabled("Тестовый метод содержит аннотацию @Skip, подходящую под текущие условия$reason")
             }
         }
@@ -95,6 +103,27 @@ class SkipConditionExtension : ExecutionCondition {
             it.name == testMethodName && 
             (it.isAnnotationPresent(org.junit.jupiter.api.Test::class.java) || 
              it.isAnnotationPresent(org.junit.jupiter.api.TestTemplate::class.java))
+        }
+    }
+
+    /**
+     * Закрывает приложение, если тест пропускается.
+     * 
+     * @param context Контекст выполнения JUnit.
+     */
+    private fun closeAppIfNeeded(context: ExtensionContext) {
+        try {
+            // Получаем экземпляр тестового класса
+            val testInstance = context.testInstance.orElse(null)
+
+            // Проверяем, является ли тестовый класс экземпляром MobileTest
+            if (testInstance is MobileTest) {
+                logger.info("Тест пропущен из-за аннотации @Skip. Закрываем приложение.")
+                // Закрываем приложение через публичный метод
+                testInstance.closeApp()
+            }
+        } catch (e: Exception) {
+            logger.error("Ошибка при попытке закрыть приложение: ${e.message}", e)
         }
     }
 }

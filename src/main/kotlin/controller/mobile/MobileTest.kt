@@ -1524,6 +1524,15 @@ open class MobileTest {
         LogCapture.attachLogsToAllureReport()
 
         // Закрытие приложения
+        closeApp()
+    }
+
+    /**
+     * Закрывает приложение.
+     * Этот метод может быть вызван из внешних классов, например, из SkipConditionExtension,
+     * когда тест пропускается из-за аннотации @Skip.
+     */
+    fun closeApp() {
         app.close()
     }
 }
