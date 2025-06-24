@@ -42,13 +42,19 @@ class WebServer : AutoCloseable {
 
     init {
         // Регистрируем shutdown hook для корректного завершения
-        Runtime.getRuntime().addShutdownHook(Thread { close() })
+        Runtime.getRuntime().addShutdownHook(Thread { 
+            try {
+                close()
+            } catch (e: Exception) {
+                logger.error("Ошибка при закрытии WebServer в shutdown hook: ${e.message}", e)
+            }
+        })
     }
 
     /**
      * Запускает веб-сервер.
      *
-     * Сервер стартует на локальном IP-адресе и фиксированном порту 8000.
+     * Сервер стартует на локальном IP-адресе и динамически выбранном свободном порту.
      */
     fun start() {
         val host = NetworkUtils.getLocalAddress()
@@ -83,10 +89,20 @@ class WebServer : AutoCloseable {
 
     /**
      * Останавливает веб-сервер.
+     * 
+     * Метод безопасен для многократного вызова и корректно обрабатывает случаи,
+     * когда сервер уже остановлен или не был инициализирован.
      */
     override fun close() {
-        webServer?.stop(0)
-        logger.info("Веб-сервер остановлен на $serverUrl")
+        try {
+            webServer?.stop(0)
+            logger.info("Веб-сервер остановлен на $serverUrl")
+        } catch (e: Exception) {
+            logger.error("Ошибка при остановке веб-сервера: ${e.message}", e)
+        } finally {
+            webServer = null
+            serverUrl = null
+        }
     }
 
     /**

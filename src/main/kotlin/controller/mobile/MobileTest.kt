@@ -85,7 +85,7 @@ open class MobileTest {
     private val scope = CoroutineScope(Dispatchers.Default)
     private val jobs = mutableListOf<Deferred<*>>()
 
-    companion object {
+    /*companion object {
         private val logger: Logger = LoggerFactory.getLogger(MobileTest::class.java)
 
         @BeforeAll
@@ -103,7 +103,7 @@ open class MobileTest {
             logger.info("Остановка эмулятора после всех тестов")
             EmulatorManager.stopEmulator()
         }
-    }
+    }*/
 
     /**
      * Найти элемент на экране по его [element] и кликнуть по нему

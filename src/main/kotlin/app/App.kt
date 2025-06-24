@@ -115,7 +115,6 @@ class App() : AutoCloseable {
                         driver = null
                     }
                 }
-                webServer.close()
             }
 
             Platform.IOS -> {
@@ -129,7 +128,6 @@ class App() : AutoCloseable {
                         driver = null
                     }
                 }
-                webServer.close()
             }
 
             Platform.WEB -> {
@@ -143,6 +141,13 @@ class App() : AutoCloseable {
                     }
                 }
             }
+        }
+
+        // Always close the WebServer regardless of platform
+        try {
+            webServer.close()
+        } catch (e: Exception) {
+            logger.error("Ошибка при закрытии WebServer: ${e.message}", e)
         }
     }
 }
