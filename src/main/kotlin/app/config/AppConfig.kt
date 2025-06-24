@@ -94,6 +94,9 @@ object AppConfig {
     private val browserType: String = prop("playwright.browser.type", "chromium")
     private val headless: Boolean = prop("playwright.headless", "true").toBoolean()
 
+    // Android headless mode
+    private val androidHeadlessMode: Boolean = propBoolean("android.headless.mode", true)
+
     // Настройки записи видео
     private val androidVideoRecordingEnabled: Boolean = propBoolean("android.video.recording.enabled", false)
     private val iosVideoRecordingEnabled: Boolean = propBoolean("ios.video.recording.enabled", false)
@@ -192,6 +195,11 @@ object AppConfig {
      * @return true, если Playwright запускается в headless-режиме.
      */
     fun isHeadless(): Boolean = headless
+
+    /**
+     * @return true, если Android эмулятор запускается в headless-режиме (без окна).
+     */
+    fun isAndroidHeadlessMode(): Boolean = androidHeadlessMode
 
     /**
      * Проверяет, включена ли запись видео для текущей платформы.

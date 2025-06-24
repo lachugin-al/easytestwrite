@@ -290,16 +290,22 @@ object EmulatorManager {
             }
 
             // Запускаем эмулятор с дополнительными параметрами для стабильности
-            val command = listOf(
+            val commandList = mutableListOf(
                 "emulator", 
                 "-avd", 
                 deviceName, 
                 "-no-snapshot-load", 
                 "-no-boot-anim",
                 "-gpu", "swiftshader_indirect",
-                "-no-audio",
-                "-no-window"  // Запуск без окна для стабильности в CI/CD
+                "-no-audio"
             )
+
+            // Добавляем параметр "-no-window" только если включен headless режим
+            if (AppConfig.isAndroidHeadlessMode()) {
+                commandList.add("-no-window")  // Запуск без окна для стабильности в CI/CD
+            }
+
+            val command = commandList
 
             logger.info("Запуск команды: ${command.joinToString(" ")}")
 
