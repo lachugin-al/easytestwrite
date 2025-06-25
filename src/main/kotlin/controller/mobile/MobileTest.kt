@@ -91,17 +91,27 @@ open class MobileTest {
         @BeforeAll
         @JvmStatic
         fun setUpAll() {
-            // Запуск эмулятора перед всеми тестами
-            logger.info("Запуск эмулятора перед всеми тестами")
-            EmulatorManager.startEmulator()
+            // Проверяем, включен ли автозапуск эмулятора
+            if (AppConfig.isEmulatorAutoStartEnabled()) {
+                // Запуск эмулятора перед всеми тестами
+                logger.info("Запуск эмулятора перед всеми тестами")
+                EmulatorManager.startEmulator()
+            } else {
+                logger.info("Автозапуск эмулятора отключен в настройках")
+            }
         }
 
         @AfterAll
         @JvmStatic
         fun tearDownAll() {
-            // Остановка эмулятора после всех тестов
-            logger.info("Остановка эмулятора после всех тестов")
-            EmulatorManager.stopEmulator()
+            // Проверяем, включено ли автовыключение эмулятора
+            if (AppConfig.isEmulatorAutoShutdownEnabled()) {
+                // Остановка эмулятора после всех тестов
+                logger.info("Остановка эмулятора после всех тестов")
+                EmulatorManager.stopEmulator()
+            } else {
+                logger.info("Автовыключение эмулятора отключено в настройках")
+            }
         }
     }
 

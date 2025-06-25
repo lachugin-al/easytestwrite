@@ -105,6 +105,10 @@ object AppConfig {
     private val videoRecordingBitrate: Int = prop("video.recording.bitrate", "100000").toInt()
     private val videoRecordingOutputDir: String = prop("video.recording.output.dir", "build/videos")
 
+    // Настройки автозапуска и автовыключения эмулятора/симулятора
+    private val emulatorAutoStart: Boolean = propBoolean("emulator.auto.start", true)
+    private val emulatorAutoShutdown: Boolean = propBoolean("emulator.auto.shutdown", true)
+
     // API
 
     /**
@@ -237,4 +241,18 @@ object AppConfig {
      * @return Битрейт для записи видео (в битах в секунду).
      */
     fun getVideoRecordingBitrate(): Int = videoRecordingBitrate
+
+    /**
+     * Проверяет, включен ли автоматический запуск эмулятора/симулятора.
+     *
+     * @return true, если автозапуск эмулятора/симулятора включен.
+     */
+    fun isEmulatorAutoStartEnabled(): Boolean = emulatorAutoStart
+
+    /**
+     * Проверяет, включено ли автоматическое выключение эмулятора/симулятора.
+     *
+     * @return true, если автовыключение эмулятора/симулятора включено.
+     */
+    fun isEmulatorAutoShutdownEnabled(): Boolean = emulatorAutoShutdown
 }
