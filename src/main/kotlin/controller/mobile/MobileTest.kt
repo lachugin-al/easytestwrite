@@ -162,64 +162,35 @@ open class MobileTest {
         timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
         timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
         pollingInterval: Long = DEFAULT_POLLING_INTERVAL,
-        scrollCount: Int = 3,
+        scrollCount: Int = 1,
         scrollCapacity: Double = 0.7,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION,
         eventPosition: String = "first"
     ) {
-        var matchedEvent: Event? = null
-
-        for (attempt in 1..scrollCount) {
-            "Ждём событие $eventName (попытка $attempt)" {
-                runCatching {
-                    checkHasEvent(eventName, eventData, timeoutExpectation)
-                }.onFailure {
-                    if (attempt < scrollCount) {
-                        logger.warn("Попытка $attempt неуспешна: событие не найдено")
-                    } else {
-                        logger.error("После всех попыток событие '$eventName' с фильтром '$eventData' не найдено")
-                    }
-                }
-            }
-
-            val matchedEvents = EventStorage.getEvents()
-                .filter {
-                    it.name == eventName &&
-                            it.data?.let { d ->
-                                val json = Json.encodeToString(EventData.serializer(), d)
-                                containsJsonData(json, eventData)
-                            } ?: false
-                }
-
-            matchedEvent = when (eventPosition.lowercase()) {
-                "last" -> matchedEvents.lastOrNull()
-                else -> matchedEvents.firstOrNull()
-            }
-
-            if (matchedEvent != null) {
-                break
-            }
-
-            if (attempt < scrollCount) {
-                logger.info("Выполняем скролл")
-                performScroll(
-                    element = null,
-                    scrollCount = 1,
-                    scrollCapacity = scrollCapacity,
-                    scrollDirection = scrollDirection
-                )
-            }
+        // Ждём событие по условиям
+        "Ждём событие $eventName" {
+            checkHasEvent(eventName, eventData, timeoutExpectation)
         }
 
-        val positionText = if (eventPosition.lowercase() == "last") "последнее" else "первое"
-        val ev = matchedEvent
-            ?: throw NoSuchElementException("$positionText событие '$eventName' с данными '$eventData' не найдено после $scrollCount скроллов")
+        // Получаем подходящее событие
+        val matchedEvents = EventStorage.getEvents().filter {
+            it.name == eventName &&
+                it.data?.let { d ->
+                    val json = Json.encodeToString(EventData.serializer(), d)
+                    containsJsonData(json, eventData)
+                } ?: false
+            }
 
-        // Извлечь массив items из body → event → data
-        val bodyObj = Json.parseToJsonElement(ev.data!!.body).jsonObject
+        val matchedEvent = when (eventPosition.lowercase()) {
+            "last" -> matchedEvents.lastOrNull()
+            else -> matchedEvents.firstOrNull()
+        } ?: throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено")
+
+        // Извлекаем массив items из body → event → data
+        val bodyObj = Json.parseToJsonElement(matchedEvent.data!!.body).jsonObject
         val itemsArr = bodyObj["event"]!!.jsonObject["data"]!!.jsonObject["items"]!!.jsonArray
 
-        // Найти первый item, содержащий искомые пары
+        // Находим первый item, содержащий искомые пары, это будет первая карточка товара на странице
         val searchObj = Json.parseToJsonElement(eventData).jsonObject
         val matched = itemsArr.firstOrNull { itemElem ->
             searchObj.all { (key, sv) ->
@@ -230,18 +201,19 @@ open class MobileTest {
             throw NoSuchElementException("В событии '$eventName' ни один item не соответствует $eventData")
         }
 
-        // Достать у найденного item его поле "name"
+        // Достаем у найденного item его поле "name"
         val itemName = matched.jsonObject["name"]!!.jsonPrimitive.content
         val positionTextCase = if (eventPosition.lowercase() == "last") "последнем" else "первом"
         logger.info("Найден подходящий товар: '$itemName' в $positionTextCase событии по фильтрам (eventName=$eventName, filter=$eventData, position=$eventPosition)")
 
-        // Построить локатор и выполнить обычный click с ожиданиями и скроллом
+        // Строим локатор и выполнить обычный click с ожиданиями и скроллом
         val locator = PageElement(
             android = PageElement.Text(itemName),
             ios = PageElement.Label(itemName),
             web = null
         )
 
+        // Выполняем click по полученному локатору
         click(
             element = locator,
             timeoutBeforeExpectation = timeoutBeforeExpectation,
@@ -595,56 +567,58 @@ open class MobileTest {
             println("Ожидание события '$eventName'...")
         }
 
-        runBlocking {
-            val result = withTimeoutOrNull(timeoutInMillis) {
-                while (true) {
-                    // Получить все события из EventStorage
-                    val allEvents = eventsFileStorage.getEvents()
+        runCatching {
+            runBlocking {
+                val result = withTimeoutOrNull(timeoutInMillis) {
+                    while (true) {
+                        // Получить все события из EventStorage
+                        val allEvents = eventsFileStorage.getEvents()
 
-                    // Перебрать события
-                    for (event in allEvents) {
-                        // Пропустить уже обработанные события
-                        if (eventsFileStorage.isEventAlreadyMatched(event.event_num)) continue
+                        // Перебрать события
+                        for (event in allEvents) {
+                            // Пропустить уже обработанные события
+                            if (eventsFileStorage.isEventAlreadyMatched(event.event_num)) continue
 
-                        // Проверка совпадения по названию события
-                        if (event.name == eventName) {
-                            if (eventData == null) {
-                                // Если дополнительные данные не требуются, отметить событие как найденное
-                                eventsFileStorage.markEventAsMatched(event.event_num)
-                                return@withTimeoutOrNull true
-                            }
+                            // Проверка совпадения по названию события
+                            if (event.name == eventName) {
+                                if (eventData == null) {
+                                    // Если дополнительные данные не требуются, отметить событие как найденное
+                                    eventsFileStorage.markEventAsMatched(event.event_num)
+                                    return@withTimeoutOrNull true
+                                }
 
-                            // Если ожидаются конкретные данные, сериализовать event.data в JSON
-                            val eventDataJson = event.data?.let { Json.encodeToString(EventData.serializer(), it) }
+                                // Если ожидаются конкретные данные, сериализовать event.data в JSON
+                                val eventDataJson = event.data?.let { Json.encodeToString(EventData.serializer(), it) }
 
-                            // Проверить, содержатся ли в событии ожидаемые данные
-                            if (eventDataJson != null && containsJsonData(eventDataJson, eventData)) {
-                                eventsFileStorage.markEventAsMatched(event.event_num)
-                                return@withTimeoutOrNull true
+                                // Проверить, содержатся ли в событии ожидаемые данные
+                                if (eventDataJson != null && containsJsonData(eventDataJson, eventData)) {
+                                    eventsFileStorage.markEventAsMatched(event.event_num)
+                                    return@withTimeoutOrNull true
+                                }
                             }
                         }
+
+                        // Подождать перед следующей проверкой
+                        delay(pollingInterval)
                     }
+                } ?: false
 
-                    // Подождать перед следующей проверкой
-                    delay(pollingInterval)
-                }
-            } ?: false
-
-            // Assert that the result is true and is of type Boolean
-            try {
-                if (result as Boolean) {
-                    println("Ожидаемое событие '$eventName' найдено.")
-                } else {
-                    if (eventData != null) {
-                        assert(false) { "Ожидаемое событие '$eventName' с данными '$eventData' не обнаружено за $timeoutExpectation секунд." }
+                // Assert that the result is true and is of type Boolean
+                try {
+                    if (result as Boolean) {
+                        println("Ожидаемое событие '$eventName' найдено.")
                     } else {
-                        assert(false) { "Ожидаемое событие '$eventName' не обнаружено за $timeoutExpectation секунд." }
+                        if (eventData != null) {
+                            throw NoSuchElementException("Ожидаемое событие '$eventName' с данными '$eventData' не обнаружено за $timeoutExpectation секунд.")
+                        } else {
+                            throw NoSuchElementException("Ожидаемое событие '$eventName' не обнаружено за $timeoutExpectation секунд.")
+                        }
                     }
+                } catch (e: ClassCastException) {
+                    throw Exception("Ошибка приведения результата проверки к Boolean: $result", e)
                 }
-            } catch (e: ClassCastException) {
-                throw Exception("Ошибка приведения результата проверки к Boolean: $result", e)
             }
-        }
+        }.getOrThrow()
     }
 
     /**
