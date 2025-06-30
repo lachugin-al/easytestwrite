@@ -1096,7 +1096,7 @@ open class MobileTest {
                 )
                 currentScroll++
             } else {
-                // Используем информацию о последнем исключении и попытавшихся локаторах для более детального сообщения об ошибке
+                // Используем информацию о последнем исключении и используемых локаторах для более детального сообщения об ошибке
                 val locatorsInfo = if (failedLocators.isNotEmpty()) {
                     "Следующие локаторы ${failedLocators.joinToString(", ")} из списка ${attemptedLocators} были не найдены."
                 } else if (attemptedLocators.isNotEmpty()) {
