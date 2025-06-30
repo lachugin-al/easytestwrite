@@ -1055,11 +1055,14 @@ open class MobileTest {
             // Получаем все локаторы для текущей платформы
             val locators = element?.getAll() ?: listOf(element?.get())
             var lastException: Exception? = null
+            val attemptedLocators = mutableListOf<Any>()
+            val failedLocators = mutableListOf<Any>()
 
             // Перебираем все локаторы
             for (locator in locators.filterNotNull()) {
                 try {
                     val pageElement = locator
+                    attemptedLocators.add(pageElement)
                     val elements =
                         wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(pageElement as By)) as List<MobileElement>
 
@@ -1068,10 +1071,17 @@ open class MobileTest {
                         throw IndexOutOfBoundsException("Элемент $elementNumber вне допустимого диапазона")
                     }
 
+                    // Логируем информацию о неудачных попытках, даже если текущий локатор успешен
+                    if (failedLocators.isNotEmpty()) {
+                        logger.info("Следующие локаторы ${failedLocators.joinToString(", ")} из списка ${attemptedLocators} были не найдены.")
+                    }
+
                     return elements[safeIndex - 1]
                 } catch (e: Exception) {
                     // Сохраняем последнее исключение
                     lastException = e
+                    // Добавляем локатор в список неудачных
+                    failedLocators.add(locator)
                     // Продолжаем перебор локаторов
                     continue
                 }
@@ -1086,7 +1096,21 @@ open class MobileTest {
                 )
                 currentScroll++
             } else {
-                throw NoSuchElementException("Элементы не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований")
+                // Используем информацию о последнем исключении и попытавшихся локаторах для более детального сообщения об ошибке
+                val locatorsInfo = if (failedLocators.isNotEmpty()) {
+                    "Следующие локаторы ${failedLocators.joinToString(", ")} из списка ${attemptedLocators} были не найдены."
+                } else if (attemptedLocators.isNotEmpty()) {
+                    "Попытались найти следующие элементы: ${attemptedLocators.joinToString(", ")}"
+                } else {
+                    "Не было найдено ни одного элемента"
+                }
+
+                val errorMessage = if (lastException != null) {
+                    "Элементы не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований. $locatorsInfo. Причина: ${lastException.message}"
+                } else {
+                    "Элементы не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований. $locatorsInfo"
+                }
+                throw NoSuchElementException(errorMessage)
             }
         }
     }
