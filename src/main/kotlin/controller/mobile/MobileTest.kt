@@ -1049,31 +1049,44 @@ open class MobileTest {
     ): MobileElement {
         Thread.sleep(timeoutBeforeExpectation * 1_000)
         val wait = WebDriverWait(driver, timeoutExpectation, pollingInterval)
-        val pageElement = element?.get()
         var currentScroll = 0
+
         while (true) {
-            try {
-                val elements =
-                    wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(pageElement as By)) as List<MobileElement>
+            // Получаем все локаторы для текущей платформы
+            val locators = element?.getAll() ?: listOf(element?.get())
+            var lastException: Exception? = null
 
-                val safeIndex = elementNumber ?: 1
-                if (safeIndex < 1 || safeIndex > elements.size) {
-                    throw IndexOutOfBoundsException("Элемент $elementNumber вне допустимого диапазона")
-                }
+            // Перебираем все локаторы
+            for (locator in locators.filterNotNull()) {
+                try {
+                    val pageElement = locator
+                    val elements =
+                        wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(pageElement as By)) as List<MobileElement>
 
-                return elements[safeIndex - 1]
-            } catch (e: Exception) {
-                // Если элементы не найдены и передано scrollCount > 0
-                if (scrollCount > 0 && currentScroll < scrollCount) {
-                    performScroll(
-                        scrollCount = 1,
-                        scrollCapacity = scrollCapacity,
-                        scrollDirection = scrollDirection
-                    )
-                    currentScroll++
-                } else {
-                    throw NoSuchElementException("Элементы '$pageElement' не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований")
+                    val safeIndex = elementNumber ?: 1
+                    if (safeIndex < 1 || safeIndex > elements.size) {
+                        throw IndexOutOfBoundsException("Элемент $elementNumber вне допустимого диапазона")
+                    }
+
+                    return elements[safeIndex - 1]
+                } catch (e: Exception) {
+                    // Сохраняем последнее исключение
+                    lastException = e
+                    // Продолжаем перебор локаторов
+                    continue
                 }
+            }
+
+            // Если ни один локатор не сработал и передано scrollCount > 0
+            if (scrollCount > 0 && currentScroll < scrollCount) {
+                performScroll(
+                    scrollCount = 1,
+                    scrollCapacity = scrollCapacity,
+                    scrollDirection = scrollDirection
+                )
+                currentScroll++
+            } else {
+                throw NoSuchElementException("Элементы не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований")
             }
         }
     }

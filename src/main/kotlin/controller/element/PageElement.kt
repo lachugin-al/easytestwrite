@@ -29,7 +29,10 @@ import org.openqa.selenium.internal.FindsByXPath
 data class PageElement(
     private val android: By? = null,
     private val ios: By? = null,
-    private val web: String? = null
+    private val web: String? = null,
+    private val androidList: List<By>? = null,
+    private val iosList: List<By>? = null,
+    private val webList: List<String>? = null
 ) {
     /**
      * Получить локатор для текущей платформы.
@@ -37,9 +40,20 @@ data class PageElement(
      * @return Локатор типа [By] для мобильных платформ или [String] для Web.
      */
     fun get(): Any? = when (AppConfig.getPlatform()) {
-        Platform.ANDROID -> android ?: error("Локатор для Android не задан")
-        Platform.IOS -> ios ?: error("Локатор для iOS не задан")
-        Platform.WEB -> web ?: error("Локатор для Web не задан")
+        Platform.ANDROID -> android ?: androidList?.firstOrNull() ?: error("Локатор для Android не задан")
+        Platform.IOS -> ios ?: iosList?.firstOrNull() ?: error("Локатор для iOS не задан")
+        Platform.WEB -> web ?: webList?.firstOrNull() ?: error("Локатор для Web не задан")
+    }
+
+    /**
+     * Получить список локаторов для текущей платформы.
+     *
+     * @return Список локаторов типа [By] для мобильных платформ или [String] для Web.
+     */
+    fun getAll(): List<Any>? = when (AppConfig.getPlatform()) {
+        Platform.ANDROID -> androidList ?: android?.let { listOf(it) }
+        Platform.IOS -> iosList ?: ios?.let { listOf(it) }
+        Platform.WEB -> webList ?: web?.let { listOf(it) }
     }
 
     companion object {
@@ -107,6 +121,56 @@ data class PageElement(
          */
         fun byIOSPredicateString(predicateExpression: String): PageElement {
             return PageElement(ios = IOSPredicateString(predicateExpression))
+        }
+
+        /**
+         * Создает PageElement со списком локаторов для Android.
+         *
+         * @param locators Список локаторов для Android.
+         * @return PageElement со списком локаторов для Android.
+         */
+        fun byAndroidLocators(locators: List<By>): PageElement {
+            return PageElement(androidList = locators)
+        }
+
+        /**
+         * Создает PageElement со списком локаторов для iOS.
+         *
+         * @param locators Список локаторов для iOS.
+         * @return PageElement со списком локаторов для iOS.
+         */
+        fun byIOSLocators(locators: List<By>): PageElement {
+            return PageElement(iosList = locators)
+        }
+
+        /**
+         * Создает PageElement со списком локаторов для Web.
+         *
+         * @param locators Список локаторов для Web.
+         * @return PageElement со списком локаторов для Web.
+         */
+        fun byWebLocators(locators: List<String>): PageElement {
+            return PageElement(webList = locators)
+        }
+
+        /**
+         * Создает PageElement со списком локаторов для всех платформ.
+         *
+         * @param androidLocators Список локаторов для Android.
+         * @param iosLocators Список локаторов для iOS.
+         * @param webLocators Список локаторов для Web.
+         * @return PageElement со списком локаторов для всех платформ.
+         */
+        fun byLocators(
+            androidLocators: List<By>? = null,
+            iosLocators: List<By>? = null,
+            webLocators: List<String>? = null
+        ): PageElement {
+            return PageElement(
+                androidList = androidLocators,
+                iosList = iosLocators,
+                webList = webLocators
+            )
         }
     }
 
