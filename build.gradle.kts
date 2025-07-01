@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.37"
+version = "0.0.38"
 
 repositories {
     maven {

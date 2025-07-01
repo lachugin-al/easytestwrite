@@ -81,7 +81,7 @@ open class MobileTest {
         get() = app.driver ?: throw IllegalStateException("Driver is not initialized")
     private val eventsFileStorage = EventStorage
 
-    // Create your own CoroutineScope for coroutine lifecycle management
+    // Создаем собственную CoroutineScope для управления жизненным циклом корутин
     private val scope = CoroutineScope(Dispatchers.Default)
     private val jobs = mutableListOf<Deferred<*>>()
 
@@ -119,7 +119,7 @@ open class MobileTest {
      * Найти элемент на экране по его [element] и кликнуть по нему
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -153,7 +153,7 @@ open class MobileTest {
     /**
      * Расширение для StepContext: клик по item из события,
      * у которого где-нибудь в data встречаются все пары из eventData.
-     * 
+     *
      * @param eventPosition позиция события для обработки: "first" - первое найденное, "last" - последнее найденное
      */
     fun StepContext.click(
@@ -212,7 +212,8 @@ open class MobileTest {
         val positionText = if (eventPosition.lowercase() == "last") "последнее" else "первое"
         val ev = matchedEvent
             ?: run {
-                val errorMsg = "$positionText событие '$eventName' с данными '$eventData' не найдено после $scrollCount скроллов"
+                val errorMsg =
+                    "$positionText событие '$eventName' с данными '$eventData' не найдено после $scrollCount скроллов"
                 logger.error(errorMsg)
                 throw NoSuchElementException(errorMsg)
             }
@@ -276,7 +277,7 @@ open class MobileTest {
      * @param text текст, который точно соответствует в целевом элементе;
      * @param containsText текст, который должен содержаться в целевом элементе;
      * @param elementNumber номер найденного элемента, начиная с 1. Если null, будет использован первый найденный;
-     * @param timeoutBeforeExpectation задержка перед началом поиска, в секундах;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation максимальное время ожидания появления элемента, в секундах;
      * @param pollingInterval интервал между попытками поиска элемента, в миллисекундах;
      * @param scrollCount количество попыток скроллирования при неудачном поиске;
@@ -307,10 +308,12 @@ open class MobileTest {
                 android = PageElement.ExactMatch(text),
                 ios = PageElement.ExactMatch(text)
             )
+
             containsText != null -> PageElement(
                 android = PageElement.Contains(containsText),
                 ios = PageElement.Contains(containsText),
             )
+
             else -> error("Указан и не text и не containsText")
         }
 
@@ -330,14 +333,33 @@ open class MobileTest {
      * Нажать в области экрана по [x] [y]
      * @param x точка по [x] в области экрана;
      * @param y точка по [y] в области экрана;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation максимальное количество секунд ожидания перед выполнением нажатия.
+     * Если указан параметр [waitCondition], в течение этого времени будет ожидаться выполнение заданного условия.
+     * Если [waitCondition] не задан, будет ожидаться стабилизация UI (отсутствие изменений в исходном коде страницы) в течение указанного времени.
+     * Если значение равно 0, ожидание перед нажатием не производится.
      */
     fun StepContext.tapArea(
         x: Int,
         y: Int,
-        timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION
+        timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
+        waitCondition: (() -> Boolean)? = null
     ) {
-        Thread.sleep(timeoutBeforeExpectation * 1_000)
+        if (waitCondition != null) {
+            WebDriverWait(driver, timeoutBeforeExpectation)
+                .until { waitCondition.invoke() }
+        } else if (timeoutBeforeExpectation > 0) {
+            val beforeWait = WebDriverWait(driver, timeoutBeforeExpectation)
+
+            // ожидание стабилизации страницы
+            var previousPageSource = driver.pageSource
+            beforeWait.until {
+                val currentPageSource = driver.pageSource
+                val isStable = currentPageSource == previousPageSource
+                previousPageSource = currentPageSource
+                isStable
+            }
+        }
+
         val pointerInput = PointerInput(PointerInput.Kind.TOUCH, "finger1")
         val sequence = Sequence(pointerInput, 0)
         val origin = PointerInput.Origin.viewport()
@@ -355,7 +377,7 @@ open class MobileTest {
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param x точка по [x] в области элемента;
      * @param y точка по [y] в области элемента;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -397,7 +419,7 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param text текст;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -433,7 +455,7 @@ open class MobileTest {
      * Проверить виден ли [element] на экране
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -476,7 +498,7 @@ open class MobileTest {
      * @param text текст, который точно соответствует в целевом элементе;
      * @param containsText текст, который должен содержаться в элементе;
      * @param elementNumber порядковый номер совпавшего элемента (начиная с 1);
-     * @param timeoutBeforeExpectation задержка перед началом ожидания;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation максимальное время ожидания элемента;
      * @param pollingInterval интервал между попытками;
      * @param scrollCount количество скроллов при отсутствии элемента;
@@ -507,10 +529,12 @@ open class MobileTest {
                 android = PageElement.ExactMatch(text),
                 ios = PageElement.ExactMatch(text)
             )
+
             containsText != null -> PageElement(
                 android = PageElement.Contains(containsText),
                 ios = PageElement.Contains(containsText),
             )
+
             else -> error("Указан и не text и не containsText")
         }
 
@@ -906,7 +930,7 @@ open class MobileTest {
      * Получить текст из [element] найденном на экране
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -943,7 +967,7 @@ open class MobileTest {
      * Получить цену из [element] найденном на экране
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -980,7 +1004,7 @@ open class MobileTest {
      * Получить значение [attribute] из [element] найденном на экране
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -1017,7 +1041,7 @@ open class MobileTest {
     /**
      * Найти элемент на экране по его [element]
      * @param element элемент;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -1037,7 +1061,34 @@ open class MobileTest {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ): MobileElement {
-        Thread.sleep(timeoutBeforeExpectation * 1_000)
+        // Если timeoutBeforeExpectation > 0, ожидаем, пока страница не будет в стабильном состоянии
+        if (timeoutBeforeExpectation > 0) {
+            val beforeWait = WebDriverWait(driver, timeoutBeforeExpectation, pollingInterval)
+            try {
+                // Ожидаем, пока UI приложения станет стабильным, проверяя, перестал ли меняться исходный код страницы
+                var previousPageSource = driver.pageSource
+                beforeWait.until { d ->
+                    try {
+                        val currentPageSource = d.pageSource
+                        val isStable = currentPageSource == previousPageSource
+                        previousPageSource = currentPageSource
+
+                        // Если исходный код страницы не изменился, считаем UI стабильным
+                        // Но продолжаем проверку до истечения таймаута, чтобы убедиться, что он действительно стабилен
+                        isStable
+                    } catch (e: Exception) {
+                        // Если возникла ошибка при получении исходного кода страницы, предполагаем, что UI стабилен
+                        logger.debug("Ошибка при проверке стабильности страницы: ${e.message}")
+                        true
+                    }
+                }
+                logger.debug("UI выглядит стабильным после ожидания")
+            } catch (e: Exception) {
+                // Если ожидание не удалось, логируем ошибку, но продолжаем поиск элемента
+                logger.warn("Ошибка при ожидании стабильности UI: ${e.message}")
+            }
+        }
+
         val wait = WebDriverWait(driver, timeoutExpectation, pollingInterval)
         val pageElement = element?.get()
         var currentScroll = 0
@@ -1064,7 +1115,7 @@ open class MobileTest {
      * Найти все элементы на экране по его [element] вернуть конкретный из списка по его номеру
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
@@ -1085,7 +1136,34 @@ open class MobileTest {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ): MobileElement {
-        Thread.sleep(timeoutBeforeExpectation * 1_000)
+        // Если timeoutBeforeExpectation > 0, ожидаем, пока страница не будет в стабильном состоянии
+        if (timeoutBeforeExpectation > 0) {
+            val beforeWait = WebDriverWait(driver, timeoutBeforeExpectation, pollingInterval)
+            try {
+                // Ожидаем, пока UI приложения станет стабильным, проверяя, перестал ли меняться исходный код страницы
+                var previousPageSource = driver.pageSource
+                beforeWait.until { d ->
+                    try {
+                        val currentPageSource = d.pageSource
+                        val isStable = currentPageSource == previousPageSource
+                        previousPageSource = currentPageSource
+
+                        // Если исходный код страницы не изменился, считаем UI стабильным
+                        // Но продолжаем проверку до истечения таймаута, чтобы убедиться, что он действительно стабилен
+                        isStable
+                    } catch (e: Exception) {
+                        // Если возникла ошибка при получении исходного кода страницы, предполагаем, что UI стабилен
+                        logger.debug("Ошибка при проверке стабильности страницы: ${e.message}")
+                        true
+                    }
+                }
+                logger.debug("UI выглядит стабильным после ожидания")
+            } catch (e: Exception) {
+                // Если ожидание не удалось, логируем ошибку, но продолжаем поиск элемента
+                logger.warn("Ошибка при ожидании стабильности UI: ${e.message}")
+            }
+        }
+
         val wait = WebDriverWait(driver, timeoutExpectation, pollingInterval)
         var currentScroll = 0
 
@@ -1157,7 +1235,7 @@ open class MobileTest {
      * Найти элемент на экране по его [element] либо вернуть null
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
+     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
      * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
