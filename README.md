@@ -50,9 +50,9 @@
     # Платформа для тестирования (ANDROID или iOS)
     platform=ANDROID
     # Версия операционной системы Android для тестирования
-    android.version=9
+    android.version=15
     # Версия операционной системы iOS для тестирования
-    ios.version=18.4
+    ios.version=18.5
     # Название устройства Android для эмуляции
     android.device.name=Pixel_XL
     # Название устройства iOS для эмуляции
