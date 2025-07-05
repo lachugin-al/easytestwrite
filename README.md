@@ -45,27 +45,57 @@
 1. В папке `test/resources` создать файл конфигурации `config.properties`:
 2. Заполнить конфигурационные настройки (либо будут применены настройки по умолчанию)
 ```config.properties
-   # URL Appium-сервера (для мобильных тестов)
-   appium.url=http://localhost:4723/
+   # URL-адрес сервера Appium для подключения к мобильным устройствам
+    appium.url=http://localhost:4723/
+    # Платформа для тестирования (ANDROID или iOS)
+    platform=ANDROID
+    # Версия операционной системы Android для тестирования
+    android.version=9
+    # Версия операционной системы iOS для тестирования
+    ios.version=18.4
+    # Название устройства Android для эмуляции
+    android.device.name=Pixel_XL
+    # Название устройства iOS для эмуляции
+    ios.device.name=iPhone 16 Plus
+    # Имя файла приложения для Android
+    android.app.name=android.apk
+    # Имя файла приложения для iOS
+    ios.app.name=ios.app
+    # Основная активность приложения Android
+    app.activity=MainActivity
+    # Идентификатор пакета приложения Android
+    app.package=dev
+    # Автоматическое принятие всплывающих уведомлений на iOS
+    ios.auto_accept_alerts=true
+    # Автоматическое отклонение всплывающих уведомлений на iOS
+    ios.auto_dismiss_alerts=false
+    # Режим работы Android-эмулятора без графического интерфейса
+    android.headless.mode=true
+    
+    # Тип браузера для Playwright (инструмент для автоматизации веб-тестирования)
+    playwright.browser.type=chromium
+    # Режим работы Playwright без графического интерфейса
+    playwright.headless=false
+    
+    # Включение/отключение записи видео для тестов на Android
+    android.video.recording.enabled=false
+    # Включение/отключение записи видео для тестов на iOS
+    ios.video.recording.enabled=false
+    # Размер видеозаписи тестов
+    video.recording.size=640x360
+    # Качество видеозаписи тестов (от 1 до 100)
+    video.recording.quality=20
+    # Битрейт видеозаписи тестов в битах в секунду
+    video.recording.bitrate=50000
+    # Директория для сохранения видеозаписей тестов
+    video.recording.output.dir=build/videos
+    
+    # Настройки автоматического запуска и выключения эмулятора/симулятора
+    # Автоматический запуск эмулятора/симулятора перед тестами
+    emulator.auto.start=true
+    # Автоматическое выключение эмулятора/симулятора после тестов
+    emulator.auto.shutdown=true
 
-   # Выбор платформы: ANDROID, IOS или WEB
-   platform=ANDROID
-
-   # Настройки для Android
-   android.version=15
-   android.device.name=Pixel_XL_API_35
-   android.app.name=android.apk
-   app.activity=ru.wildberries.main.activity.ui.MainActivity
-   app.package=com.wildberries.ru.dev
-
-   # Настройки для iOS
-   ios.version=18.4
-   ios.device.name=iPhone 16 Plus
-   ios.app.name=ios.app
-
-   # Настройки для Web-тестирования (Playwright)
-   playwright.browser.type=chromium
-   playwright.headless=false
 ```
 3. Выбрать папку с тестами или отдельные тесты для запуска, вызвать меню и нажать `Run ...`
 
