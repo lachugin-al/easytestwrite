@@ -445,6 +445,43 @@ object ExampleScreen {
 - `checkHasEvent(eventName, eventDataFile)` - проверка с данными из файла
 - `checkHasEventAsync(eventName, eventDataFile)` - асинхронная проверка с данными из файла
 
+#### Шаблоны для сопоставления значений в eventData
+
+При проверке событий поддерживаются следующие шаблоны для значений в JSON:
+
+- `"*"` - соответствует любому значению (wildcard)
+- `""` - соответствует только пустому значению
+- `"~value"` - проверяет частичное совпадение (если 'value' является подстрокой значения)
+- Любое другое значение - проверяется точное соответствие
+
+Примеры использования шаблонов:
+
+```kotlin
+// Проверка события с любым значением для поля "loc"
+checkHasEvent(
+    eventName = "view_item",
+    eventData = """{"loc": "*"}"""
+)
+
+// Проверка события с пустым значением для поля "loc"
+checkHasEvent(
+    eventName = "view_item",
+    eventData = """{"loc": ""}"""
+)
+
+// Проверка события, где значение поля "log" содержит подстроку "logsns"
+checkHasEvent(
+    eventName = "view_item",
+    eventData = """{"log": "~partial_value"}"""
+)
+
+// Проверка события с точным совпадением значения поля "loc"
+checkHasEvent(
+    eventName = "view_item",
+    eventData = """{"loc": "exact_value"}"""
+)
+```
+
 #### Синхронная проверка событий
 
 ```kotlin
@@ -670,16 +707,16 @@ class WebExampleTest : WebTest() {
         context.run {
             "Открываем главную страницу" {
                 navigate("https://www.example.com")
-                
+
                 "Проверяем заголовок страницы" {
                     checkVisible(WebExamplePage.pageTitle)
                 }
             }
-            
+
             "Выполняем поиск" {
                 typeText(WebExamplePage.searchInput, "test query")
                 click(WebExamplePage.searchButton)
-                
+
                 "Проверяем результаты поиска" {
                     checkVisible(WebExamplePage.searchResults)
                 }
