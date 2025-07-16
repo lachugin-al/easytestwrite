@@ -61,11 +61,11 @@ object AppConfig {
     }.getOrElse { Platform.ANDROID }
 
     // Версии ОС
-    private val androidVersion: String = prop("android.version", "15")
+    private val androidVersion: String = prop("android.version", "16")
     private val iosVersion: String = prop("ios.version", "18.4")
 
     // Имена устройств
-    private val androidDeviceName: String = prop("android.device.name", "Pixel_XL_API_35")
+    private val androidDeviceName: String = prop("android.device.name", "WBA16")
     private val iosDeviceName: String = prop("ios.device.name", "iPhone 16 Plus")
 
     // Пути к приложениям
