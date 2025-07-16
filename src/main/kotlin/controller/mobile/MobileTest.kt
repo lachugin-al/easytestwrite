@@ -75,8 +75,8 @@ import java.time.Duration
 @ExtendWith(SkipConditionExtension::class)
 open class MobileTest {
     private val logger: Logger = LoggerFactory.getLogger(MobileTest::class.java)
-    protected var app: App = App().launch()
-    protected var context: TestingContext = TestingContext(driver)
+    protected lateinit var app: App
+    protected lateinit var context: TestingContext
     protected val driver: AppiumDriver<MobileElement>
         get() = app.driver ?: throw IllegalStateException("Driver is not initialized")
     private val eventsFileStorage = EventStorage
@@ -87,6 +87,7 @@ open class MobileTest {
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(MobileTest::class.java)
+        private var emulatorStarted = false
 
         @BeforeAll
         @JvmStatic
@@ -95,7 +96,10 @@ open class MobileTest {
             if (AppConfig.isEmulatorAutoStartEnabled()) {
                 // Запуск эмулятора перед всеми тестами
                 logger.info("Запуск эмулятора перед всеми тестами")
-                EmulatorManager.startEmulator()
+                emulatorStarted = EmulatorManager.startEmulator()
+                if (!emulatorStarted) {
+                    logger.error("Не удалось запустить эмулятор")
+                }
             } else {
                 logger.info("Автозапуск эмулятора отключен в настройках")
             }
@@ -1699,6 +1703,22 @@ open class MobileTest {
         LogCapture.initialize()
         // Очистка хранилища событий перед началом теста
         EventStorage.clear()
+
+        // Проверяем, был ли успешно запущен эмулятор, если он требуется
+        if (AppConfig.getPlatform() == Platform.ANDROID && 
+            AppConfig.isEmulatorAutoStartEnabled() && 
+            !emulatorStarted) {
+            logger.warn("Эмулятор не был успешно запущен в setUpAll(), пробуем запустить снова")
+            emulatorStarted = EmulatorManager.startEmulator()
+            if (!emulatorStarted) {
+                logger.error("Не удалось запустить эмулятор перед тестом")
+                throw RuntimeException("Не удалось инициализировать Android-драйвер. Проверьте запущен ли эмулятор.")
+            }
+        }
+
+        // Инициализация приложения
+        app = App().launch()
+        context = TestingContext(driver)
 
         // Запуск записи видео
         val testName = testInfo.displayName
