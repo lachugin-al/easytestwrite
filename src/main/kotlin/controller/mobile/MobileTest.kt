@@ -171,60 +171,28 @@ open class MobileTest {
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION,
         eventPosition: String = "first"
     ) {
-        var matchedEvent: Event? = null
-
-        for (attempt in 1..scrollCount) {
-            "Ждём событие $eventName (попытка $attempt)" {
-                runCatching {
-                    checkHasEvent(eventName, eventData, timeoutExpectation)
-                }.onFailure {
-                    if (attempt < scrollCount) {
-                        logger.warn("Попытка $attempt неуспешна: событие не найдено")
-                    } else {
-                        logger.error("После всех попыток событие '$eventName' с фильтром '$eventData' не найдено")
-                    }
-                }
-            }
-
-            val matchedEvents = EventStorage.getEvents()
-                .filter {
-                    it.name == eventName &&
-                            it.data?.let { d ->
-                                val json = Json.encodeToString(EventData.serializer(), d)
-                                containsJsonData(json, eventData)
-                            } ?: false
-                }
-            matchedEvent = when (eventPosition.lowercase()) {
-                "last" -> matchedEvents.lastOrNull()
-                else -> matchedEvents.firstOrNull()
-            }
-
-            if (matchedEvent != null) {
-                break
-            }
-            if (attempt < scrollCount) {
-                logger.info("Выполняем скролл")
-                performScroll(
-                    element = null,
-                    scrollCount = 1,
-                    scrollCapacity = scrollCapacity,
-                    scrollDirection = scrollDirection
-                )
-            }
+        // Ждём событие по условиям
+        "Ждём событие $eventName" {
+            checkHasEvent(eventName, eventData, timeoutExpectation)
         }
 
-        val positionText = if (eventPosition.lowercase() == "last") "последнее" else "первое"
-        val ev = matchedEvent
-            ?: run {
-                val errorMsg =
-                    "$positionText событие '$eventName' с данными '$eventData' не найдено после $scrollCount скроллов"
-                logger.error(errorMsg)
-                throw NoSuchElementException(errorMsg)
+        // Получаем подходящее событие
+        val matchedEvents = EventStorage.getEvents().filter {
+            it.name == eventName &&
+                it.data?.let { d ->
+                    val json = Json.encodeToString(EventData.serializer(), d)
+                    containsJsonData(json, eventData)
+                } ?: false
             }
+
+        val matchedEvent = when (eventPosition.lowercase()) {
+            "last" -> matchedEvents.lastOrNull()
+            else -> matchedEvents.firstOrNull()
+        } ?: throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено")
 
         try {
             // Извлекаем массив items из body → event → data
-            val bodyObj = Json.parseToJsonElement(ev.data!!.body).jsonObject
+            val bodyObj = Json.parseToJsonElement(matchedEvent.data!!.body).jsonObject
             val itemsArr = bodyObj["event"]!!.jsonObject["data"]!!.jsonObject["items"]!!.jsonArray
 
             // Находим первый item, содержащий искомые пары, это будет первая карточка товара на странице
@@ -235,9 +203,7 @@ open class MobileTest {
                 }
             }
             if (matched == null) {
-                val errorMsg = "В событии '$eventName' ни один item не соответствует $eventData"
-                logger.error(errorMsg)
-                throw NoSuchElementException(errorMsg)
+                throw NoSuchElementException("В событии '$eventName' ни один item не соответствует $eventData")
             }
 
             // Достаем у найденного item его поле "name"
