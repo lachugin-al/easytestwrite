@@ -548,10 +548,10 @@ open class MobileTest {
     fun ExpectationContext.checkHasEvent(
         eventName: String,
         eventData: String? = null,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
         // Вызов основной функции с уже подготовленной строкой JSON
-        checkHasEventInternal(eventName, eventData, timeoutExpectation)
+        checkHasEventInternal(eventName, eventData, timeoutEventExpectation)
     }
 
     /**
@@ -581,10 +581,10 @@ open class MobileTest {
     fun ExpectationContext.checkHasEvent(
         eventName: String,
         eventData: File?,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
         val jsonData = eventData?.readText()
-        checkHasEventInternal(eventName, jsonData, timeoutExpectation)
+        checkHasEventInternal(eventName, jsonData, timeoutEventExpectation)
     }
 
     /**
@@ -604,10 +604,10 @@ open class MobileTest {
     private fun ExpectationContext.checkHasEventInternal(
         eventName: String,
         eventData: String? = null,
-        timeoutExpectation: Long
+        timeoutEventExpectation: Long
     ) {
         val pollingInterval = 500L
-        val timeoutInMillis = timeoutExpectation * 1000
+        val timeoutInMillis = timeoutEventExpectation * 1000
 
         if (eventData != null) {
             println("Ожидание события '$eventName' с данными '$eventData'")
@@ -657,9 +657,9 @@ open class MobileTest {
                         println("Ожидаемое событие '$eventName' найдено.")
                     } else {
                         if (eventData != null) {
-                            throw NoSuchElementException("Ожидаемое событие '$eventName' с данными '$eventData' не обнаружено за $timeoutExpectation секунд.")
+                            throw NoSuchElementException("Ожидаемое событие '$eventName' с данными '$eventData' не обнаружено за $timeoutEventExpectation секунд.")
                         } else {
-                            throw NoSuchElementException("Ожидаемое событие '$eventName' не обнаружено за $timeoutExpectation секунд.")
+                            throw NoSuchElementException("Ожидаемое событие '$eventName' не обнаружено за $timeoutEventExpectation секунд.")
                         }
                     }
                 } catch (e: ClassCastException) {
@@ -804,9 +804,9 @@ open class MobileTest {
     fun ExpectationContext.checkHasEventAsync(
         eventName: String,
         eventData: String? = null,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
-        checkHasEventAsyncInternal(eventName, eventData, timeoutExpectation)
+        checkHasEventAsyncInternal(eventName, eventData, timeoutEventExpectation)
     }
 
     /**
@@ -840,10 +840,10 @@ open class MobileTest {
     fun ExpectationContext.checkHasEventAsync(
         eventName: String,
         eventData: File?,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
         val jsonData = eventData?.readText()
-        checkHasEventAsyncInternal(eventName, jsonData, timeoutExpectation)
+        checkHasEventAsyncInternal(eventName, jsonData, timeoutEventExpectation)
     }
 
     /**
@@ -864,10 +864,10 @@ open class MobileTest {
     private fun ExpectationContext.checkHasEventAsyncInternal(
         eventName: String,
         eventData: String? = null,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
         val pollingInterval = 500L
-        val timeoutInMillis = timeoutExpectation * 1000
+        val timeoutInMillis = timeoutEventExpectation * 1000
 
         val job = scope.async {
             val initialEventCount = eventsFileStorage.getEvents().size
@@ -914,9 +914,9 @@ open class MobileTest {
                     println("Ожидаемое событие '$eventName' найдено.")
                 } else {
                     if (eventData != null) {
-                        assert(false) { "Событие '$eventName' с данными '$eventData' не было обнаружено за $timeoutExpectation секунд." }
+                        assert(false) { "Событие '$eventName' с данными '$eventData' не было обнаружено за $timeoutEventExpectation секунд." }
                     } else {
-                        assert(false) { "Событие '$eventName' не было обнаружено за $timeoutExpectation секунд." }
+                        assert(false) { "Событие '$eventName' не было обнаружено за $timeoutEventExpectation секунд." }
                     }
                 }
             } catch (e: ClassCastException) {
