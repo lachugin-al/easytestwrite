@@ -165,6 +165,7 @@ open class MobileTest {
         eventData: String,
         timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
         timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION,
         pollingInterval: Long = DEFAULT_POLLING_INTERVAL,
         scrollCount: Int = 1,
         scrollCapacity: Double = 0.7,
@@ -173,7 +174,7 @@ open class MobileTest {
     ) {
         // Ждём событие по условиям
         "Ждём событие $eventName" {
-            checkHasEvent(eventName, eventData, timeoutExpectation)
+            checkHasEvent(eventName, eventData, timeoutEventExpectation)
         }
 
         // Получаем подходящее событие
