@@ -4,12 +4,13 @@ plugins {
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
     id("org.gradle.test-retry") version "1.6.2"
+    id("io.gitlab.arturbosch.detekt") version "1.23.5"
     `java-library`
     `maven-publish`
 }
 
 group = "wba"
-version = "0.0.45"
+version = "0.0.46"
 
 repositories {
     maven {
@@ -194,4 +195,23 @@ publishing {
 
 kotlin {
     jvmToolchain(21)
+}
+
+detekt {
+    buildUponDefaultConfig = true // use the default detekt configuration as a baseline
+    allRules = false // activate all available (even unstable) rules
+    config.setFrom(files("$projectDir/config/detekt/detekt.yml")) // point to your custom config defining rules to run
+    baseline = file("$projectDir/config/detekt/baseline.xml") // a way of suppressing issues before introducing detekt
+    
+    reports {
+        html.required.set(true) // observe findings in your browser with structure and code snippets
+        xml.required.set(true) // checkstyle like format mainly for integrations like Jenkins
+        txt.required.set(true) // similar to the console output, contains issue signature to manually edit baseline files
+        sarif.required.set(true) // standardized SARIF format (https://sarifweb.azurewebsites.net/) to support integrations with GitHub Code Scanning
+        md.required.set(true) // simple Markdown format
+    }
+}
+
+dependencies {
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.5")
 }
