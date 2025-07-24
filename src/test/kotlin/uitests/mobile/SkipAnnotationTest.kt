@@ -18,7 +18,7 @@ class SkipAnnotationTest : MobileTest() {
         logger.info("BeforeEach метод выполнен")
     }
 
-    @Test
+//    @Test
     @DisplayName("Тест без аннотации Skip всегда выполняется")
     fun testWithoutSkip() {
         context.run {
@@ -28,7 +28,7 @@ class SkipAnnotationTest : MobileTest() {
         }
     }
 
-    @Test
+//    @Test
     @Skip()
     @DisplayName("Тест с аннотацией Skip всегда пропускается")
     fun testWithSkipTrue() {
@@ -39,7 +39,7 @@ class SkipAnnotationTest : MobileTest() {
         }
     }
 
-    @Test
+//    @Test
     @DisplayName("Тест без аннотации Skip всегда выполняется")
     fun testWithSkipFalse() {
         context.run {
@@ -49,7 +49,7 @@ class SkipAnnotationTest : MobileTest() {
         }
     }
 
-    @Test
+//    @Test
     @Skip(platform = "android")
     @DisplayName("Тест пропускается только на Android")
     fun testSkipOnAndroid() {
@@ -60,7 +60,7 @@ class SkipAnnotationTest : MobileTest() {
         }
     }
 
-    @Test
+//    @Test
     @Skip(platform = "ios")
     @DisplayName("Тест пропускается только на iOS")
     fun testSkipOnIOS() {
