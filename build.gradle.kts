@@ -149,47 +149,60 @@ tasks.named("test") {
 
 
 // Настройки публикации проекта
-val propUser = findProperty("wbaNexusUser") as String?
-val propPassword = findProperty("wbaNexusPassword") as String?
-val envUser = System.getenv("WBA_NEXUS_USER")
-val envPassword = System.getenv("WBA_NEXUS_PASSWORD")
+// Проверяем, выполняется ли задача публикации
+val isPublishTask = gradle.startParameter.taskNames.any { it.contains("publish") }
 
-val wbaNexusUser: String = propUser
-    ?: envUser
-    ?: throw GradleException(
-        "Не задан wbaNexusUser: " +
-                "укажите в gradle.properties (wbaNexusUser=…) или через -P, " +
-                "или задайте env WBA_NEXUS_USER"
-    )
+// Настраиваем публикацию только если выполняется задача публикации
+// или добавляем пустую конфигурацию, чтобы избежать ошибок при других задачах
+if (isPublishTask) {
+    // Эти проверки выполняются только при задачах публикации
+    val propUser = findProperty("wbaNexusUser") as String?
+    val propPassword = findProperty("wbaNexusPassword") as String?
+    val envUser = System.getenv("WBA_NEXUS_USER")
+    val envPassword = System.getenv("WBA_NEXUS_PASSWORD")
 
-val wbaNexusPassword: String = propPassword
-    ?: envPassword
-    ?: throw GradleException(
-        "Не задан wbaNexusPassword: " +
-                "укажите в gradle.properties (wbaNexusPassword=…) или через -P, " +
-                "или задайте env WBA_NEXUS_PASSWORD"
-    )
+    val wbaNexusUser: String = propUser
+        ?: envUser
+        ?: throw GradleException(
+            "Не задан wbaNexusUser: " +
+                    "укажите в gradle.properties (wbaNexusUser=…) или через -P, " +
+                    "или задайте env WBA_NEXUS_USER"
+        )
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            artifact(tasks["sourcesJar"])
-            artifact(tasks["javadocJar"])
-            groupId = "wba"
-            artifactId = "easytestwrite"
-            version = project.version.toString()
-        }
-    }
-    repositories {
-        maven {
-            name = "wba-maven"
-            url = uri("https://wba-nexus.wb.ru/repository/wba-maven/")
-            credentials {
-                username = wbaNexusUser
-                password = wbaNexusPassword
+    val wbaNexusPassword: String = propPassword
+        ?: envPassword
+        ?: throw GradleException(
+            "Не задан wbaNexusPassword: " +
+                    "укажите в gradle.properties (wbaNexusPassword=…) или через -P, " +
+                    "или задайте env WBA_NEXUS_PASSWORD"
+        )
+
+    publishing {
+        publications {
+            create<MavenPublication>("mavenJava") {
+                from(components["java"])
+                artifact(tasks["sourcesJar"])
+                artifact(tasks["javadocJar"])
+                groupId = "wba"
+                artifactId = "easytestwrite"
+                version = project.version.toString()
             }
         }
+        repositories {
+            maven {
+                name = "wba-maven"
+                url = uri("https://wba-nexus.wb.ru/repository/wba-maven/")
+                credentials {
+                    username = wbaNexusUser
+                    password = wbaNexusPassword
+                }
+            }
+        }
+    }
+} else {
+    // Пустая конфигурация публикации для непубликационных задач
+    publishing {
+        // Пустые публикации и репозитории
     }
 }
 
