@@ -124,11 +124,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      */
@@ -349,11 +349,11 @@ open class MobileTest {
      * @param x точка по [x] в области элемента;
      * @param y точка по [y] в области элемента;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      */
     fun StepContext.tapElementArea(
         element: PageElement?,
@@ -391,11 +391,11 @@ open class MobileTest {
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param text текст;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      */
@@ -427,11 +427,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      */
@@ -948,11 +948,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      *
@@ -985,11 +985,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException если возвращаемое значение будет null
      *
@@ -1022,11 +1022,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      *
@@ -1059,11 +1059,11 @@ open class MobileTest {
      * Найти элемент на экране по его [element]
      * @param element элемент;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      *
@@ -1133,11 +1133,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      *
@@ -1253,11 +1253,11 @@ open class MobileTest {
      * @param element элемент;
      * @param elementNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @exception java.util.NoSuchElementException элемент не найден
      *

@@ -162,11 +162,11 @@ open class WebTest {
      * @param selector элемент;
      * @param selectorNumber номер найденного элемента начиная с 1;
      * @param timeoutBeforeExpectation количество секунд, до того как будет производиться поиск элемента;
-     * @param timeoutExpectation количество секунд в течении которого производится поиск элемента;
+     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
      * @param pollingInterval частота опроса элемента в миллисекундах;
      * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
      * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллировая экрана;
+     * @param scrollDirection направление скроллирования экрана;
      *
      * @return the specific ElementHandle if found
      */

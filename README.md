@@ -515,11 +515,11 @@ object ExampleScreen {
 - `element: PageElement?` - элемент
 - `elementNumber: Int?` - номер найденного элемента начиная с 1
 - `timeoutBeforeExpectation: Long` - количество секунд, до того как будет производиться поиск элемента
-- `timeoutExpectation: Long` - количество секунд в течении которого производится поиск элемента
+- `timeoutExpectation: Long` - количество секунд в течение которого производится поиск элемента
 - `pollingInterval: Long` - частота опроса элемента в миллисекундах
 - `scrollCount: Int` - количество скроллирований до элемента, если элемент не найден на текущей странице
 - `scrollCapacity: Double` - модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу
-- `scrollDirection: ScrollDirection` - направление скроллировая экрана
+- `scrollDirection: ScrollDirection` - направление скроллирования экрана
 - `x: Int`, `y: Int` - передача точки `x` и `y` на экране для функций `tapArea()` и `tapElementArea()`
 - `eventName: String` - название события для поиска в EventStorage
 - `eventData: String` - JSON-строка с данными для проверки в событии
