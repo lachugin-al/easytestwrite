@@ -1,6 +1,6 @@
 # Easy test write
 
-Фреймворк для автоматизации тестирования мобильных и веб-приложений WB
+Фреймворк для автоматизации тестирования мобильных и веб-приложений
 
 ![Version](https://img.shields.io/badge/version-0.0.45-blue.svg)
 
@@ -495,10 +495,10 @@ object ExampleScreen {
 - `openDeeplink(deeplink)` - Выполняет открытие переданной в параметры ссылки диплинка (поддерживается для Android и iOS)
   ```kotlin
   // Примеры использования:
-  openDeeplink("wildberries://main")      // Открытие главной страницы
-  openDeeplink("wildberries://catalog")   // Открытие страницы каталога
-  openDeeplink("wildberries://cart")      // Открытие страницы корзины
-  openDeeplink("wildberries://profile")   // Открытие страницы профиля
+  openDeeplink("project://main")      // Открытие главной страницы
+  openDeeplink("project://catalog")   // Открытие страницы каталога
+  openDeeplink("project://cart")      // Открытие страницы корзины
+  openDeeplink("project://profile")   // Открытие страницы профиля
   ```
 
 ### ExpectationContext
