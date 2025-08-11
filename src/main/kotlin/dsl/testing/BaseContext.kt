@@ -2,7 +2,6 @@ package dsl.testing
 
 import app.config.AppConfig
 import app.model.Platform
-import com.microsoft.playwright.Page
 import io.appium.java_client.AppiumDriver
 import io.qameta.allure.Allure.addAttachment
 import utils.screenshot.AppiumScreenshotProvider
@@ -151,7 +150,6 @@ abstract class BaseContext {
             {
                 val provider: ScreenshotProvider = when (driver) {
                     is AppiumDriver<*> -> AppiumScreenshotProvider(driver as AppiumDriver<*>)
-                    is Page -> PlaywrightScreenshotProvider(driver as Page)
                     else -> null
                 } ?: return@optional
 

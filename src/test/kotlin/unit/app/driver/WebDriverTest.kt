@@ -1,7 +1,6 @@
 package unit.app.driver
 
 import app.config.AppConfig
-import app.driver.WebDriver
 import com.microsoft.playwright.Browser
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright

@@ -3,9 +3,7 @@ package app
 import app.config.AppConfig
 import app.driver.AndroidDriver
 import app.driver.IosDriver
-import app.driver.WebDriver
 import app.model.Platform
-import com.microsoft.playwright.Page
 import io.appium.java_client.AppiumDriver
 import io.appium.java_client.MobileElement
 import org.openqa.selenium.WebDriverException
@@ -38,10 +36,6 @@ class App() : AutoCloseable {
 
     /** Экземпляр Appium-драйвера для мобильного тестирования (Android/iOS). */
     var driver: AppiumDriver<MobileElement>? = null
-        private set
-
-    /** Экземпляр Playwright Page для веб-тестирования. */
-    var webDriver: Page? = null
         private set
 
     /** Локальный веб-сервер, используемый для вспомогательных целей в тестах. */
@@ -86,11 +80,6 @@ class App() : AutoCloseable {
                 logger.info("Инициализация iOS-драйвера")
                 driver = IosDriver(autoLaunch = true).getIOSDriver(3)
             }
-
-            Platform.WEB -> {
-                logger.info("Инициализация Playwright для веб-тестирования")
-                webDriver = WebDriver(AppConfig.getBrowserType(), AppConfig.isHeadless()).getPlaywrightPage(3)
-            }
         }
     }
 
@@ -126,18 +115,6 @@ class App() : AutoCloseable {
                         logger.error("Ошибка при завершении сессии Appium-драйвера на iOS", e)
                     } finally {
                         driver = null
-                    }
-                }
-            }
-
-            Platform.WEB -> {
-                webDriver?.let {
-                    try {
-                        it.close()
-                    } catch (e: Exception) {
-                        logger.error("Ошибка при закрытии Playwright-страницы", e)
-                    } finally {
-                        webDriver = null
                     }
                 }
             }
