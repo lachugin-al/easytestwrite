@@ -182,7 +182,6 @@ object AppConfig {
         return when (platform) {
             Platform.ANDROID -> androidAppName
             Platform.IOS -> iosAppName
-            Platform.WEB -> ""
         }
     }
 

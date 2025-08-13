@@ -49,11 +49,6 @@ class AppConfigTest {
                 assertFalse(AppConfig.isAndroid())
                 assertTrue(AppConfig.isiOS())
             }
-
-            Platform.WEB -> {
-                assertFalse(AppConfig.isAndroid())
-                assertFalse(AppConfig.isiOS())
-            }
         }
 
         // Проверяем, что getPlatform возвращает ожидаемую платформу
@@ -90,10 +85,6 @@ class AppConfigTest {
                 assertNotNull(appName)
                 assertFalse(appName.isEmpty())
             }
-
-            Platform.WEB -> {
-                assertEquals("", appName)
-            }
         }
     }
 
@@ -116,20 +107,6 @@ class AppConfigTest {
         assertTrue(bitrate > 0)
         assertNotNull(outputDir)
         assertFalse(outputDir.isEmpty())
-    }
-
-    /**
-     * Тестирует получение настроек браузера для веб-тестирования.
-     */
-    @Test
-    fun `test browser settings`() {
-        // Получаем тип браузера и режим headless
-        val browserType = AppConfig.getBrowserType()
-        val isHeadless = AppConfig.isHeadless()
-
-        // Проверяем, что тип браузера не null и является одним из допустимых значений
-        assertNotNull(browserType)
-        assertTrue(browserType in listOf("chromium", "firefox", "webkit"))
     }
 
     /**

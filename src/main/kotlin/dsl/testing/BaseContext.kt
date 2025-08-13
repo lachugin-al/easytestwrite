@@ -6,7 +6,6 @@ import io.appium.java_client.AppiumDriver
 import io.qameta.allure.Allure.addAttachment
 import utils.screenshot.AppiumScreenshotProvider
 import utils.screenshot.ImageProcessor
-import utils.screenshot.PlaywrightScreenshotProvider
 import utils.screenshot.ScreenshotProvider
 import java.io.ByteArrayInputStream
 

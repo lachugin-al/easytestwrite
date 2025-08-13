@@ -24,7 +24,6 @@ class PlatformTest {
 
         assertTrue(platforms.contains(Platform.ANDROID))
         assertTrue(platforms.contains(Platform.IOS))
-        assertTrue(platforms.contains(Platform.WEB))
     }
 
     /**
@@ -46,7 +45,6 @@ class PlatformTest {
         // Проверяем, что имена значений перечисления соответствуют ожидаемым
         assertEquals("ANDROID", Platform.ANDROID.name)
         assertEquals("IOS", Platform.IOS.name)
-        assertEquals("WEB", Platform.WEB.name)
     }
 
     /**
@@ -57,7 +55,6 @@ class PlatformTest {
         // Проверяем, что порядковые номера значений перечисления соответствуют ожидаемым
         assertEquals(0, Platform.ANDROID.ordinal)
         assertEquals(1, Platform.IOS.ordinal)
-        assertEquals(2, Platform.WEB.ordinal)
     }
 
     /**
@@ -68,7 +65,6 @@ class PlatformTest {
         // Проверяем, что метод valueOf корректно возвращает значения перечисления
         assertEquals(Platform.ANDROID, Platform.valueOf("ANDROID"))
         assertEquals(Platform.IOS, Platform.valueOf("IOS"))
-        assertEquals(Platform.WEB, Platform.valueOf("WEB"))
     }
 
     /**
