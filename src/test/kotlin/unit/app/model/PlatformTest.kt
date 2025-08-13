@@ -34,7 +34,7 @@ class PlatformTest {
         // Проверяем, что перечисление содержит ожидаемое количество значений
         val platforms = Platform.values()
 
-        assertEquals(3, platforms.size)
+        assertEquals(2, platforms.size)
     }
 
     /**
