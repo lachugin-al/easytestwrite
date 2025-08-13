@@ -36,9 +36,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
     testImplementation("io.qameta.allure:allure-junit5:2.28.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
-
-    // https://mvnrepository.com/artifact/com.microsoft.playwright/playwright
-    implementation("com.microsoft.playwright:playwright:1.47.0")
 }
 
 tasks.test {
@@ -55,8 +52,6 @@ tasks.test {
     val appPackageProp = (project.findProperty("app.package") as String?).orEmpty()
     val iosAutoAcceptAlertsProp = (project.findProperty("ios.auto_accept_alerts") as String?).orEmpty()
     val iosAutoDismissAlertsProp = (project.findProperty("ios.auto_dismiss_alerts") as String?).orEmpty()
-    val browserTypeProp = (project.findProperty("playwright.browser.type") as String?).orEmpty()
-    val headlessProp = (project.findProperty("playwright.headless") as String?).orEmpty()
     val tagProp = (project.findProperty("tag") as String?).orEmpty()
     val androidVideoRecordingEnabledProp = (project.findProperty("android.video.recording.enabled") as String?).orEmpty()
     val iosVideoRecordingEnabledProp = (project.findProperty("ios.video.recording.enabled") as String?).orEmpty()
@@ -96,8 +91,6 @@ tasks.test {
         "app.package" to appPackageProp,
         "ios.auto_accept_alerts" to iosAutoAcceptAlertsProp,
         "ios.auto_dismiss_alerts" to iosAutoDismissAlertsProp,
-        "playwright.browser.type" to browserTypeProp,
-        "playwright.headless" to headlessProp,
         "android.video.recording.enabled" to androidVideoRecordingEnabledProp,
         "ios.video.recording.enabled" to iosVideoRecordingEnabledProp,
         "video.recording.size" to videoRecordingSizeProp,

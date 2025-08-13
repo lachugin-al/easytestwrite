@@ -180,11 +180,11 @@ open class MobileTest {
         // Получаем подходящее событие
         val matchedEvents = EventStorage.getEvents().filter {
             it.name == eventName &&
-                it.data?.let { d ->
-                    val json = Json.encodeToString(EventData.serializer(), d)
-                    containsJsonData(json, eventData)
-                } ?: false
-            }
+                    it.data?.let { d ->
+                        val json = Json.encodeToString(EventData.serializer(), d)
+                        containsJsonData(json, eventData)
+                    } ?: false
+        }
 
         val matchedEvent = when (eventPosition.lowercase()) {
             "last" -> matchedEvents.lastOrNull()
@@ -215,8 +215,7 @@ open class MobileTest {
             // Строим локатор и выполнить обычный click с ожиданиями и скроллом
             val locator = PageElement(
                 android = PageElement.Text(itemName),
-                ios = PageElement.Label(itemName),
-                web = null
+                ios = PageElement.Label(itemName)
             )
 
             // Выполняем click по полученному локатору
@@ -671,7 +670,7 @@ open class MobileTest {
 
     /**
      * Проверяет, содержатся ли все ключи и значения из искомого JSON внутри JSON события.
-     * 
+     *
      * Поддерживает шаблоны для значений:
      * - "*" - соответствует любому значению (wildcard)
      * - "" - соответствует только пустому значению
@@ -743,7 +742,11 @@ open class MobileTest {
                 when {
                     searchElement.content == "*" -> true // Wildcard - соответствует любому значению
                     searchElement.content == "" -> eventElement.content.isEmpty() // Пустая строка - соответствует только пустому значению
-                    searchElement.content.startsWith("~") -> eventElement.content.contains(searchElement.content.substring(1)) // Частичное совпадение
+                    searchElement.content.startsWith("~") -> eventElement.content.contains(
+                        searchElement.content.substring(
+                            1
+                        )
+                    ) // Частичное совпадение
                     else -> eventElement.content == searchElement.content // Точное соответствие
                 }
             }
@@ -1572,8 +1575,7 @@ open class MobileTest {
                 waitForElement(
                     PageElement(
                         android = null,
-                        ios = By.id("deeplink"),
-                        web = null
+                        ios = By.id("deeplink")
                     ), timeoutExpectation = 15
                 ).click()
             }
@@ -1638,10 +1640,6 @@ open class MobileTest {
                     throw IllegalArgumentException("Необходимо передать параметр iosKey для iOS-платформы")
                 }
             }
-
-            Platform.WEB -> {
-                throw UnsupportedOperationException("Нативные действия не поддерживаются на платформе WEB")
-            }
         }
     }
 
@@ -1672,9 +1670,10 @@ open class MobileTest {
         EventStorage.clear()
 
         // Проверяем, был ли успешно запущен эмулятор, если он требуется
-        if (AppConfig.getPlatform() == Platform.ANDROID && 
-            AppConfig.isEmulatorAutoStartEnabled() && 
-            !emulatorStarted) {
+        if (AppConfig.getPlatform() == Platform.ANDROID &&
+            AppConfig.isEmulatorAutoStartEnabled() &&
+            !emulatorStarted
+        ) {
             logger.warn("Эмулятор не был успешно запущен в setUpAll(), пробуем запустить снова")
             emulatorStarted = EmulatorManager.startEmulator()
             if (!emulatorStarted) {
