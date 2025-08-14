@@ -75,15 +75,15 @@ object AppConfig {
     // Активити и пакет Android
     private val appActivity: String = prop(
         "app.activity",
-        "ru.wildberries.view.main.MainActivity"
+        "MainActivity"
     )
     private val appPackage: String = prop(
         "app.package",
-        "com.wildberries.ru.dev"
+        "com.dev"
     )
     private val bundleId: String = prop(
         "bundle.id",
-        "RU.WILDBERRIES.MOBILEAPP.DEV"
+        "MOBILEAPP.DEV"
     )
 
     // iOS alerts configuration - оба значения false по умолчанию
