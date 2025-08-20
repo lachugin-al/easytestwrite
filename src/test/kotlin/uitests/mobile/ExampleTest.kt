@@ -4,14 +4,14 @@ package uitests.mobile
  * Пример использования параметризованных тестов в мобильном тестировании.
  *
  * В этом классе реализованы два подхода к параметризации тестов:
- * 1. Использование встроенных параметров через @ValueSource - метод smokeTestWithValueSource
- * 2. Использование параметров из CSV файла через @CsvFileSource - метод smokeTestWithCsvSource
+ * 1. Использование встроенных параметров через @ValueSource - метод exampleTestWithValueSource
+ * 2. Использование параметров из CSV файла через @CsvFileSource - метод exampleTestWithCsvSource
  *
  * Для добавления новых поисковых запросов:
  * - В первом случае - добавьте новое значение в массив @ValueSource
  * - Во втором случае - добавьте новую строку в файл src/test/resources/search_terms.csv
  *
- * Оба метода используют общую логику тестирования, вынесенную в приватный метод runSmokeTest.
+ * Оба метода используют общую логику тестирования, вынесенную в приватный метод runexampleTest.
  *
  * При запуске тестов с параметрами, каждый тест будет выполнен для каждого значения параметра.
  * В случае падения теста, механизм перезапуска в build.gradle.kts обеспечит повторный запуск
@@ -29,60 +29,60 @@ import org.junit.jupiter.params.provider.CsvFileSource
 import uipages.mobile.MobileExamplePage
 
 
-class SmokeTest : MobileTest() {
+class ExampleTest : MobileTest() {
 
-    @ParameterizedTest(name = "Smoke Test с поиском: {0}")
+    @ParameterizedTest(name = "Example Test с поиском: {0}")
     @ValueSource(strings = ["Стиральный", "Телефон"])
-    @DisplayName("Smoke Test, загрузка приложения (встроенные параметры)")
+    @DisplayName("Example Test, загрузка приложения (встроенные параметры)")
     @Description(
         """Проверяем что приложение загрузилось, на старте отображается экран с выбором региона,
         | после загрузки приложение присутствует нижняя навигационная панель с кнопками 'Home', 'Catalog', 'Cart', 'Profile'"""
     )
     @Feature("Smoke")
-    fun smokeTestWithValueSource(searchTerm: String) {
-        runSmokeTest(searchTerm)
+    fun exampleTestWithValueSource(searchTerm: String) {
+        runexampleTest(searchTerm)
     }
 
 
-    @ParameterizedTest(name = "Smoke Test с поиском из CSV: {0}")
+    @ParameterizedTest(name = "Example Test с поиском из CSV: {0}")
     @CsvFileSource(resources = ["/search_terms.csv"], numLinesToSkip = 1)
-    @DisplayName("Smoke Test, загрузка приложения (параметры из CSV)")
+    @DisplayName("Example Test, загрузка приложения (параметры из CSV)")
     @Description(
         """Проверяем что приложение загрузилось, на старте отображается экран с выбором региона,
         | после загрузки приложение присутствует нижняя навигационная панель с кнопками 'Home', 'Catalog', 'Cart', 'Profile'"""
     )
     @Feature("Smoke")
-    fun smokeTestWithCsvSource(searchTerm: String) {
-        runSmokeTest(searchTerm)
+    fun exampleTestWithCsvSource(searchTerm: String) {
+        runexampleTest(searchTerm)
     }
 
 
     @Test
-    @DisplayName("Smoke Test, загрузка приложения (без параметров)")
+    @DisplayName("Example Test, загрузка приложения (без параметров)")
     @Description(
         """Проверяем что приложение загрузилось, на старте отображается экран с выбором региона,
         | после загрузки приложение присутствует нижняя навигационная панель с кнопками 'Home', 'Catalog', 'Cart', 'Profile'"""
     )
     @Feature("Smoke")
-    fun smokeTestWithoutParam() {
-        runSmokeTest("Стиральный")
+    fun exampleTestWithoutParam() {
+        runexampleTest("Стиральный")
     }
 
     @Tag("Smoke")
-    @ParameterizedTest(name = "Smoke Test с выбором региона: {0}")
+    @ParameterizedTest(name = "Example Test с выбором региона: {0}")
     @ValueSource(strings = ["Россия", "Беларусь", "Казахстан", "Киргизия", "Армения", "Узбекистан", "Грузия", "Таджикистан"])
-    @DisplayName("Smoke Test, загрузка приложения")
+    @DisplayName("Example Test, загрузка приложения")
     @Description(
         """Проверяем что приложение загрузилось, на старте отображается экран с выбором региона,
         | после загрузки приложение присутствует нижняя навигационная панель с кнопками 'Home', 'Catalog', 'Cart', 'Profile'"""
     )
     @Feature("Smoke")
     fun smokeWithParam(regionTerm: String) {
-        smokeTest(regionTerm)
+        exampleTest(regionTerm)
     }
 
 
-    private fun runSmokeTest(searchTerm: String) {
+    private fun runexampleTest(searchTerm: String) {
         context.run {
             "Загрузка приложения" {
                 "Экран с выбором региона отображается" {
@@ -116,7 +116,7 @@ class SmokeTest : MobileTest() {
         }
     }
 
-    private fun smokeTest(regionTerm: String) {
+    private fun exampleTest(regionTerm: String) {
         context.run {
             "Загрузка приложения" {
                 "Экран с выбором региона отображается" {
