@@ -58,6 +58,7 @@ import org.junit.jupiter.api.TestInfo
 import utils.DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
 import utils.AnrWatcher
 import utils.EmulatorManager
+import utils.NumberParser
 import java.io.File
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -984,21 +985,16 @@ open class MobileTest {
     }
 
     /**
-     * Получить цену из [element] найденном на экране
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Получить числовое значение из [element] найденного на экране
+     * Универсальный парсер числовых значений из «грязного» текста (цены/суммы):
+     * нормализуются спецпробелы, валютные/текстовые хвосты, определяется десятичный
+     * разделитель, удаляются разделители тысяч.
      *
-     * @exception java.util.NoSuchElementException если возвращаемое значение будет null
+     * Примеры: "1 22323", "1232", "12.2323", "стоимость 12 р".
      *
-     * @return Int or null
+     * @return Double or null
      */
-    fun getPrice(
+    fun getNumber(
         element: PageElement?,
         elementNumber: Int? = null,
         timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
@@ -1007,8 +1003,8 @@ open class MobileTest {
         scrollCount: Int = DEFAULT_SCROLL_COUNT,
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
-    ): Int? {
-        return waitForElements(
+    ): Double? {
+        val text = waitForElements(
             element = element,
             elementNumber = elementNumber,
             timeoutBeforeExpectation = timeoutBeforeExpectation,
@@ -1017,7 +1013,8 @@ open class MobileTest {
             scrollCount = scrollCount,
             scrollCapacity = scrollCapacity,
             scrollDirection = scrollDirection
-        ).text.toString().filter { it.isDigit() }.toIntOrNull()
+        ).text.toString()
+        return NumberParser.parseNumber(text)
     }
 
     /**
