@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.params.provider.CsvFileSource
-import uipages.mobile.MobileExamplePage
+import uipages.mobile.ExampleMobilePage
 
 
 class ExampleTest : MobileTest() {
@@ -86,26 +86,26 @@ class ExampleTest : MobileTest() {
         context.run {
             "Загрузка приложения" {
                 "Экран с выбором региона отображается" {
-                    checkVisible(MobileExamplePage.ruRegionRussiaText)
+                    checkVisible(ExampleMobilePage.ruRegionRussiaText)
                 }
             }
 
             "Переходим на главный экран приложения RU регион" {
-                click(MobileExamplePage.ruRegionRussiaText)
+                click(ExampleMobilePage.ruRegionRussiaText)
             }
 
             "Проверяем наличие нижней навигационной панели" {
                 "Кнопка 'Home' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.homeNavBar)
+                    checkVisible(ExampleMobilePage.homeNavBar)
                 }
                 "Кнопка 'Catalog' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.catNavBar)
+                    checkVisible(ExampleMobilePage.catNavBar)
                 }
                 "Кнопка 'Cart' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.cartNavBar)
+                    checkVisible(ExampleMobilePage.cartNavBar)
                 }
                 "Кнопка 'Profile' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.profileNavBar)
+                    checkVisible(ExampleMobilePage.profileNavBar)
                 }
             }
 
@@ -130,26 +130,26 @@ class ExampleTest : MobileTest() {
 
             optionalIos(
                 { "Принимаем alert" { alert(timeoutExpectation = 3).accept() } },
-                { "Подпишитесь на наши обновления" { click(MobileExamplePage.dismissNotice) } },
+                { "Подпишитесь на наши обновления" { click(ExampleMobilePage.dismissNotice) } },
                 { "Откллоняем alert" { alert().dismiss() } },
             )
 
             optionalAndroid(
-                { "Пропускаем поп-ап обновления" { click(MobileExamplePage.notNow, timeoutExpectation = 3) } }
+                { "Пропускаем поп-ап обновления" { click(ExampleMobilePage.notNow, timeoutExpectation = 3) } }
             )
 
             "Проверяем наличие нижней навигационной панели" {
                 "Кнопка 'Home' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.homeNavBar)
+                    checkVisible(ExampleMobilePage.homeNavBar)
                 }
                 "Кнопка 'Catalog' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.catNavBar)
+                    checkVisible(ExampleMobilePage.catNavBar)
                 }
                 "Кнопка 'Cart' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.cartNavBar)
+                    checkVisible(ExampleMobilePage.cartNavBar)
                 }
                 "Кнопка 'Profile' на навигационной панели отображается" {
-                    checkVisible(MobileExamplePage.profileNavBar)
+                    checkVisible(ExampleMobilePage.profileNavBar)
                 }
             }
         }
