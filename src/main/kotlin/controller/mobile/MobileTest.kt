@@ -1554,8 +1554,24 @@ open class MobileTest {
                 )
             )
 
-            // Для iOS эмулируем открытие диплинка через симулятор
+            // Для iOS: сначала пробуем стандартный способ через Appium, затем (при ошибке или отсутствии bundleId) эмулируем через симулятор
             Platform.IOS -> {
+                val bundleId = AppConfig.getBundleId().trim()
+                if (bundleId.isNotEmpty()) {
+                    try {
+                        driver.executeScript(
+                            "mobile:deepLink",
+                            mapOf(
+                                "url" to deeplink,
+                                "bundleId" to bundleId
+                            )
+                        )
+                        return
+                    } catch (e: Exception) {
+                        logger.warn("iOS deepLink via Appium failed, falling back to simulator: ${e.message}")
+                    }
+                }
+
                 val encodedUrl: String = URLEncoder.encode(deeplink, StandardCharsets.UTF_8)
                 val listCommand = listOf(
                     "xcrun",
