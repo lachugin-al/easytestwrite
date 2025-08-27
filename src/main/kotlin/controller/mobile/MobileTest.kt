@@ -156,86 +156,6 @@ open class MobileTest {
     }
 
     /**
-     * Расширение для StepContext: клик по item из события,
-     * у которого где-нибудь в data встречаются все пары из eventData.
-     *
-     * @param eventPosition позиция события для обработки: "first" - первое найденное, "last" - последнее найденное
-     */
-    fun StepContext.click(
-        eventName: String,
-        eventData: String,
-        timeoutBeforeExpectation: Long = DEFAULT_TIMEOUT_BEFORE_EXPECTATION,
-        timeoutExpectation: Long = DEFAULT_TIMEOUT_EXPECTATION,
-        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION,
-        pollingInterval: Long = DEFAULT_POLLING_INTERVAL,
-        scrollCount: Int = 1,
-        scrollCapacity: Double = 0.7,
-        scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION,
-        eventPosition: String = "first"
-    ) {
-        // Ждём событие по условиям
-        "Ждём событие $eventName" {
-            checkHasEvent(eventName, eventData, timeoutEventExpectation)
-        }
-
-        // Получаем подходящее событие
-        val matchedEvents = EventStorage.getEvents().filter {
-            it.name == eventName &&
-                    it.data?.let { d ->
-                        val json = Json.encodeToString(EventData.serializer(), d)
-                        containsJsonData(json, eventData)
-                    } ?: false
-        }
-
-        val matchedEvent = when (eventPosition.lowercase()) {
-            "last" -> matchedEvents.lastOrNull()
-            else -> matchedEvents.firstOrNull()
-        } ?: throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено")
-
-        try {
-            // Извлекаем массив items из body → event → data
-            val bodyObj = Json.parseToJsonElement(matchedEvent.data!!.body).jsonObject
-            val itemsArr = bodyObj["event"]!!.jsonObject["data"]!!.jsonObject["items"]!!.jsonArray
-
-            // Находим первый item, содержащий искомые пары, это будет первая карточка товара на странице
-            val searchObj = Json.parseToJsonElement(eventData).jsonObject
-            val matched = itemsArr.firstOrNull { itemElem ->
-                searchObj.all { (key, sv) ->
-                    findKeyValueInTree(itemElem, key, sv)
-                }
-            }
-            if (matched == null) {
-                throw NoSuchElementException("В событии '$eventName' ни один item не соответствует $eventData")
-            }
-
-            // Достаем у найденного item его поле "name"
-            val itemName = matched.jsonObject["name"]!!.jsonPrimitive.content
-            val positionTextCase = if (eventPosition.lowercase() == "last") "последнем" else "первом"
-            logger.info("Найден подходящий товар: '$itemName' в $positionTextCase событии по фильтрам (eventName=$eventName, filter=$eventData, position=$eventPosition)")
-
-            // Строим локатор и выполнить обычный click с ожиданиями и скроллом
-            val locator = PageElement(
-                android = PageElement.Text(itemName),
-                ios = PageElement.Label(itemName)
-            )
-
-            // Выполняем click по полученному локатору
-            click(
-                element = locator,
-                timeoutBeforeExpectation = timeoutBeforeExpectation,
-                timeoutExpectation = timeoutExpectation,
-                pollingInterval = pollingInterval,
-                scrollCount = scrollCount,
-                scrollCapacity = scrollCapacity,
-                scrollDirection = scrollDirection
-            )
-        } catch (e: Exception) {
-            logger.error("Ошибка при выполнении click по событию '$eventName': ${e.message}")
-            throw e
-        }
-    }
-
-    /**
      * Найти элемент на экране, содержащий указанный текст, и кликнуть по нему.
      *
      * Метод построит локатор по стратегии `PageElement.Contains` на всех платформах (Android, iOS, Web)
@@ -298,6 +218,107 @@ open class MobileTest {
             scrollCapacity = scrollCapacity,
             scrollDirection = scrollDirection
         ).click()
+    }
+
+    /**
+     * Построить PageElement по item из события, у которого где-нибудь в data встречаются все пары из eventData.
+     * Возвращает PageElement для дальнейшего использования (например, в методе click).
+     *
+     * @param eventPosition позиция события для обработки: "first" - первое найденное, "last" - последнее найденное
+     */
+    fun StepContext.pageElementMatchedEvent(
+        eventName: String,
+        eventData: String,
+        timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION,
+        scrollCount: Int = DEFAULT_SCROLL_COUNT,
+        scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
+        scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION,
+        eventPosition: String = "first"
+    ): PageElement {
+        val maxAttempts = (scrollCount.coerceAtLeast(0)) + 1
+        var attempt = 0
+
+        while (attempt < maxAttempts) {
+            try {
+                // Ждём событие по условиям
+                "Ждём событие $eventName (попытка ${attempt + 1}/$maxAttempts)" {
+                    checkHasEvent(eventName, eventData, timeoutEventExpectation)
+                }
+
+                // Получаем подходящее событие
+                val matchedEvents = EventStorage.getEvents().filter {
+                    it.name == eventName &&
+                            it.data?.let { d ->
+                                val json = Json.encodeToString(EventData.serializer(), d)
+                                containsJsonData(json, eventData)
+                            } ?: false
+                }
+
+                val matchedEvent = when (eventPosition.lowercase()) {
+                    "last" -> matchedEvents.lastOrNull()
+                    else -> matchedEvents.firstOrNull()
+                }
+
+                if (matchedEvent == null) {
+                    // Если событие не найдено, попробуем проскроллить и повторить попытку
+                    if (attempt < maxAttempts - 1) {
+                        logger.info("Событие '$eventName' с фильтром '$eventData' не найдено. Скроллим (1 шаг) и пробуем снова...")
+                        performScroll(
+                            element = null,
+                            scrollCount = 1,
+                            scrollCapacity = scrollCapacity,
+                            scrollDirection = scrollDirection
+                        )
+                        attempt++
+                        continue
+                    } else {
+                        throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено после $maxAttempts попыток (со скроллом)")
+                    }
+                }
+
+                // Извлекаем массив items из body → event → data
+                val bodyObj = Json.parseToJsonElement(matchedEvent.data!!.body).jsonObject
+                val itemsArr = bodyObj["event"]!!.jsonObject["data"]!!.jsonObject["items"]!!.jsonArray
+
+                // Находим первый item, содержащий искомые пары, это будет первая карточка товара на странице
+                val searchObj = Json.parseToJsonElement(eventData).jsonObject
+                val matched = itemsArr.firstOrNull { itemElem ->
+                    searchObj.all { (key, sv) ->
+                        findKeyValueInTree(itemElem, key, sv)
+                    }
+                } ?: throw NoSuchElementException("В событии '$eventName' ни один item не соответствует $eventData")
+
+                // Достаем у найденного item его поле "name"
+                val itemName = matched.jsonObject["name"]!!.jsonPrimitive.content
+                val positionTextCase = if (eventPosition.lowercase() == "last") "последнем" else "первом"
+                logger.info("Найден подходящий товар: '$itemName' в $positionTextCase событии по фильтрам (eventName=$eventName, filter=$eventData, position=$eventPosition)")
+
+                // Строим и возвращаем локатор
+                return PageElement(
+                    android = PageElement.Text(itemName),
+                    ios = PageElement.Label(itemName)
+                )
+            } catch (t: Throwable) {
+                // Если чек события не прошёл (например, по таймауту), пробуем проскроллить и повторить, если есть попытки
+                if (attempt < maxAttempts - 1) {
+                    logger.info("Не удалось найти событие '$eventName' на попытке ${attempt + 1}: ${t.message}. Скроллим (1 шаг) и пробуем снова...")
+                    performScroll(
+                        element = null,
+                        scrollCount = 1,
+                        scrollCapacity = scrollCapacity,
+                        scrollDirection = scrollDirection
+                    )
+                    attempt++
+                    continue
+                } else {
+                    // Попытки закончились — пробрасываем ошибку
+                    throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено после $maxAttempts попыток (со скроллом). Последняя ошибка: ${t.message}")
+                }
+            }
+        }
+
+        // Теоретически недостижимо
+        throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено")
     }
 
     /**
