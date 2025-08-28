@@ -51,7 +51,6 @@ import utils.DEFAULT_SWIPE_COEFFICIENT
 import utils.DEFAULT_TIMEOUT_BEFORE_EXPECTATION
 import utils.DEFAULT_TIMEOUT_EXPECTATION
 import utils.LogCapture
-import utils.TerminalUtils
 import utils.TerminalUtils.runCommand
 import utils.VideoRecorder
 import org.junit.jupiter.api.TestInfo
