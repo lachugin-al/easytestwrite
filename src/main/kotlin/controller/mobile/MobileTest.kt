@@ -1758,6 +1758,10 @@ open class MobileTest {
      * когда тест пропускается из-за аннотации @Skip.
      */
     fun closeApp() {
-        app.close()
+        if (this::app.isInitialized) {
+            app.close()
+        } else {
+            logger.debug("closeApp() called, but 'app' is not initialized; skipping close.")
+        }
     }
 }

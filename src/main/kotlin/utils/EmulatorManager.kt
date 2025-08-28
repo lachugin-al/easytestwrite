@@ -632,7 +632,7 @@ object EmulatorManager {
             }
 
             // Проверяем наличие необходимых утилит
-            if (!checkRequiredTools(listOf("xcrun", "simctl"))) {
+            if (!checkRequiredTools(listOf("xcrun"))) {
                 logger.error("Отсутствуют необходимые утилиты для запуска iOS симулятора")
                 return false
             }
@@ -807,16 +807,26 @@ object EmulatorManager {
     private fun isSimulatorResponsive(simulatorId: String): Boolean {
         try {
             val result = TerminalUtils.runCommand(
-                command = listOf("xcrun", "simctl", "list", "apps", simulatorId),
+                command = listOf("xcrun", "simctl", "list", "--json"),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при проверке работоспособности симулятора iOS")
+                logger.warn("Таймаут при проверке состояния симулятора iOS")
                 return false
             }
-            return result.exitCode == 0
+            val json = kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+                coerceInputValues = true
+            }
+            val simulatorsResponse = json.decodeFromString<utils.model.SimulatorsResponse>(result.stdout)
+            // Считаем симулятор работоспособным, если он имеет состояние "Booted"
+            val isBooted = simulatorsResponse.devices.values.any { runtimeList ->
+                runtimeList.any { it.udid == simulatorId && it.state == "Booted" }
+            }
+            return isBooted
         } catch (e: Exception) {
-            logger.warn("Ошибка при проверке работоспособности симулятора iOS: ${e.message}")
+            logger.warn("Ошибка при проверке состояния симулятора iOS: ${e.message}")
             return false
         }
     }
@@ -880,7 +890,7 @@ object EmulatorManager {
             }
 
             // Проверяем наличие необходимых утилит
-            if (!checkRequiredTools(listOf("xcrun", "simctl"))) {
+            if (!checkRequiredTools(listOf("xcrun"))) {
                 logger.error("Отсутствуют необходимые утилиты для остановки iOS симулятора")
                 return false
             }
