@@ -25,6 +25,48 @@ object EmulatorManager {
     private const val EMULATOR_STARTUP_TIMEOUT_SECONDS = 60
     private const val COMMAND_TIMEOUT_SECONDS = 30
 
+    // Универсальное ожидание условия без использования Thread.sleep
+    private fun waitForCondition(
+        timeout: Duration,
+        pollInterval: Duration = Duration.ofMillis(500),
+        onTick: ((elapsed: Duration) -> Unit)? = null,
+        condition: () -> Boolean
+    ): Boolean {
+        val scheduler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
+        val latch = java.util.concurrent.CountDownLatch(1)
+        val startNs = System.nanoTime()
+
+        val task = Runnable {
+            try {
+                val elapsed = Duration.ofNanos(System.nanoTime() - startNs)
+                if (condition()) {
+                    latch.countDown()
+                } else {
+                    onTick?.invoke(elapsed)
+                }
+            } catch (t: Throwable) {
+                // Не ломаем планировщик из-за исключений в condition/onTick
+                logger.debug("Ошибка в задаче ожидания: ${t.message}")
+            }
+        }
+
+        val future = scheduler.scheduleAtFixedRate(
+            task,
+            0,
+            pollInterval.toMillis(),
+            java.util.concurrent.TimeUnit.MILLISECONDS
+        )
+
+        val completed = try {
+            latch.await(timeout.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+        } finally {
+            future.cancel(true)
+            scheduler.shutdownNow()
+        }
+
+        return completed
+    }
+
     /**
      * Запускает эмулятор или симулятор в зависимости от текущей платформы.
      *
@@ -47,9 +89,13 @@ object EmulatorManager {
             // Используем мьютекс для предотвращения гонок при параллельном запуске
             if (!emulatorMutex.tryLock()) {
                 logger.warn("Другой поток уже выполняет операции с эмулятором, ожидаем...")
-                // Если не удалось получить блокировку сразу, ждем некоторое время
-                Thread.sleep(1000)
-                if (!emulatorMutex.tryLock()) {
+                val acquired = waitForCondition(
+                    timeout = Duration.ofSeconds(5),
+                    pollInterval = Duration.ofMillis(200)
+                ) {
+                    emulatorMutex.tryLock()
+                }
+                if (!acquired) {
                     logger.error("Не удалось получить блокировку для запуска эмулятора")
                     return false
                 }
@@ -92,9 +138,13 @@ object EmulatorManager {
             // Используем мьютекс для предотвращения гонок при параллельной остановке
             if (!emulatorMutex.tryLock()) {
                 logger.warn("Другой поток уже выполняет операции с эмулятором, ожидаем...")
-                // Если не удалось получить блокировку сразу, ждем некоторое время
-                Thread.sleep(1000)
-                if (!emulatorMutex.tryLock()) {
+                val acquired = waitForCondition(
+                    timeout = Duration.ofSeconds(5),
+                    pollInterval = Duration.ofMillis(200)
+                ) {
+                    emulatorMutex.tryLock()
+                }
+                if (!acquired) {
                     logger.error("Не удалось получить блокировку для остановки эмулятора")
                     return false
                 }
@@ -196,7 +246,11 @@ object EmulatorManager {
                 logger.warn("Ошибка при проверке загрузки эмулятора $deviceId: ${e.message}")
             }
 
-            Thread.sleep(2000)
+            // Неблокирующее ожидание 2 секунды между проверками
+            waitForCondition(
+                timeout = Duration.ofSeconds(2),
+                pollInterval = Duration.ofMillis(200)
+            ) { false }
         }
 
         logger.error("Эмулятор $deviceId так и не загрузился за отведенное время ($EMULATOR_BOOT_TIMEOUT_SECONDS секунд)")
@@ -338,7 +392,11 @@ object EmulatorManager {
                     break
                 } else {
                     logger.info("Ожидание запуска эмулятора Android, попытка $i/$maxAttempts")
-                    Thread.sleep(2000) // Пауза 2 секунды между проверками
+                    // Неблокирующее ожидание 2 секунды между проверками
+                    waitForCondition(
+                        timeout = Duration.ofSeconds(2),
+                        pollInterval = Duration.ofMillis(200)
+                    ) { false }
                 }
             }
 
@@ -437,8 +495,11 @@ object EmulatorManager {
                 logger.warn("Таймаут при остановке эмулятора через adb emu kill")
             }
 
-            // Ждем немного, чтобы эмулятор успел остановиться
-            Thread.sleep(2000)
+            // Подождем до 2 секунд, давая эмулятору шанс остановиться без Thread.sleep
+            waitForCondition(
+                timeout = Duration.ofSeconds(2),
+                pollInterval = Duration.ofMillis(200)
+            ) { getEmulatorId() == null }
 
             // Проверяем, остановился ли эмулятор
             if (getEmulatorId() != null) {
@@ -500,18 +561,37 @@ object EmulatorManager {
                 logger.warn("Таймаут при остановке эмулятора Android")
             }
 
-            // Ждем немного, чтобы эмулятор успел остановиться
-            Thread.sleep(2000)
+            // После команды завершения подождём, давая эмулятору шанс остановиться корректно.
+            // Используем переменную окружения ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL (секунды), если задана.
+            val envWaitSeconds = System.getenv("ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL")?.toIntOrNull()
+            // По умолчанию эмулятор ждёт 20с сам, дадим чуть больше запаса.
+            val gracefulWaitSeconds = (envWaitSeconds ?: 20) + 5
 
-            // Проверяем, остановился ли эмулятор
-            val stillRunning = getEmulatorId() != null
-            if (stillRunning) {
-                logger.warn("Эмулятор Android не остановился стандартным способом, применяем принудительную остановку")
+            val stoppedGracefully = waitForCondition(
+                timeout = Duration.ofSeconds(gracefulWaitSeconds.toLong()),
+                pollInterval = Duration.ofSeconds(1),
+                onTick = { elapsed ->
+                    val elapsedSec = elapsed.seconds
+                    if (elapsedSec == 0L || elapsedSec % 5L == 0L) {
+                        logger.debug("Ожидание остановки эмулятора... ${'$'}elapsedSec/${'$'}gracefulWaitSeconds s")
+                    }
+                }
+            ) {
+                getEmulatorId() == null
+            }
+
+            if (!stoppedGracefully && getEmulatorId() != null) {
+                logger.warn("Эмулятор Android не остановился стандартным способом за ${'$'}gracefulWaitSeconds s, применяем принудительную остановку")
                 forceStopAndroidEmulator(emulatorId)
 
-                // Проверяем еще раз
-                Thread.sleep(2000)
-                val stillRunningAfterForce = getEmulatorId() != null
+                // Проверяем еще раз с коротким ожиданием без Thread.sleep
+                val stoppedAfterForce = waitForCondition(
+                    timeout = Duration.ofSeconds(5),
+                    pollInterval = Duration.ofMillis(500)
+                ) {
+                    getEmulatorId() == null
+                }
+                val stillRunningAfterForce = !stoppedAfterForce
                 if (stillRunningAfterForce) {
                     logger.error("Не удалось остановить эмулятор Android даже принудительно")
                     return false
@@ -640,7 +720,10 @@ object EmulatorManager {
                         return true
                     } else {
                         logger.info("Ожидание загрузки симулятора iOS, попытка $i/$maxAttempts")
-                        Thread.sleep(2000)
+                        waitForCondition(
+                            timeout = Duration.ofSeconds(2),
+                            pollInterval = Duration.ofMillis(200)
+                        ) { false }
                     }
                 }
 
@@ -754,8 +837,11 @@ object EmulatorManager {
                 logger.warn("Таймаут при остановке симулятора iOS")
             }
 
-            // Ждем немного, чтобы симулятор успел остановиться
-            Thread.sleep(2000)
+            // Подождем до 2 секунд без Thread.sleep, давая симулятору шанс остановиться
+            waitForCondition(
+                timeout = Duration.ofSeconds(2),
+                pollInterval = Duration.ofMillis(200)
+            ) { false }
 
             // Если не помогло, пробуем остановить все симуляторы
             TerminalUtils.runCommand(
@@ -822,8 +908,11 @@ object EmulatorManager {
                 logger.warn("Таймаут при остановке симулятора iOS")
             }
 
-            // Ждем немного, чтобы симулятор успел остановиться
-            Thread.sleep(2000)
+            // Подождем до 2 секунд без Thread.sleep, давая симулятору шанс остановиться
+            waitForCondition(
+                timeout = Duration.ofSeconds(2),
+                pollInterval = Duration.ofMillis(200)
+            ) { getSimulatorId(deviceName) == null }
 
             // Проверяем, остановился ли симулятор
             val stillRunning = getSimulatorId(deviceName) != null
@@ -831,9 +920,12 @@ object EmulatorManager {
                 logger.warn("Симулятор iOS не остановился стандартным способом, применяем принудительную остановку")
                 forceStopIosSimulator(simulatorId)
 
-                // Проверяем еще раз
-                Thread.sleep(2000)
-                val stillRunningAfterForce = getSimulatorId(deviceName) != null
+                // Проверяем еще раз с ожиданием до 5 секунд без Thread.sleep
+                val stoppedAfterForce = waitForCondition(
+                    timeout = Duration.ofSeconds(5),
+                    pollInterval = Duration.ofMillis(200)
+                ) { getSimulatorId(deviceName) == null }
+                val stillRunningAfterForce = !stoppedAfterForce
                 if (stillRunningAfterForce) {
                     logger.error("Не удалось остановить симулятор iOS даже принудительно")
                     return false
