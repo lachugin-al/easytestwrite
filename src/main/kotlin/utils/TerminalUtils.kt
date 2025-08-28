@@ -1,8 +1,5 @@
 package utils
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import java.nio.charset.StandardCharsets
 
 /**
  * Утилитарный класс для взаимодействия с терминалом и устройствами эмуляции/симуляции.
@@ -42,41 +39,6 @@ object TerminalUtils {
     }
 
     /**
-     * Получает UDID симулятора iOS по его имени.
-     *
-     * Использует `xcrun simctl list --json` для получения списка доступных устройств
-     * и находит среди них активный (Booted) симулятор с заданным именем.
-     *
-     * @param simulatorName Имя симулятора (например, "iPhone 15 Pro Max").
-     * @return UDID симулятора или `null`, если устройство не найдено.
-     */
-    fun getSimulatorId(simulatorName: String): String? {
-        try {
-            // Выполнение команды 'xcrun simctl list --json' для получения списка симуляторов в формате JSON
-            val process = Runtime.getRuntime().exec("xcrun simctl list --json")
-            val output = process.inputStream.bufferedReader(StandardCharsets.UTF_8).readText()
-
-            // Использование kotlinx.serialization для парсинга JSON-ответа с игнорированием неизвестных ключей
-            val json = Json {
-                ignoreUnknownKeys = true
-            }
-            val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(output)
-
-            // Поиск нужного симулятора по имени и состоянию 'Booted'
-            for (runtime in simulatorsResponse.devices.values) {
-                val simulator = runtime.find { it.name == simulatorName && it.state == "Booted" }
-                if (simulator != null) {
-                    // Возвращаем UDID найденного симулятора
-                    return simulator.udid
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
-    /**
      * Выполняет системную команду и возвращает результат выполнения в виде строки.
      *
      * @param command Список строк, представляющий команду и её аргументы.
@@ -96,52 +58,4 @@ object TerminalUtils {
             ""
         }
     }
-
-    /**
-     * Получает ID эмулятора Android по его имени.
-     *
-     * Использует `adb devices` для получения списка всех подключённых устройств и выбирает нужный эмулятор.
-     *
-     * @param emulatorName Имя эмулятора (по умолчанию "emulator-5554").
-     * @return ID эмулятора или `null`, если устройство не найдено.
-     */
-    fun getEmulatorId(emulatorName: String = "emulator-5554"): String? {
-        // Запуск команды `adb devices` для получения списка подключенных устройств и эмуляторов
-        val command = listOf("adb", "devices")
-        val errorMessage = "Не удалось получить ID эмулятора"
-
-        return if (runCommand(command, errorMessage)) {
-            val output = ProcessBuilder(command)
-                .redirectErrorStream(true)
-                .start()
-                .inputStream
-                .bufferedReader()
-                .use { it.readText() }
-
-            // Поиск ID эмулятора с именем `emulatorName`
-            output.lines().firstOrNull { line ->
-                line.contains(emulatorName) && line.contains("device")
-            }?.split("\t")?.firstOrNull()
-        } else {
-            null
-        }
-    }
-
-    /**
-     * Модель ответа при запросе списка симуляторов через `xcrun simctl list --json`.
-     *
-     * @property devices Карта, где ключ — название версии платформы, значение — список симуляторов.
-     */
-    @Serializable
-    data class SimulatorsResponse(val devices: Map<String, List<Simulator>>)
-
-    /**
-     * Модель симулятора iOS.
-     *
-     * @property udid Уникальный идентификатор устройства.
-     * @property name Имя симулятора (например, "iPhone 15 Pro").
-     * @property state Текущее состояние устройства (например, "Booted", "Shutdown").
-     */
-    @Serializable
-    data class Simulator(val udid: String, val name: String, val state: String)
 }

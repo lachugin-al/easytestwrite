@@ -184,7 +184,8 @@ object EmulatorManager {
                     continue
                 }
 
-                val bootCompleted = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }.trim()
+                val bootCompleted =
+                    process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }.trim()
 
                 if (bootCompleted == "1") {
                     // Дополнительная проверка работоспособности эмулятора
@@ -291,10 +292,10 @@ object EmulatorManager {
 
             // Запускаем эмулятор с дополнительными параметрами для стабильности
             val commandList = mutableListOf(
-                "emulator", 
-                "-avd", 
-                deviceName, 
-                "-no-snapshot-load", 
+                "emulator",
+                "-avd",
+                deviceName,
+                "-no-snapshot-load",
                 "-no-boot-anim",
                 "-gpu", "swiftshader_indirect",
                 "-no-audio"
@@ -408,7 +409,7 @@ object EmulatorManager {
      *
      * @return ID эмулятора или `null`, если эмулятор не запущен.
      */
-    private fun getEmulatorId(): String? {
+    fun getEmulatorId(): String? {
         try {
             val process = ProcessBuilder(listOf("adb", "devices"))
                 .redirectErrorStream(true)
@@ -613,7 +614,7 @@ object EmulatorManager {
                     coerceInputValues = true
                 }
 
-                val simulatorsResponse = json.decodeFromString<TerminalUtils.SimulatorsResponse>(simulatorsJson)
+                val simulatorsResponse = json.decodeFromString<utils.model.SimulatorsResponse>(simulatorsJson)
 
                 // Ищем симулятор с нужным именем
                 var foundSimulatorId: String? = null
@@ -705,7 +706,7 @@ object EmulatorManager {
      * @param simulatorName Имя симулятора.
      * @return ID симулятора или `null`, если симулятор не запущен.
      */
-    private fun getSimulatorId(simulatorName: String): String? {
+    fun getSimulatorId(simulatorName: String): String? {
         try {
             val simulatorsJson = getSimulatorsList()
             if (simulatorsJson.isBlank()) {
@@ -718,7 +719,7 @@ object EmulatorManager {
                 coerceInputValues = true
             }
 
-            val simulatorsResponse = json.decodeFromString<TerminalUtils.SimulatorsResponse>(simulatorsJson)
+            val simulatorsResponse = json.decodeFromString<utils.model.SimulatorsResponse>(simulatorsJson)
 
             // Ищем запущенный симулятор с нужным именем
             for (runtime in simulatorsResponse.devices.values) {

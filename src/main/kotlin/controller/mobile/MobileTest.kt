@@ -58,6 +58,7 @@ import org.junit.jupiter.api.TestInfo
 import utils.DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
 import utils.AnrWatcher
 import utils.EmulatorManager
+import utils.EmulatorManager.getSimulatorId
 import utils.NumberParser
 import java.io.File
 import java.net.URLEncoder
@@ -1598,7 +1599,7 @@ open class MobileTest {
                     "xcrun",
                     "simctl",
                     "openurl",
-                    TerminalUtils.getSimulatorId(AppConfig.getIosDeviceName()).toString(),
+                    getSimulatorId(AppConfig.getIosDeviceName()).toString(),
                     app.webServer.getHostingUrl() + "src/main/resources/deeplink.html?url=" + encodedUrl
                 )
 
