@@ -36,6 +36,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
     testImplementation("io.qameta.allure:allure-junit5:2.28.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
+    testImplementation("io.mockk:mockk:1.13.12")
 }
 
 tasks.test {

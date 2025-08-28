@@ -25,13 +25,16 @@ object AnrWatcher {
     private val logger: Logger = LoggerFactory.getLogger(AnrWatcher::class.java)
     private var job: Job? = null
 
+    interface Clickable { fun click() }
+    interface UiAutomatorDriver {
+        val pageSource: String
+        fun findElementByAndroidUIAutomator(selector: String): Clickable
+    }
+
     /**
-     * Запускает ANR Watcher для мониторинга ANR диалогов.
-     *
-     * @param driver AndroidDriver для взаимодействия с приложением
-     * @param intervalMillis интервал проверки в миллисекундах
+     * Запускает ANR Watcher для мониторинга ANR диалогов (универсальная версия с минимальным контрактом).
      */
-    fun start(driver: AndroidDriver<MobileElement>, intervalMillis: Long = 2000L) {
+    fun start(driver: UiAutomatorDriver, intervalMillis: Long = 2000L) {
         if (job != null) {
             logger.info("ANR Watcher уже запущен")
             return  // уже запущен
@@ -74,6 +77,20 @@ object AnrWatcher {
                 }
             }
         }
+    }
+
+    /**
+     * Запускает ANR Watcher для AndroidDriver (адаптер к универсальному контракту).
+     */
+    fun start(driver: AndroidDriver<MobileElement>, intervalMillis: Long = 2000L) {
+        val adapter = object : UiAutomatorDriver {
+            override val pageSource: String get() = driver.pageSource
+            override fun findElementByAndroidUIAutomator(selector: String): Clickable {
+                val element = driver.findElementByAndroidUIAutomator(selector)
+                return object : Clickable { override fun click() = element.click() }
+            }
+        }
+        start(adapter, intervalMillis)
     }
 
     /**
