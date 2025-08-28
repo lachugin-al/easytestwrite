@@ -12,7 +12,6 @@ import dsl.testing.SkipConditionExtension
 import dsl.testing.StepContext
 import dsl.testing.TestingContext
 import org.junit.jupiter.api.extension.ExtendWith
-import events.Event
 import events.EventData
 import events.EventStorage
 import io.appium.java_client.AppiumDriver

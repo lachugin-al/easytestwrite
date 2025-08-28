@@ -3,12 +3,10 @@ package utils
 import app.config.AppConfig
 import app.model.Platform
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 /**
  * Класс для управления жизненным циклом эмуляторов и симуляторов.
@@ -130,18 +128,16 @@ object EmulatorManager {
     private fun checkRequiredTools(commands: List<String>): Boolean {
         for (command in commands) {
             try {
-                val process = ProcessBuilder(
-                    if (System.getProperty("os.name").lowercase().contains("windows")) {
-                        listOf("where", command)
-                    } else {
-                        listOf("which", command)
-                    }
+                val cmd = if (System.getProperty("os.name").lowercase().contains("windows")) {
+                    listOf("where", command)
+                } else {
+                    listOf("which", command)
+                }
+                val result = TerminalUtils.runCommand(
+                    command = cmd,
+                    timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
                 )
-                    .redirectErrorStream(true)
-                    .start()
-
-                val exitCode = process.waitFor()
-                if (exitCode != 0) {
+                if (result.timedOut || result.exitCode != 0) {
                     logger.error("Утилита '$command' не найдена в системе")
                     return false
                 }
@@ -173,19 +169,17 @@ object EmulatorManager {
         val maxAttempts = EMULATOR_BOOT_TIMEOUT_SECONDS / 2 // Проверка каждые 2 секунды
         for (i in 1..maxAttempts) {
             try {
-                val process = ProcessBuilder(listOf("adb", "-s", deviceId, "shell", "getprop", "sys.boot_completed"))
-                    .redirectErrorStream(true)
-                    .start()
+                val result = TerminalUtils.runCommand(
+                    command = listOf("adb", "-s", deviceId, "shell", "getprop", "sys.boot_completed"),
+                    timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+                )
 
-                // Устанавливаем таймаут для команды
-                if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                    process.destroyForcibly()
+                if (result.timedOut) {
                     logger.warn("Таймаут при проверке загрузки эмулятора $deviceId, попытка $i/$maxAttempts")
                     continue
                 }
 
-                val bootCompleted =
-                    process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }.trim()
+                val bootCompleted = result.stdout.trim()
 
                 if (bootCompleted == "1") {
                     // Дополнительная проверка работоспособности эмулятора
@@ -217,18 +211,16 @@ object EmulatorManager {
      */
     private fun isEmulatorResponsive(deviceId: String): Boolean {
         try {
-            val process = ProcessBuilder(listOf("adb", "-s", deviceId, "shell", "pm", "list", "packages"))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("adb", "-s", deviceId, "shell", "pm", "list", "packages"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при проверке работоспособности эмулятора $deviceId")
                 return false
             }
-
-            val output = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
-            return output.contains("package:") && process.exitValue() == 0
+            val output = result.stdout
+            return output.contains("package:") && result.exitCode == 0
         } catch (e: Exception) {
             logger.warn("Ошибка при проверке работоспособности эмулятора $deviceId: ${e.message}")
             return false
@@ -386,17 +378,15 @@ object EmulatorManager {
      */
     private fun checkEmulatorExists(deviceName: String): Boolean {
         try {
-            val process = ProcessBuilder(listOf("emulator", "-list-avds"))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("emulator", "-list-avds"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при получении списка эмуляторов")
                 return false
             }
-
-            val output = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+            val output = result.stdout
             return output.lines().any { it.trim() == deviceName }
         } catch (e: Exception) {
             logger.warn("Ошибка при проверке существования эмулятора: ${e.message}")
@@ -411,18 +401,15 @@ object EmulatorManager {
      */
     fun getEmulatorId(): String? {
         try {
-            val process = ProcessBuilder(listOf("adb", "devices"))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("adb", "devices"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при получении списка устройств")
                 return null
             }
-
-            val output = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
-
+            val output = result.stdout
             // Ищем строку, содержащую "emulator-" и "device"
             return output.lines()
                 .filter { it.contains("emulator-") && it.contains("device") }
@@ -442,12 +429,11 @@ object EmulatorManager {
     private fun forceStopAndroidEmulator(emulatorId: String) {
         try {
             // Сначала пробуем остановить через adb emu kill
-            val process1 = ProcessBuilder(listOf("adb", "-s", emulatorId, "emu", "kill"))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process1.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process1.destroyForcibly()
+            val result1 = TerminalUtils.runCommand(
+                command = listOf("adb", "-s", emulatorId, "emu", "kill"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result1.timedOut) {
                 logger.warn("Таймаут при остановке эмулятора через adb emu kill")
             }
 
@@ -460,18 +446,16 @@ object EmulatorManager {
 
                 // Если не остановился, пробуем через killall (для Linux/Mac)
                 if (!System.getProperty("os.name").lowercase().contains("windows")) {
-                    val process2 = ProcessBuilder(listOf("killall", "-9", "qemu-system-x86_64"))
-                        .redirectErrorStream(true)
-                        .start()
-
-                    process2.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
+                    TerminalUtils.runCommand(
+                        command = listOf("killall", "-9", "qemu-system-x86_64"),
+                        timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+                    )
                 } else {
                     // Для Windows используем taskkill
-                    val process2 = ProcessBuilder(listOf("taskkill", "/F", "/IM", "qemu-system-x86_64.exe"))
-                        .redirectErrorStream(true)
-                        .start()
-
-                    process2.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
+                    TerminalUtils.runCommand(
+                        command = listOf("taskkill", "/F", "/IM", "qemu-system-x86_64.exe"),
+                        timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -508,12 +492,11 @@ object EmulatorManager {
             logger.info("Остановка эмулятора Android с ID: $emulatorId")
 
             // Пробуем остановить эмулятор стандартным способом
-            val process = ProcessBuilder(listOf("adb", "-s", emulatorId, "emu", "kill"))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("adb", "-s", emulatorId, "emu", "kill"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при остановке эмулятора Android")
             }
 
@@ -635,18 +618,16 @@ object EmulatorManager {
                 // Запускаем симулятор
                 logger.info("Запуск симулятора iOS с ID: $foundSimulatorId")
 
-                val process = ProcessBuilder(listOf("xcrun", "simctl", "boot", foundSimulatorId))
-                    .redirectErrorStream(true)
-                    .start()
-
-                if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                    process.destroyForcibly()
+                val result = TerminalUtils.runCommand(
+                    command = listOf("xcrun", "simctl", "boot", foundSimulatorId),
+                    timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+                )
+                if (result.timedOut) {
                     logger.error("Таймаут при запуске симулятора iOS")
                     return false
                 }
-
-                if (process.exitValue() != 0) {
-                    val error = process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+                if (result.exitCode != 0) {
+                    val error = if (result.stderr.isNotBlank()) result.stderr else result.stdout
                     logger.error("Ошибка при запуске симулятора iOS: $error")
                     return false
                 }
@@ -683,17 +664,15 @@ object EmulatorManager {
      */
     private fun getSimulatorsList(): String {
         try {
-            val process = ProcessBuilder(listOf("xcrun", "simctl", "list", "--json"))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("xcrun", "simctl", "list", "--json"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при получении списка iOS симуляторов")
                 return ""
             }
-
-            return process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { it.readText() }
+            return result.stdout
         } catch (e: Exception) {
             logger.warn("Ошибка при получении списка iOS симуляторов: ${e.message}")
             return ""
@@ -744,17 +723,15 @@ object EmulatorManager {
      */
     private fun isSimulatorResponsive(simulatorId: String): Boolean {
         try {
-            val process = ProcessBuilder(listOf("xcrun", "simctl", "list", "apps", simulatorId))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("xcrun", "simctl", "list", "apps", simulatorId),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при проверке работоспособности симулятора iOS")
                 return false
             }
-
-            return process.exitValue() == 0
+            return result.exitCode == 0
         } catch (e: Exception) {
             logger.warn("Ошибка при проверке работоспособности симулятора iOS: ${e.message}")
             return false
@@ -769,12 +746,11 @@ object EmulatorManager {
     private fun forceStopIosSimulator(simulatorId: String) {
         try {
             // Сначала пробуем стандартный способ
-            val process1 = ProcessBuilder(listOf("xcrun", "simctl", "shutdown", simulatorId))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process1.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process1.destroyForcibly()
+            val result1 = TerminalUtils.runCommand(
+                command = listOf("xcrun", "simctl", "shutdown", simulatorId),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result1.timedOut) {
                 logger.warn("Таймаут при остановке симулятора iOS")
             }
 
@@ -782,18 +758,16 @@ object EmulatorManager {
             Thread.sleep(2000)
 
             // Если не помогло, пробуем остановить все симуляторы
-            val process2 = ProcessBuilder(listOf("xcrun", "simctl", "shutdown", "all"))
-                .redirectErrorStream(true)
-                .start()
-
-            process2.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
+            TerminalUtils.runCommand(
+                command = listOf("xcrun", "simctl", "shutdown", "all"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
 
             // Если и это не помогло, пробуем через killall
-            val process3 = ProcessBuilder(listOf("killall", "Simulator"))
-                .redirectErrorStream(true)
-                .start()
-
-            process3.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)
+            TerminalUtils.runCommand(
+                command = listOf("killall", "Simulator"),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
         } catch (e: Exception) {
             logger.warn("Ошибка при принудительной остановке симулятора iOS: ${e.message}")
         }
@@ -840,12 +814,11 @@ object EmulatorManager {
             logger.info("Остановка симулятора iOS с ID: $simulatorId")
 
             // Пробуем остановить симулятор стандартным способом
-            val process = ProcessBuilder(listOf("xcrun", "simctl", "shutdown", simulatorId))
-                .redirectErrorStream(true)
-                .start()
-
-            if (!process.waitFor(COMMAND_TIMEOUT_SECONDS.toLong(), TimeUnit.SECONDS)) {
-                process.destroyForcibly()
+            val result = TerminalUtils.runCommand(
+                command = listOf("xcrun", "simctl", "shutdown", simulatorId),
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+            if (result.timedOut) {
                 logger.warn("Таймаут при остановке симулятора iOS")
             }
 
