@@ -1,4 +1,4 @@
-package utils.screenshot
+package reporting.artifacts.screenshot
 
 import io.appium.java_client.AppiumDriver
 import org.openqa.selenium.OutputType

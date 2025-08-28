@@ -1,4 +1,4 @@
-package utils
+package reporting.allure
 
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 /**
  * Служебный класс для захвата логов со всех потоков и прикрепления их к отчетам Allure.
  */
-object LogCapture {
+object AllureLogCapture {
     private val logQueue = ConcurrentLinkedQueue<String>()
     private val memoryAppender = MemoryAppender()
     private var initialized = false
@@ -56,9 +56,9 @@ object LogCapture {
         val logs = getLogs()
         if (logs.isNotEmpty()) {
             Allure.addAttachment(
-                "Console Logs", 
-                "text/plain", 
-                ByteArrayInputStream(logs.toByteArray(StandardCharsets.UTF_8)), 
+                "Console Logs",
+                "text/plain",
+                ByteArrayInputStream(logs.toByteArray(StandardCharsets.UTF_8)),
                 "txt"
             )
             clearLogs()

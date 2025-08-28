@@ -1,4 +1,4 @@
-package utils
+package reporting.artifacts.video
 
 import app.config.AppConfig
 import app.model.Platform

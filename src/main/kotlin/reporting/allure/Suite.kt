@@ -1,4 +1,4 @@
-package utils.allure
+package reporting.allure
 
 /**
  * Используется для пометки тестового класса как Suite (набор тестов).

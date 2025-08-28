@@ -49,14 +49,14 @@ import utils.DEFAULT_SCROLL_DIRECTION
 import utils.DEFAULT_SWIPE_COEFFICIENT
 import utils.DEFAULT_TIMEOUT_BEFORE_EXPECTATION
 import utils.DEFAULT_TIMEOUT_EXPECTATION
-import utils.LogCapture
+import reporting.allure.AllureLogCapture
 import utils.TerminalUtils.runCommand
-import utils.VideoRecorder
+import reporting.artifacts.video.VideoRecorder
 import org.junit.jupiter.api.TestInfo
 import utils.DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
-import utils.AnrWatcher
-import utils.EmulatorManager
-import utils.EmulatorManager.getSimulatorId
+import device.AnrWatcher
+import device.EmulatorManager
+import device.EmulatorManager.getSimulatorId
 import utils.NumberParser
 import java.io.File
 import java.net.URLEncoder
@@ -1696,9 +1696,9 @@ open class MobileTest {
     @BeforeEach
     fun setUp(testInfo: TestInfo) {
         // Очистка логов перед началом теста
-        LogCapture.clearLogs()
+        AllureLogCapture.clearLogs()
         // Инициализация системы захвата логов
-        LogCapture.initialize()
+        AllureLogCapture.initialize()
         // Очистка хранилища событий перед началом теста
         EventStorage.clear()
 
@@ -1746,7 +1746,7 @@ open class MobileTest {
         }
 
         // Прикрепление логов к отчету Allure
-        LogCapture.attachLogsToAllureReport()
+        AllureLogCapture.attachLogsToAllureReport()
 
         // Закрытие приложения
         closeApp()

@@ -1,12 +1,18 @@
-package utils
+package device
 
 import app.config.AppConfig
 import app.model.Platform
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.serialization.json.Json
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import utils.TerminalUtils
+import device.model.SimulatorsResponse
 import java.nio.charset.StandardCharsets
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
  * Класс для управления жизненным циклом эмуляторов и симуляторов.
@@ -32,8 +38,8 @@ object EmulatorManager {
         onTick: ((elapsed: Duration) -> Unit)? = null,
         condition: () -> Boolean
     ): Boolean {
-        val scheduler = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
-        val latch = java.util.concurrent.CountDownLatch(1)
+        val scheduler = Executors.newSingleThreadScheduledExecutor()
+        val latch = CountDownLatch(1)
         val startNs = System.nanoTime()
 
         val task = Runnable {
@@ -54,11 +60,11 @@ object EmulatorManager {
             task,
             0,
             pollInterval.toMillis(),
-            java.util.concurrent.TimeUnit.MILLISECONDS
+            TimeUnit.MILLISECONDS
         )
 
         val completed = try {
-            latch.await(timeout.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+            latch.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
         } finally {
             future.cancel(true)
             scheduler.shutdownNow()
@@ -671,13 +677,13 @@ object EmulatorManager {
 
             // Парсим JSON с обработкой ошибок
             try {
-                val json = kotlinx.serialization.json.Json {
+                val json = Json {
                     ignoreUnknownKeys = true
                     isLenient = true
                     coerceInputValues = true
                 }
 
-                val simulatorsResponse = json.decodeFromString<utils.model.SimulatorsResponse>(simulatorsJson)
+                val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(simulatorsJson)
 
                 // Ищем симулятор с нужным именем
                 var foundSimulatorId: String? = null
@@ -775,13 +781,13 @@ object EmulatorManager {
                 return null
             }
 
-            val json = kotlinx.serialization.json.Json {
+            val json = Json {
                 ignoreUnknownKeys = true
                 isLenient = true
                 coerceInputValues = true
             }
 
-            val simulatorsResponse = json.decodeFromString<utils.model.SimulatorsResponse>(simulatorsJson)
+            val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(simulatorsJson)
 
             // Ищем запущенный симулятор с нужным именем
             for (runtime in simulatorsResponse.devices.values) {
@@ -814,12 +820,12 @@ object EmulatorManager {
                 logger.warn("Таймаут при проверке состояния симулятора iOS")
                 return false
             }
-            val json = kotlinx.serialization.json.Json {
+            val json = Json {
                 ignoreUnknownKeys = true
                 isLenient = true
                 coerceInputValues = true
             }
-            val simulatorsResponse = json.decodeFromString<utils.model.SimulatorsResponse>(result.stdout)
+            val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(result.stdout)
             // Считаем симулятор работоспособным, если он имеет состояние "Booted"
             val isBooted = simulatorsResponse.devices.values.any { runtimeList ->
                 runtimeList.any { it.udid == simulatorId && it.state == "Booted" }

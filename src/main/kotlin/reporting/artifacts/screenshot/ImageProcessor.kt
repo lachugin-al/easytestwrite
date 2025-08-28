@@ -1,4 +1,4 @@
-package utils.screenshot
+package reporting.artifacts.screenshot
 
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream

@@ -1,8 +1,14 @@
-package utils
+package device
 
-import io.appium.java_client.android.AndroidDriver
 import io.appium.java_client.MobileElement
-import kotlinx.coroutines.*
+import io.appium.java_client.android.AndroidDriver
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import org.openqa.selenium.NoSuchElementException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

@@ -1,4 +1,4 @@
-package utils.allure
+package reporting.allure
 
 import io.qameta.allure.Allure
 import io.qameta.allure.model.Label

@@ -4,9 +4,9 @@ import app.config.AppConfig
 import app.model.Platform
 import io.appium.java_client.AppiumDriver
 import io.qameta.allure.Allure.addAttachment
-import utils.screenshot.AppiumScreenshotProvider
-import utils.screenshot.ImageProcessor
-import utils.screenshot.ScreenshotProvider
+import reporting.artifacts.screenshot.AppiumScreenshotProvider
+import reporting.artifacts.screenshot.ImageProcessor
+import reporting.artifacts.screenshot.ScreenshotProvider
 import java.io.ByteArrayInputStream
 
 /**

@@ -1,4 +1,4 @@
-package utils.model
+package device.model
 
 import kotlinx.serialization.Serializable
 
