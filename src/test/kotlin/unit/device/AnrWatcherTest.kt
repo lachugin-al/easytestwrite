@@ -35,11 +35,10 @@ class AnrWatcherTest {
         every { driver.findElementByAndroidUIAutomator(match { it.contains("Подождать") }) } returns waitButton
 
         AnrWatcher.start(driver, intervalMillis = 50)
-        Thread.sleep(150) // give the coroutine some time
+        Thread.sleep(150)
         AnrWatcher.stop()
 
         verify(atLeast = 1) { waitButton.click() }
-        // Ensure it didn't try Close path
         verify(exactly = 0) { driver.findElementByAndroidUIAutomator(match { it.contains("Закрыть приложение") }) }
     }
 
@@ -67,7 +66,6 @@ class AnrWatcherTest {
         Thread.sleep(100)
         AnrWatcher.stop()
 
-        // Since no ANR text, it should not try to find any buttons
         verify(exactly = 0) { driver.findElementByAndroidUIAutomator(any()) }
     }
 }
