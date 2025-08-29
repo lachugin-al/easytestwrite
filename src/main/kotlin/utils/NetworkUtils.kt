@@ -4,6 +4,7 @@ import java.io.IOException
 import java.net.NetworkInterface
 import java.net.ServerSocket
 import java.net.SocketException
+import java.net.InetAddress
 import java.util.Enumeration
 
 /**
@@ -13,6 +14,26 @@ import java.util.Enumeration
  * определения активного сетевого интерфейса и поиска свободного TCP-порта.
  */
 object NetworkUtils {
+
+    // Тестовые провайдеры (инжектируются в unit-тестах)
+    internal data class NetworkInfo(
+        val isLoopback: Boolean,
+        val isUp: Boolean,
+        val isVirtual: Boolean,
+        val displayName: String,
+        val addresses: List<InetAddress>
+    )
+
+    internal var networkInfoProvider: (() -> List<NetworkInfo>)? = null
+
+    // Базовые провайдеры (используются для сборки NetworkInfo в проде)
+    internal var networkInterfacesProvider: () -> Enumeration<NetworkInterface> = {
+        NetworkInterface.getNetworkInterfaces()
+    }
+
+    internal var inetAddressesProvider: (NetworkInterface) -> List<InetAddress> = { iface ->
+        iface.interfaceAddresses.mapNotNull { it?.address }
+    }
 
     /**
      * Получает локальный IP-адрес машины.
@@ -25,12 +46,25 @@ object NetworkUtils {
      */
     @Throws(SocketException::class)
     fun getLocalAddress(): String? {
-        val interfaces = NetworkInterface.getNetworkInterfaces()
+        networkInfoProvider?.let { provider ->
+            for (ni in provider.invoke()) {
+                if (!ni.isLoopback && ni.isUp && !ni.isVirtual) {
+                    for (inetAddress in ni.addresses) {
+                        if (inetAddress.isSiteLocalAddress) {
+                            return inetAddress.hostAddress
+                        }
+                    }
+                }
+            }
+            return null
+        }
+
+        val interfaces = networkInterfacesProvider()
         while (interfaces.hasMoreElements()) {
             val iface = interfaces.nextElement()
             if (!iface.isLoopback && iface.isUp && !iface.isVirtual) {
-                for (address in iface.interfaceAddresses) {
-                    val inetAddress = address.address
+                val addresses = inetAddressesProvider(iface)
+                for (inetAddress in addresses) {
                     if (inetAddress.isSiteLocalAddress) {
                         return inetAddress.hostAddress
                     }
@@ -53,7 +87,17 @@ object NetworkUtils {
      */
     @Throws(SocketException::class)
     fun getActiveNetworkInterface(): String {
-        val interfaces: Enumeration<NetworkInterface> = NetworkInterface.getNetworkInterfaces()
+        networkInfoProvider?.let { provider ->
+            for (ni in provider.invoke()) {
+                if (!ni.isLoopback && ni.isUp && !ni.isVirtual &&
+                    (ni.displayName.startsWith("en") || ni.displayName.startsWith("utun"))) {
+                    return "Wi-Fi"
+                }
+            }
+            throw IOException("Активный физический сетевой интерфейс не найден")
+        }
+
+        val interfaces: Enumeration<NetworkInterface> = networkInterfacesProvider()
 
         while (interfaces.hasMoreElements()) {
             val iface = interfaces.nextElement()
@@ -78,9 +122,11 @@ object NetworkUtils {
      * @param defaultPort Порт по умолчанию, который будет возвращён в случае ошибки поиска.
      * @return Свободный порт или порт по умолчанию при возникновении ошибки.
      */
+    internal var serverSocketFactory: (Int) -> ServerSocket = { p -> ServerSocket(p) }
+
     fun getFreePort(defaultPort: Int = 8000): Int {
         return try {
-            ServerSocket(0).use { socket ->
+            serverSocketFactory(0).use { socket ->
                 socket.localPort
             }
         } catch (e: IOException) {
