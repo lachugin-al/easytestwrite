@@ -24,7 +24,7 @@ class AllureExtension : BeforeEachCallback {
     override fun beforeEach(context: ExtensionContext) {
         // Получаем значение аннотации Suite из тестового класса
         val suite = context.testClass
-            .flatMap { klass -> klass.getAnnotation(Suite::class.java)?.let { Optional.of(it.value) } }
+            .flatMap { klass -> Optional.ofNullable(klass.getAnnotation(Suite::class.java)).map { it.value } }
 
         // Если аннотация Suite присутствует, обновляем метку "suite" в Allure
         suite.ifPresent { value ->
