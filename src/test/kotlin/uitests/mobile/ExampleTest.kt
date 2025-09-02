@@ -17,7 +17,7 @@ package uitests.mobile
  * В случае падения теста, механизм перезапуска в build.gradle.kts обеспечит повторный запуск
  * только упавшего теста с тем же параметром.
  */
-import controller.mobile.MobileTest
+import controller.mobile.base.MobileTest
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
 import org.junit.jupiter.api.DisplayName

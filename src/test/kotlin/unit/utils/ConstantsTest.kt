@@ -1,6 +1,6 @@
 package unit.utils
 
-import controller.element.ScrollDirection
+import controller.mobile.interaction.ScrollDirection
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import utils.DEFAULT_POLLING_INTERVAL

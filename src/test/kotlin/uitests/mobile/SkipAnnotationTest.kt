@@ -1,6 +1,6 @@
 package uitests.mobile
 
-import controller.mobile.MobileTest
+import controller.mobile.base.MobileTest
 import dsl.testing.Skip
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
  * Тестовый класс для проверки работы аннотации @Skip.
  */
 class SkipAnnotationTest : MobileTest() {
-    private val logger = LoggerFactory.getLogger(SkipAnnotationTest::class.java)
+    override val logger = LoggerFactory.getLogger(SkipAnnotationTest::class.java)
 
     @BeforeEach
     fun beforeEachTest() {

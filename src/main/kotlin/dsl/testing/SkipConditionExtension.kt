@@ -2,7 +2,7 @@ package dsl.testing
 
 import app.App
 import app.config.AppConfig
-import controller.mobile.MobileTest
+import controller.mobile.base.MobileTest
 import org.junit.jupiter.api.extension.ConditionEvaluationResult
 import org.junit.jupiter.api.extension.ExecutionCondition
 import org.junit.jupiter.api.extension.ExtensionContext

@@ -1,7 +1,7 @@
 package uipages.mobile
 
-import controller.element.PageElement
-import controller.element.PageElement.*
+import controller.mobile.element.PageElement
+import controller.mobile.element.PageElement.*
 
 /**
  * Тестовая страница с разметкой

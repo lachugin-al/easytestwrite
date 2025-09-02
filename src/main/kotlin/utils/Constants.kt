@@ -1,6 +1,6 @@
 package utils
 
-import controller.element.ScrollDirection
+import controller.mobile.interaction.ScrollDirection
 
 /**
  * Константы для настройки таймаутов, скроллинга и поиска элементов в тестах.

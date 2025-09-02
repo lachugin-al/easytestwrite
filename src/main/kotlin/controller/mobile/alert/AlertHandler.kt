@@ -1,4 +1,4 @@
-package controller.handler
+package controller.mobile.alert
 
 import io.appium.java_client.AppiumDriver
 import io.appium.java_client.MobileElement

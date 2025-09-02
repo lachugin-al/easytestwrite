@@ -1,4 +1,4 @@
-package controller.element
+package controller.mobile.element
 
 import app.config.AppConfig
 import app.model.Platform
@@ -12,7 +12,7 @@ import org.openqa.selenium.internal.FindsByXPath
  * Универсальный дескриптор элемента страницы.
  *
  * Объединяет способы поиска элементов для разных платформ:
- * Android ([org.openqa.selenium.By]), iOS ([org.openqa.selenium.By]).
+ * Android ([By]), iOS ([By]).
  *
  * Поддерживает специальные стратегии поиска для мобильных платформ:
  * - Accessibility ID (Android и iOS)
@@ -159,7 +159,7 @@ data class PageElement(
     /**
      * Базовый класс для создания собственных локаторов через XPath.
      *
-     * Реализует стандартные методы поиска элементов через [org.openqa.selenium.SearchContext].
+     * Реализует стандартные методы поиска элементов через [SearchContext].
      *
      * @param value Значение, по которому производится поиск.
      * @param valueType Тип значения для описания (например: id, text, label).
