@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.0.50"
+version = "0.1.0"
 
 repositories {
     maven {
