@@ -1,6 +1,7 @@
 package app.config
 
 import app.model.Platform
+import io.github.cdimascio.dotenv.Dotenv
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URI
@@ -22,8 +23,25 @@ import java.util.Properties
  * @throws IllegalArgumentException если файл `config.properties` не найден
  */
 object AppConfig {
-
     private val logger: Logger = LoggerFactory.getLogger(AppConfig::class.java)
+
+    // Загрузчик .env
+    private val dotenv: Dotenv? = runCatching {
+        Dotenv.configure()
+            .ignoreIfMissing()     // если .env нет — ок
+            .ignoreIfMalformed()   // пропускаем кривые строки
+            .load()
+    }.getOrNull()
+
+    // Преобразуем "appium.url" -> "APPIUM_URL" и ищем в .env
+    private fun envGet(key: String): String? {
+        val k1 = key.uppercase().replace('.', '_')
+        val k2 = key
+        return dotenv?.get(k1)
+            ?: dotenv?.get(k2)
+            ?: System.getenv(k1)
+            ?: System.getenv(k2)
+    }
 
     private val properties = Properties().apply {
         try {
@@ -41,15 +59,16 @@ object AppConfig {
         }
     }
 
-    // Helper: системное свойство или из файла или default
+    // Приоритеты -> System.getProperty > .env/ENV > config.properties > default
     private fun prop(name: String, default: String): String =
         System.getProperty(name)
+            ?: envGet(name)
             ?: properties.getProperty(name, default)
 
-    // Helper: системное свойство или из файла или default для boolean
     private fun propBoolean(name: String, default: Boolean): Boolean =
-        System.getProperty(name)?.toBoolean()
-            ?: properties.getProperty(name)?.toBoolean()
+        System.getProperty(name)?.toBooleanStrictOrNull()
+            ?: envGet(name)?.toBooleanStrictOrNull()
+            ?: properties.getProperty(name)?.toBooleanStrictOrNull()
             ?: default
 
     // URL Appium
