@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit
 import com.github.gradle.node.npm.task.NpmTask
 import org.gradle.api.tasks.testing.Test
 import java.net.URI
+import com.github.gradle.node.NodeExtension
+import java.io.File
 
 plugins {
     kotlin("jvm") version "2.0.0"
@@ -55,7 +57,7 @@ dependencies {
 }
 
 tasks.test {
-    // Читаем все возможные Gradle-свойства
+    // Читаем все возможные Gradle -P свойства (если переданы)
     val platformProp = (project.findProperty("platform") as String?).orEmpty()
     val appiumUrlProp = (project.findProperty("appium.url") as String?).orEmpty()
     val androidVersionProp = (project.findProperty("android.version") as String?).orEmpty()
@@ -152,6 +154,42 @@ tasks.register("checkFfmpeg") {
     }
 }
 
+/* -------------------------------  Appium utils  ------------------------------- */
+
+// Базовый URL Appium с дефолтом
+fun appiumBaseUrl(project: org.gradle.api.Project): String =
+    (project.findProperty("appium.url") as String?).orEmpty().ifBlank { "http://localhost:4723/" }
+
+// Проверка «жив ли Appium» (GET /status)
+fun isAppiumRunning(project: org.gradle.api.Project): Boolean {
+    val baseUrl = appiumBaseUrl(project)
+    val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
+    return try {
+        val conn = statusUrl.openConnection() as HttpURLConnection
+        conn.connectTimeout = 1000
+        conn.readTimeout = 1000
+        conn.requestMethod = "GET"
+        val code = conn.responseCode
+        val body = (if (code in 200..299) conn.inputStream else conn.errorStream)
+            ?.bufferedReader()?.use { it.readText() }.orEmpty()
+        conn.disconnect()
+        code == 200 && body.isNotBlank()
+    } catch (_: Exception) {
+        false
+    }
+}
+
+// Достаём путь к npm из node-gradle (без reflection)
+fun resolvedNpmPath(project: org.gradle.api.Project): String {
+    val nodeExt = project.extensions.getByType(NodeExtension::class.java)
+    val nodeDir = nodeExt.resolvedNodeDir.get().asFile
+    val isWin = System.getProperty("os.name").lowercase().contains("win")
+    return if (isWin) File(nodeDir, "npm.cmd").absolutePath
+    else File(File(nodeDir, "bin"), "npm").absolutePath
+}
+
+/* ----------------------------------------------------------------------------- */
+
 tasks.register("ensureAppium") {
     doLast {
         val skip = (project.findProperty("skipAppiumCheck") as String?)?.toBoolean() == true
@@ -159,9 +197,9 @@ tasks.register("ensureAppium") {
             println("Skipping Appium check (skipAppiumCheck=true)")
             return@doLast
         }
-        val baseUrl = (project.findProperty("appium.url") as String?).orEmpty().ifBlank { "http://localhost:4723/" }
-        val statusUrlStr = baseUrl.trimEnd('/') + "/status"
-        val statusUrl = URL(statusUrlStr)
+        val baseUrl = appiumBaseUrl(project)
+        val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
+
         var ok = false
         val attempts = 10
         val delayMs = 1000L
@@ -199,7 +237,7 @@ tasks.register("ensureAppium") {
     }
 }
 
-// Auto-start Appium from bundled appium-runner (node_modules) during Gradle tasks
+// Флаги автозапуска/остановки Appium
 val autoStartAppium: Boolean = (project.findProperty("appium.auto.start") as String?)?.toBoolean() ?: true
 val startAppiumLocalProp: Boolean = (project.findProperty("appium.local.start") as String?)?.toBoolean() ?: true
 val stopAppiumLocalProp: Boolean = (project.findProperty("appium.local.stop") as String?)?.toBoolean() ?: true
@@ -211,56 +249,33 @@ tasks.register<NpmTask>("nodeRunnerSetup") {
     args.set(listOf("run", "setup"))
 }
 
-// Start Appium server in background using npm start inside appium-runner
+// Локальный процесс Appium, если мы его поднимали сами
 val appiumProcKey = "__appiumProc__"
 
 tasks.register("startAppiumLocal") {
-    onlyIf { autoStartAppium && startAppiumLocalProp }
+    onlyIf {
+        autoStartAppium && startAppiumLocalProp && !isAppiumRunning(project)
+    }
     dependsOn("nodeRunnerSetup")
     doFirst {
-        val nodeExt = project.extensions.getByType(com.github.gradle.node.NodeExtension::class.java)
-        val npmExec = try {
-            val execProvider = com.github.gradle.node.NodeExtension::class.java.getMethod("getNpmExecutable").invoke(nodeExt)
-            val asFile = execProvider.javaClass.getMethod("getAsFile").invoke(execProvider)
-            asFile.javaClass.getMethod("getAbsolutePath").invoke(asFile) as String
-        } catch (e: Exception) {
-            if (System.getProperty("os.name").lowercase().contains("win")) "npm.cmd" else "npm"
-        }
-        project.extensions.extraProperties.set("npmBinPath", npmExec)
+        val npmPath = resolvedNpmPath(project)
+        project.extensions.extraProperties.set("npmBinPath", npmPath)
     }
     doLast {
         val npm = project.extensions.extraProperties.get("npmBinPath") as String
-        val baseUrl = (project.findProperty("appium.url") as String?).orEmpty().ifBlank { "http://localhost:4723/" }
-        val statusUrl = URI(baseUrl.trimEnd('/') + "/status").toURL()
+        val baseUrl = appiumBaseUrl(project)
+        val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
 
-        fun isUp(): Boolean {
-            return try {
-                val conn = statusUrl.openConnection() as HttpURLConnection
-                conn.connectTimeout = 1000
-                conn.readTimeout = 1000
-                conn.requestMethod = "GET"
-                val code = conn.responseCode
-                val body = (if (code in 200..299) conn.inputStream else conn.errorStream)
-                    ?.bufferedReader()?.use { it.readText() }.orEmpty()
-                conn.disconnect()
-                code == 200 && body.isNotBlank()
-            } catch (e: Exception) { false }
-        }
+        fun isUp(): Boolean = isAppiumRunning(project)
 
-        if (isUp()) {
-            println("Appium is already running at $statusUrl — will not start a new instance.")
-            return@doLast
-        }
-
-        println("Starting Appium from appium-runner (npm start)...")
+        println("Starting Appium from node-runner (npm start)…")
         val pb = ProcessBuilder(npm, "start")
         pb.directory(nodeRunnerDir)
         pb.redirectErrorStream(true)
         val process = pb.start()
-        // Save process to project extra to stop later
         project.extensions.extraProperties.set(appiumProcKey, process)
 
-        // Wait until server is up
+        // ждём готовности
         val attempts = 60
         val delayMs = 1000L
         var ok = false
@@ -269,7 +284,7 @@ tasks.register("startAppiumLocal") {
             Thread.sleep(delayMs)
         }
         if (!ok) {
-            println("Appium failed to start in time, stopping process...")
+            println("Appium failed to start in time, stopping process…")
             try { process.destroy() } catch (_: Exception) {}
             throw GradleException("Failed to start Appium at $statusUrl within ${(attempts * delayMs) / 1000}s")
         }
@@ -314,14 +329,13 @@ tasks.named<Test>("test") {
     if (autoStartAppium && stopAppiumLocalProp) {
         finalizedBy("stopAppiumLocal")
     }
-    // Propagate flags to test JVM so AppConfig can read them via System.getProperty (dotted keys)
     systemProperty("appium.auto.start", autoStartAppium.toString())
     systemProperty("appium.local.start", startAppiumLocalProp.toString())
     systemProperty("appium.local.stop", stopAppiumLocalProp.toString())
 }
 
+/* ------------------------------  publishing  ------------------------------ */
 
-// Настройки публикации проекта
 // Проверяем, выполняется ли задача публикации
 val isPublishTask = gradle.startParameter.taskNames.any { it.contains("publish") }
 
