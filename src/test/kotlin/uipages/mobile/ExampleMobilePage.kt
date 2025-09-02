@@ -25,7 +25,7 @@ object ExampleMobilePage {
      * Нижняя навигационная панель, кнопка "Home"
      */
     val homeNavBar = PageElement(
-        android = ResourceId("HomeNavBar"),
+        android = ResourceId("homeNavBar"),
         ios = Name("[tabMain]")
     )
 
@@ -33,7 +33,7 @@ object ExampleMobilePage {
      * Нижняя навигационная панель, кнопка "Catalogue"
      */
     val catNavBar = PageElement(
-        android = ResourceId("CatNavBar"),
+        android = ResourceId("catNavBar"),
         ios = Name("[tabCatalog]")
     )
 
@@ -41,7 +41,7 @@ object ExampleMobilePage {
      * Нижняя навигационная панель, кнопка "Cart"
      */
     val cartNavBar = PageElement(
-        android = ResourceId("CartNavBar"),
+        android = ResourceId("cartNavBar"),
         ios = Name("[cart]")
     )
 
@@ -49,7 +49,7 @@ object ExampleMobilePage {
      * Нижняя навигационная панель, кнопка "Profile"
      */
     val profileNavBar = PageElement(
-        android = ResourceId("ProfileNavBar"),
+        android = ResourceId("profileNavBar"),
         ios = Name("[tabPersonal]")
     )
 
