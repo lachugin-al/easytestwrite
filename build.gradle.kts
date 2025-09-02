@@ -331,22 +331,38 @@ tasks.register("startAppiumLocal") {
 }
 
 tasks.register("stopAppiumLocal") {
+    // оставляем общий флаг — но сама задача теперь no-op, если мы ничего не поднимали
     onlyIf { autoStartAppium && stopAppiumLocalProp }
     doLast {
         val extra = project.extensions.extraProperties
-        // Log Закрытие логгера (если был)
-        if (extra.has(appiumLogWriterKey)) {
-            (extra.get(appiumLogWriterKey) as? BufferedWriter)?.let {
-                try { it.flush(); it.close() } catch (_: Exception) {}
+
+        val hasProc     = extra.has(appiumProcKey)
+        val hasWriter   = extra.has(appiumLogWriterKey)
+        val hasLogFile  = extra.has(appiumLogFileKey)
+        val hasLogThread= extra.has(appiumLogThreadKey)
+
+        // если мы не стартовали локально (нет ни процесса, ни лог-ресурсов) — ничего не делаем
+        if (!hasProc && !hasWriter && !hasLogFile && !hasLogThread) {
+            println("No locally started Appium process to stop.")
+            return@doLast
+        }
+
+        // закрыть логгер (если был)
+        if (hasWriter) {
+            (extra.get(appiumLogWriterKey) as? java.io.BufferedWriter)?.let {
+                try { it.flush() } catch (_: Exception) {}
+                try { it.close() } catch (_: Exception) {}
             }
             try { extra.set(appiumLogWriterKey, null) } catch (_: Exception) {}
         }
-        if (extra.has(appiumLogThreadKey)) {
-            // поток демонический — отдельно завершать не нужно
+
+        // почистить ссылку на поток зеркалирования (демон; отдельно останавливать не требуется)
+        if (hasLogThread) {
             try { extra.set(appiumLogThreadKey, null) } catch (_: Exception) {}
         }
 
-        if (extra.has(appiumProcKey)) {
+        // остановить локально запущенный процесс (если был)
+        if (hasProc) {
             val proc = extra.get(appiumProcKey)
             if (proc is Process && proc.isAlive) {
                 println("Stopping local Appium process...")
@@ -358,18 +374,15 @@ tasks.register("stopAppiumLocal") {
                     }
                 } catch (_: Exception) {}
             }
-            // Clean the flag
             try { extra.set(appiumProcKey, null) } catch (_: Exception) {}
-        } else {
-            println("No locally started Appium process to stop.")
         }
 
-        // Log Покажем где лежит последний лог
-        val lastLog = (extra.get(appiumLogFileKey) as? String)
-        if (!lastLog.isNullOrBlank()) {
-            println("Last Appium log file: $lastLog")
+        // вывести путь к логу, если он есть, и очистить ключ
+        if (hasLogFile) {
+            val lastLog = (extra.get(appiumLogFileKey) as? String).orEmpty()
+            if (lastLog.isNotBlank()) println("Last Appium log file: $lastLog")
+            try { extra.set(appiumLogFileKey, null) } catch (_: Exception) {}
         }
-        try { extra.set(appiumLogFileKey, null) } catch (_: Exception) {}
     }
 }
 
