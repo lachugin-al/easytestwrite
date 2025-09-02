@@ -1,5 +1,4 @@
 import org.gradle.api.GradleException
-import java.net.URL
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 import com.github.gradle.node.npm.task.NpmTask
@@ -7,6 +6,8 @@ import org.gradle.api.tasks.testing.Test
 import java.net.URI
 import com.github.gradle.node.NodeExtension
 import java.io.File
+import java.io.BufferedWriter
+import java.io.FileWriter
 
 plugins {
     kotlin("jvm") version "2.0.0"
@@ -251,6 +252,9 @@ tasks.register<NpmTask>("nodeRunnerSetup") {
 
 // Локальный процесс Appium, если мы его поднимали сами
 val appiumProcKey = "__appiumProc__"
+val appiumLogFileKey = "__appiumLogFile__"
+val appiumLogWriterKey = "__appiumLogWriter__"
+val appiumLogThreadKey = "__appiumLogThread__"
 
 tasks.register("startAppiumLocal") {
     onlyIf {
@@ -268,12 +272,44 @@ tasks.register("startAppiumLocal") {
 
         fun isUp(): Boolean = isAppiumRunning(project)
 
+        // Подготовим файл логов
+        val logsDir = File(buildDir, "appium-logs")
+        logsDir.mkdirs()
+        val logFile = File(logsDir, "appium-${System.currentTimeMillis()}.log")
+        project.extensions.extraProperties.set(appiumLogFileKey, logFile.absolutePath)
+        println("Appium logs → ${logFile.absolutePath}")
+
         println("Starting Appium from node-runner (npm start)…")
         val pb = ProcessBuilder(npm, "start")
         pb.directory(nodeRunnerDir)
         pb.redirectErrorStream(true)
+
+        // Добавим node/bin в PATH, чтобы npm корректно нашёл node (особенно на *nix)
+        val env = pb.environment()
+        val pathKey = env.keys.firstOrNull { it.equals("Path", ignoreCase = true) } ?: "PATH"
+        val nodeBin = File(npm).parentFile.absolutePath
+        env[pathKey] = nodeBin + File.pathSeparator + (env[pathKey] ?: "")
+
         val process = pb.start()
         project.extensions.extraProperties.set(appiumProcKey, process)
+
+        // Log поток, который зеркалит stdout процесса в файл и в консоль Gradle
+        val writer = BufferedWriter(FileWriter(logFile, true))
+        val t = Thread({
+            process.inputStream.bufferedReader().useLines { seq ->
+                seq.forEach { line ->
+                    try {
+                        writer.appendLine(line)
+                        writer.flush()
+                    } catch (_: Exception) {}
+                    println("[appium] $line")
+                }
+            }
+        }, "appium-log-forwarder")
+        t.isDaemon = true
+        t.start()
+        project.extensions.extraProperties.set(appiumLogWriterKey, writer)
+        project.extensions.extraProperties.set(appiumLogThreadKey, t)
 
         // ждём готовности
         val attempts = 60
@@ -286,6 +322,8 @@ tasks.register("startAppiumLocal") {
         if (!ok) {
             println("Appium failed to start in time, stopping process…")
             try { process.destroy() } catch (_: Exception) {}
+            // Log закрыть writer
+            try { writer.close() } catch (_: Exception) {}
             throw GradleException("Failed to start Appium at $statusUrl within ${(attempts * delayMs) / 1000}s")
         }
         println("Appium started and is reachable at $statusUrl")
@@ -296,6 +334,18 @@ tasks.register("stopAppiumLocal") {
     onlyIf { autoStartAppium && stopAppiumLocalProp }
     doLast {
         val extra = project.extensions.extraProperties
+        // Log Закрытие логгера (если был)
+        if (extra.has(appiumLogWriterKey)) {
+            (extra.get(appiumLogWriterKey) as? BufferedWriter)?.let {
+                try { it.flush(); it.close() } catch (_: Exception) {}
+            }
+            try { extra.set(appiumLogWriterKey, null) } catch (_: Exception) {}
+        }
+        if (extra.has(appiumLogThreadKey)) {
+            // поток демонический — отдельно завершать не нужно
+            try { extra.set(appiumLogThreadKey, null) } catch (_: Exception) {}
+        }
+
         if (extra.has(appiumProcKey)) {
             val proc = extra.get(appiumProcKey)
             if (proc is Process && proc.isAlive) {
@@ -313,6 +363,13 @@ tasks.register("stopAppiumLocal") {
         } else {
             println("No locally started Appium process to stop.")
         }
+
+        // Log Покажем где лежит последний лог
+        val lastLog = (extra.get(appiumLogFileKey) as? String)
+        if (!lastLog.isNullOrBlank()) {
+            println("Last Appium log file: $lastLog")
+        }
+        try { extra.set(appiumLogFileKey, null) } catch (_: Exception) {}
     }
 }
 
