@@ -1,0 +1,21 @@
+{
+  "name": "easytestwrite-node-runner",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Node runner with Appium and mobile drivers (uiautomator2, xcuitest) for launching Appium server used by tests.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "setup": "npm install",
+    "start": "appium server --allow-cors",
+    "start:android": "appium server --drivers=uiautomator2 --allow-cors",
+    "start:ios": "appium server --drivers=xcuitest --allow-cors"
+  },
+  "dependencies": {
+    "appium": "^3.0.1",
+    "appium-uiautomator2-driver": "^5.0.0",
+    "appium-xcuitest-driver": "^10.0.4"
+  }
+}
