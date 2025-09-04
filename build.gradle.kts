@@ -20,7 +20,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.1.2"
+version = "0.1.3"
 
 node {
     version.set("20.19.0")
