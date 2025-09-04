@@ -142,8 +142,8 @@ abstract class BaseContext {
      */
     fun takeScreenshot(
         name: String,
-        scale: Double = 0.5,
-        quality: Int = 100
+        scale: Double = AppConfig.getScreenshotScale(),
+        quality: Int = AppConfig.getScreenshotQuality()
     ) {
         optional(
             {
@@ -153,11 +153,9 @@ abstract class BaseContext {
                 } ?: return@optional
 
                 val raw = provider.getRawScreenshot()
-                val processed = if (scale < 1.0 || quality < 100)
-                    ImageProcessor.processImage(raw, scale.coerceIn(0.1, 1.0), quality.coerceIn(1, 100))
-                else raw
+                val processed = ImageProcessor.processImage(raw, scale.coerceIn(0.1, 1.0), quality.coerceIn(1, 100))
 
-                addAttachment(name, "image/png", ByteArrayInputStream(processed), "png")
+                addAttachment(name, "image/jpeg", ByteArrayInputStream(processed), "jpg")
             }
         )
     }

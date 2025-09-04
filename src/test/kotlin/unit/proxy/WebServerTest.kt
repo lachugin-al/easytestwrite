@@ -22,6 +22,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import java.lang.reflect.Field
+import java.net.URI
 
 /**
  * Модульные тесты для класса [WebServer].
@@ -122,7 +123,7 @@ class WebServerTest {
         }.toString()
 
         // Отправляем POST запрос на конечную точку batch
-        val url = URL("$serverUrl/m/batch")
+        val url = URI("$serverUrl/m/batch").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.doOutput = true
@@ -148,7 +149,7 @@ class WebServerTest {
         val filePath = tempFile.absolutePath
 
         // Создаем URL для запроса файла
-        val url = URL("$serverUrl/file/$filePath")
+        val url = URI("$serverUrl/file/$filePath").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
 
@@ -174,7 +175,7 @@ class WebServerTest {
 
         try {
             // Создаем URL для запроса с таймаутом
-            val url = URL("$serverUrl/file/${tempFile.absolutePath}")
+            val url = URI("$serverUrl/file/${tempFile.absolutePath}").toURL()
             val connection = url.openConnection() as HttpURLConnection
             connection.connectTimeout = 500 // Устанавливаем короткий таймаут
             connection.readTimeout = 500
@@ -228,7 +229,7 @@ class WebServerTest {
         }.toString()
 
         // Отправляем POST запрос на конечную точку batch
-        val url = URL("$serverUrl/m/batch")
+        val url = URI("$serverUrl/m/batch").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
         connection.doOutput = true

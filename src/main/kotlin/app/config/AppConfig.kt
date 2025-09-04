@@ -124,6 +124,16 @@ object AppConfig {
     private val emulatorAutoStart: Boolean = propBoolean("emulator.auto.start", true)
     private val emulatorAutoShutdown: Boolean = propBoolean("emulator.auto.shutdown", true)
 
+    // Масштаб скриншота, применяемый при подготовке артефактов.
+    private val screenshotScale: Double =
+        prop("screenshot.scale", "0.5").toDoubleOrNull()
+            ?.coerceIn(0.1, 1.0) ?: 0.5
+
+    // Качество JPEG при сохранении скриншотов.
+    private val screenshotQuality: Int =
+        prop("screenshot.quality", "100").toIntOrNull()
+            ?.coerceIn(1, 100) ?: 100
+
     // API
 
     /**
@@ -259,4 +269,25 @@ object AppConfig {
      * @return true, если автовыключение эмулятора/симулятора включено.
      */
     fun isEmulatorAutoShutdownEnabled(): Boolean = emulatorAutoShutdown
+
+    /**
+     * Возвращает актуальный масштаб скриншотов.
+     *
+     * Значение уже приведено к диапазону **0.1..1.0**.
+     * По умолчанию — **0.5**, если не задано в конфигурации.
+     *
+     * @return масштаб скриншотов (Double)
+     */
+    fun getScreenshotScale(): Double = screenshotScale
+
+
+    /**
+     * Возвращает качество JPEG для скриншотов.
+     *
+     * Значение уже приведено к диапазону **1..100**.
+     * По умолчанию — **100**, если не задано в конфигурации.
+     *
+     * @return качество JPEG (Int)
+     */
+    fun getScreenshotQuality(): Int = screenshotQuality
 }

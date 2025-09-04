@@ -20,7 +20,7 @@ plugins {
 }
 
 group = "wba"
-version = "0.1.1"
+version = "0.1.2"
 
 node {
     version.set("20.19.0")
@@ -158,11 +158,11 @@ tasks.register("checkFfmpeg") {
 /* -------------------------------  Appium utils  ------------------------------- */
 
 // Базовый URL Appium с дефолтом
-fun appiumBaseUrl(project: org.gradle.api.Project): String =
+fun appiumBaseUrl(project: Project): String =
     (project.findProperty("appium.url") as String?).orEmpty().ifBlank { "http://localhost:4723/" }
 
 // Проверка «жив ли Appium» (GET /status)
-fun isAppiumRunning(project: org.gradle.api.Project): Boolean {
+fun isAppiumRunning(project: Project): Boolean {
     val baseUrl = appiumBaseUrl(project)
     val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
     return try {

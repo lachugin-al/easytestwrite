@@ -1,5 +1,7 @@
 package reporting.artifacts.screenshot
 
+import java.awt.Color
+import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -8,51 +10,109 @@ import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 import javax.imageio.ImageWriter
 import javax.imageio.stream.ImageOutputStream
+import kotlin.math.max
+import kotlin.math.roundToInt
 
-/**
- * Масштабирует изображение и сжимает PNG.
- */
 object ImageProcessor {
 
+    enum class Format { JPEG, PNG }
+
     /**
-     * Масштабирует изображение и задаёт степень сжатия PNG.
+     * Масштабирует изображение и перекодирует его в указанный формат.
+     *
+     * @param bytes   исходные байты (обычно PNG из Appium)
+     * @param scale   0.1..1.0 (уменьшение разрешения)
+     * @param quality 1..100 (для JPEG реально влияет на размер; для PNG — скорее подсказка)
+     * @param format  целевой формат (по умолчанию JPEG)
+     * @param background Цвет подложки для JPEG (альфа не поддерживается)
      */
+    @JvmStatic
     fun processImage(
         bytes: ByteArray,
         scale: Double,
-        quality: Int
+        quality: Int,
+        format: Format = Format.JPEG,
+        background: Color = Color.WHITE
     ): ByteArray {
-        return try {
-            val original: BufferedImage = ImageIO.read(ByteArrayInputStream(bytes))
-            // масштаб
-            val width = (original.width * scale).toInt()
-            val height = (original.height * scale).toInt()
-            val resized = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB).apply {
-                createGraphics().also { g ->
-                    g.drawImage(original, 0, 0, width, height, null)
-                    g.dispose()
-                }
-            }
-            // сжатие PNG
-            val writer: ImageWriter = ImageIO.getImageWritersByFormatName("png").next()
-            val param: ImageWriteParam = writer.defaultWriteParam.apply {
-                if (canWriteCompressed()) {
-                    compressionMode = ImageWriteParam.MODE_EXPLICIT
+        val safeScale = scale.coerceIn(0.1, 1.0)
+        val safeQuality = quality.coerceIn(1, 100)
 
-                    val compLevel = (9 * (100 - quality) / 99f)
-                    compressionQuality = 1f - compLevel / 9f
+        return try {
+            val original = ImageIO.read(ByteArrayInputStream(bytes))
+                ?: return bytes
+
+            val w = max(1, (original.width * safeScale).roundToInt())
+            val h = max(1, (original.height * safeScale).roundToInt())
+
+            val targetType = when (format) {
+                Format.JPEG -> BufferedImage.TYPE_INT_RGB
+                Format.PNG -> BufferedImage.TYPE_INT_ARGB
+            }
+
+            val canvas = BufferedImage(w, h, targetType)
+
+            val g = canvas.createGraphics()
+            try {
+                g.setRenderingHint(
+                    RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BILINEAR
+                )
+                g.setRenderingHint(
+                    RenderingHints.KEY_RENDERING,
+                    RenderingHints.VALUE_RENDER_QUALITY
+                )
+                g.setRenderingHint(
+                    RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON
+                )
+
+                if (format == Format.JPEG) {
+                    g.color = background
+                    g.fillRect(0, 0, w, h)
                 }
+                g.drawImage(original, 0, 0, w, h, null)
+            } finally {
+                g.dispose()
             }
-            val outStream = ByteArrayOutputStream().also { baos ->
-                val ios: ImageOutputStream = ImageIO.createImageOutputStream(baos)
-                writer.output = ios
-                writer.write(null, IIOImage(resized, null, null), param)
-                ios.close()
-                writer.dispose()
+
+            when (format) {
+                Format.JPEG -> writeJpeg(canvas, safeQuality)
+                Format.PNG -> writePng(canvas, safeQuality)
             }
-            outStream.toByteArray()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            System.err.println("[ImageProcessor] ${e.javaClass.simpleName}: ${e.message}")
             bytes
+        }
+    }
+
+    private fun writeJpeg(img: BufferedImage, quality: Int): ByteArray {
+        val writer: ImageWriter = ImageIO.getImageWritersByFormatName("jpeg").next()
+        val param: ImageWriteParam = writer.defaultWriteParam.apply {
+            compressionMode = ImageWriteParam.MODE_EXPLICIT
+            compressionQuality = quality / 100f // 0.0..1.0
+        }
+
+        return ByteArrayOutputStream().use { baos ->
+            ImageIO.createImageOutputStream(baos).use { ios: ImageOutputStream ->
+                writer.output = ios
+                writer.write(null, IIOImage(img, null, null), param)
+            }
+            writer.dispose()
+            baos.toByteArray()
+        }
+    }
+
+    private fun writePng(img: BufferedImage, @Suppress("UNUSED_PARAMETER") quality: Int): ByteArray {
+        val writer: ImageWriter = ImageIO.getImageWritersByFormatName("png").next()
+        val param: ImageWriteParam = writer.defaultWriteParam // можно оставить по умолчанию
+
+        return ByteArrayOutputStream().use { baos ->
+            ImageIO.createImageOutputStream(baos).use { ios: ImageOutputStream ->
+                writer.output = ios
+                writer.write(null, IIOImage(img, null, null), param)
+            }
+            writer.dispose()
+            baos.toByteArray()
         }
     }
 }
