@@ -418,6 +418,14 @@ object EmulatorManager {
                     return false
                 }
 
+                // Конфигурация сети: включаем Wi‑Fi и отключаем мобильные данные, затем проверяем состояние
+                val networkConfigured = configureAndroidNetwork(newEmulatorId)
+                if (!networkConfigured) {
+                    logger.error("Не удалось сконфигурировать сеть (Wi‑Fi ON, Data OFF) на эмуляторе $newEmulatorId")
+                    // Можно попытаться мягко перезапустить сеть/эмулятор, но по требованиям — вернуть неуспех
+                    return false
+                }
+
                 return true
             }
 
@@ -952,6 +960,83 @@ object EmulatorManager {
             return true
         } catch (e: Exception) {
             logger.error("Ошибка при остановке симулятора iOS: ${e.message}", e)
+            return false
+        }
+    }
+
+    /**
+     * Публичный метод для форсирования использования Wi‑Fi на Android‑эмуляторе перед тестами.
+     * Возвращает true, если удалось включить Wi‑Fi и отключить мобильные данные.
+     */
+    fun ensureAndroidWifiConnectivity(): Boolean {
+        return try {
+            if (AppConfig.getPlatform() != Platform.ANDROID) return true
+            val emulatorId = getEmulatorId() ?: run {
+                logger.warn("Не найден запущенный Android эмулятор для настройки сети")
+                return false
+            }
+            configureAndroidNetwork(emulatorId)
+        } catch (t: Throwable) {
+            logger.error("Ошибка при обеспечении Wi‑Fi подключения на эмуляторе: ${t.message}", t)
+            false
+        }
+    }
+
+    /**
+     * Конфигурирует сеть на Android‑эмуляторе: включает Wi‑Fi и отключает мобильные данные,
+     * затем проверяет состояние с повторами в течение ограниченного времени.
+     */
+    private fun configureAndroidNetwork(deviceId: String): Boolean {
+        if (deviceId.isBlank()) return false
+
+        fun runAdb(vararg args: String): TerminalUtils.CommandResult =
+            TerminalUtils.runCommand(
+                command = listOf("adb", "-s", deviceId, "shell") + args,
+                timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+            )
+
+        try {
+            // Команды на включение Wi‑Fi и отключение мобильных данных
+            runAdb("svc", "wifi", "enable")
+            runAdb("svc", "data", "disable")
+
+            // Дополнительная попытка выключить мобильные данные через settings для старых API
+            runAdb("settings", "put", "global", "mobile_data", "0")
+
+            val timeout = Duration.ofSeconds(20)
+            val ok = waitForCondition(
+                timeout = timeout,
+                pollInterval = Duration.ofMillis(500)
+            ) {
+                val wifiEnabled = try {
+                    val res1 = runAdb("settings", "get", "global", "wifi_on")
+                    val value = res1.stdout.trim()
+                    value == "1" || value.equals("true", ignoreCase = true)
+                } catch (_: Exception) { false }
+
+                val wifiCmdOk = try {
+                    val res2 = TerminalUtils.runCommand(
+                        command = listOf("adb", "-s", deviceId, "shell", "cmd", "wifi", "status"),
+                        timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
+                    )
+                    val out = (res2.stdout + "\n" + res2.stderr).lowercase()
+                    out.contains("enabled") || out.contains("wifi is enabled")
+                } catch (_: Exception) { false }
+
+                val dataDisabled = try {
+                    val res3 = runAdb("settings", "get", "global", "mobile_data")
+                    res3.stdout.trim() == "0"
+                } catch (_: Exception) { true /* некоторые API не отдают значение, считаем ок если svc выполнилась */ }
+
+                (wifiEnabled || wifiCmdOk) && dataDisabled
+            }
+
+            if (!ok) {
+                logger.warn("Не удалось подтвердить состояние сети: Wi‑Fi ON и Data OFF в отведённое время")
+            }
+            return ok
+        } catch (t: Throwable) {
+            logger.error("Ошибка при конфигурации сети Android: ${t.message}", t)
             return false
         }
     }

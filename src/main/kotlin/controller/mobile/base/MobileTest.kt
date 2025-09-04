@@ -132,6 +132,18 @@ open class MobileTest:
             }
         }
 
+        // Гарантируем Wi‑Fi на эмуляторе Android перед каждым тестом
+        if (AppConfig.getPlatform() == Platform.ANDROID) {
+            val needEnsure = AppConfig.isEmulatorAutoStartEnabled() || (EmulatorManager.getEmulatorId() != null)
+            if (needEnsure) {
+                val wifiOk = EmulatorManager.ensureAndroidWifiConnectivity()
+                if (!wifiOk) {
+                    logger.error("Не удалось обеспечить использование Wi‑Fi на Android эмуляторе перед тестом")
+                    throw RuntimeException("Wi‑Fi не настроен на эмуляторе. Остановите тест или проверьте окружение.")
+                }
+            }
+        }
+
         // Инициализация приложения
         app = App().launch()
         context = TestingContext(driver)

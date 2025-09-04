@@ -26,7 +26,7 @@ class ImageProcessorTest {
     @Test
     fun `processImage scales and keeps PNG format`() {
         val input = pngBytes(10, 10)
-        val processed = ImageProcessor.processImage(input, scale = 0.5, quality = 50)
+        val processed = ImageProcessor.processImage(input, scale = 0.5, quality = 50, format = ImageProcessor.Format.PNG)
         val pngSig = byteArrayOf(-119, 80, 78, 71, 13, 10, 26, 10)
         assertContentEquals(pngSig.toList(), processed.take(8))
         val img = ImageIO.read(processed.inputStream())
@@ -38,7 +38,7 @@ class ImageProcessorTest {
     @Test
     fun `processImage returns original on error`() {
         val bad = byteArrayOf(1, 2, 3)
-        val out = ImageProcessor.processImage(bad, 0.5, 50)
+        val out = ImageProcessor.processImage(bad, 0.5, 50, format = ImageProcessor.Format.PNG)
         assertContentEquals(bad.toList(), out.toList())
     }
 }
