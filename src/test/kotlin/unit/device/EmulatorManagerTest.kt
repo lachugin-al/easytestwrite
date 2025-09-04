@@ -15,6 +15,51 @@ import utils.TerminalUtils.CommandResult
 
 class EmulatorManagerTest {
 
+    @Test
+    fun `ensureAndroidWifiConnectivity returns true on non-Android platform`() {
+        every { AppConfig.getPlatform() } returns Platform.IOS
+        val result = EmulatorManager.ensureAndroidWifiConnectivity()
+        assertTrue(result)
+    }
+
+    @Test
+    fun `ensureAndroidWifiConnectivity returns false when Android but no emulator running`() {
+        every { AppConfig.getPlatform() } returns Platform.ANDROID
+        val manager = spyk(EmulatorManager, recordPrivateCalls = true)
+        every { manager.getEmulatorId() } returns null
+        val result = manager.ensureAndroidWifiConnectivity()
+        assertFalse(result)
+        verify { manager.getEmulatorId() }
+    }
+
+    @Test
+    fun `ensureAndroidWifiConnectivity returns true when Android emulator present and network configured`() {
+        every { AppConfig.getPlatform() } returns Platform.ANDROID
+        val manager = spyk(EmulatorManager, recordPrivateCalls = true)
+        every { manager.getEmulatorId() } returns "emulator-5554"
+        every { manager invoke "configureAndroidNetwork" withArguments listOf("emulator-5554") } returns true
+        val result = manager.ensureAndroidWifiConnectivity()
+        assertTrue(result)
+        verify {
+            manager.getEmulatorId()
+            manager invoke "configureAndroidNetwork" withArguments listOf("emulator-5554")
+        }
+    }
+
+    @Test
+    fun `ensureAndroidWifiConnectivity returns false when Android emulator present but network configuration fails`() {
+        every { AppConfig.getPlatform() } returns Platform.ANDROID
+        val manager = spyk(EmulatorManager, recordPrivateCalls = true)
+        every { manager.getEmulatorId() } returns "emulator-5556"
+        every { manager invoke "configureAndroidNetwork" withArguments listOf("emulator-5556") } returns false
+        val result = manager.ensureAndroidWifiConnectivity()
+        assertFalse(result)
+        verify {
+            manager.getEmulatorId()
+            manager invoke "configureAndroidNetwork" withArguments listOf("emulator-5556")
+        }
+    }
+
     @BeforeEach
     fun setUp() {
         mockkObject(TerminalUtils)
