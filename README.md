@@ -1,315 +1,316 @@
-# Easy test write
+# EasyTestWrite
 
-Фреймворк для автоматизации тестирования мобильных приложений
+[![version](https://img.shields.io/badge/version-0.0.1-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
 
-![Version](https://img.shields.io/badge/version-0.1.3-blue.svg)
+## Table of Contents
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+    - [Environment Setup](#environment-setup-before-starting)
+    - [Project Structure](#project-structure)
+- [Running Tests](#running-tests)
+    - [Local Run](#local-run-of-e2e-tests)
+    - [Automatic Appium Startup](#automatic-appium-startup)
+    - [Running with Tags](#running-tests-with-tags)
+    - [Running with Emulator Management](#running-tests-with-automatic-emulator-management)
+- [Writing Tests](#writing-tests)
+    - [UI Test Structure](#ui-test-structure)
+    - [Types of Tests](#types-of-tests)
+    - [Special Blocks](#special-blocks-for-test-organization)
+    - [Test Lifecycle](#test-lifecycle)
+    - [Skipping Tests](#skipping-tests-with-the-skip-annotation)
+- [PageObject Model](#pageobject-structure-description)
+    - [Element Locators](#advanced-locator-capabilities)
+- [Framework API](#method-descriptions-each-function-has-detailed-documentation)
+    - [Data Retrieval Methods](#data-retrieval-methods)
+    - [Interaction Methods](#stepcontext)
+    - [Verification Methods](#expectationcontext)
+    - [Helper Methods](#helper-methods)
+    - [Method Parameters](#description-of-possible-parameters-for-functions)
+- [Working with Events and Analytics](#working-with-events-and-analytics)
+    - [Architecture](#event-processing-architecture)
+    - [Event Verification](#event-verification)
+    - [Matching Templates](#templates-for-matching-values-in-eventdata)
+    - [Interacting with Elements](#interacting-with-elements-based-on-events)
+    - [Event Debugging](#event-debugging)
+- [Allure Integration](#allure)
+    - [Features](#key-features-of-allure-integration)
+    - [Suite Annotation](#using-the-suite-annotation)
+    - [Report Generation](#report-generation)
+- [Advanced Features](#advanced-framework-features)
+    - [Emulator Management](#automatic-management-of-emulators-and-simulators)
+    - [Parameterized Testing](#parameterized-testing)
+    - [Video Recording](#video-recording-settings)
+- [Conclusion](#conclusion)
 
-## Содержание
-- [Обзор](#обзор)
-- [Начало работы](#начало-работы)
-  - [Настройка окружения](#настройка-окружения-перед-началом-работы)
-  - [Структура проекта](#структура-проекта)
-- [Запуск тестов](#запуск-тестов)
-  - [Локальный запуск](#локальный-запуск-e2e-тестов)
-  - [Автоматический запуск Appium](#автоматический-запуск-appium)
-  - [Запуск с тегами](#запуск-тестов-с-тегами)
-  - [Запуск с управлением эмуляторами](#запуск-тестов-с-автоматическим-управлением-эмуляторами)
-- [Написание тестов](#написание-тестов)
-  - [Структура UI теста](#структура-ui-теста)
-  - [Типы тестов](#типы-тестов)
-  - [Специальные блоки](#специальные-блоки-для-организации-тестов)
-  - [Жизненный цикл теста](#жизненный-цикл-теста)
-  - [Пропуск тестов](#пропуск-тестов-с-аннотацией-skip)
-- [PageObject модель](#описание-структуры-pageobject)
-  - [Локаторы элементов](#расширенные-возможности-локаторов)
-- [API фреймворка](#описание-методов-к-каждой-функции-добавлена-документация-с-подробным-описанием)
-  - [Методы извлечения данных](#методы-извлечения-данных)
-  - [Методы взаимодействия](#stepcontext)
-  - [Методы проверки](#expectationcontext)
-  - [Вспомогательные методы](#вспомогательные-методы)
-  - [Параметры методов](#описание-возможных-параметров-допустимых-для-передачи-в-функции-к-каждой-параметру-добавлена-документация-с-подробным-описанием)
-- [Работа с событиями и аналитикой](#работа-с-событиями-и-аналитикой)
-  - [Архитектура](#архитектура-работы-с-событиями)
-  - [Проверка событий](#проверка-событий)
-  - [Шаблоны сопоставления](#шаблоны-для-сопоставления-значений-в-eventdata)
-  - [Взаимодействие с элементами](#взаимодействие-с-элементами-на-основе-событий)
-  - [Отладка событий](#отладка-событий)
-- [Интеграция с Allure](#allure)
-  - [Возможности](#основные-возможности-allure-интеграции)
-  - [Аннотация Suite](#использование-аннотации-suite)
-  - [Генерация отчета](#генерация-отчета)
-- [Расширенные возможности](#расширенные-возможности-фреймворка)
-  - [Управление эмуляторами](#автоматическое-управление-эмуляторами-и-симуляторами)
-  - [Параметризованное тестирование](#параметризованное-тестирование)
-  - [Запись видео](#настройки-записи-видео)
-- [Заключение](#заключение)
+## Overview
 
-## Обзор
+**Usage:**
+- for automating end-to-end testing of mobile app user flows
+- for automating analytics testing
+- for creating parameterized tests with various data sources
 
-Использование: 
-- для автоматизации end-to-end тестирования пользовательских сценариев мобильного приложения
-- для автоматизации тестирования аналитики
-- для создания параметризованных тестов с различными источниками данных
+## Getting Started
 
-## Начало работы
+### Environment Setup (Before You Start):
+1. Install `JDK 21` - [guide](https://www.oracle.com/java/technologies/downloads/#java21)
+2. Open the `Terminal`
+3. Set environment variables: `ANDROID_SDK_ROOT`, `ANDROID_HOME`, `JAVA_HOME`
+4. Install `Appium` - [guide](https://github.com/appium/appium)
+5. Install native drivers for Android and iOS:
+    1. Android - [guide](https://github.com/appium/appium-uiautomator2-driver)
+    2. iOS - [guide](https://github.com/appium/appium-xcuitest-driver)
+6. Install `FFmpeg` for video recording:
+    - macOS: `brew install ffmpeg`
+    - Linux: `sudo apt install ffmpeg`
+    - Windows: `choco install ffmpeg` or `winget install ffmpeg`
+7. Open the project in `Android Studio`
+8. Go to `Device Manager` and click `+ Create Virtual Device`, then choose `Pixel 2` and `API 34`
+9. Install `Xcode` (macOS only)
+10. Open `Xcode`, go to `Open Developer Tool -> Simulator`, then create an `iPhone 16 Plus`
 
-### Настройка окружения перед началом работы:
-1. Установить `JDK 21` - [инструкция](https://www.oracle.com/java/technologies/downloads/#java21)
-2. Открыть `Terminal`
-3. Установить переменные среды окружения `ANDROID_SDK_ROOT, ANDROID_HOME, JAVA_HOME`
-4. Установить `Appium` - [инструкция](https://github.com/appium/appium)
-5. Установить нативные драйвера для Android и iOS: 
-   1. Android - [инструкция](https://github.com/appium/appium-uiautomator2-driver)
-   2. iOS - [инструкция](https://github.com/appium/appium-xcuitest-driver)
-6. Установить `FFmpeg` для записи видео:
-   - Mac: `brew install ffmpeg`
-   - Linux: `sudo apt install ffmpeg`
-   - Windows: `choco install ffmpeg` или `winget install ffmpeg`
-7. Открыть проект в `Android Studio`
-8. Перейти в `Device Manager` и нажать + `Create Virtual Device`, далее по шагам выбрать `Pixel 2` и `API 34`
-9. Установить `Xcode` (только для macOS)
-10. Открыть `Xcode`, в меню выбрать `Open Developer Tool -> Simulator`, далее создать `iPhone 16 Plus`
+### Project Structure
 
-### Структура проекта
-Вся кодовая база находится в папке `src/main/` и разделена по пакетам:
-* `app` - классы для подключения и запуска приложения для тестирования
-  * `config` - классы конфигурации
-  * `driver` - классы драйверов для Android и iOS
-  * `model` - модели данных
-* `controller` - классы с контроллерами
-  * `mobile` - контроллеры для мобильных тестов
-  * `element` - классы для работы с элементами UI
-  * `handler` - обработчики специфических взаимодействий (алерты и др.)
-* `dsl` - классы DSL для написания тестов
-* `events` - классы работы с событиями и аналитикой
-* `proxy` - классы прокси сервера для перехвата и анализа сетевого трафика
-* `utils` - классы с утилитами
-  * `allure` - расширения для Allure отчетов
-  * `video` - классы для записи видео тестов
+All source code is located in the `src/main/` folder and split by packages:
+* `app` - classes for connecting and launching the app under test
+    * `config` - configuration classes
+    * `driver` - Android and iOS driver classes
+    * `model` - data models
+* `controller` - controller classes
+    * `mobile` - controllers for mobile tests, classes for working with UI elements, handlers for specific interactions (alerts, etc.)
+* `device` - 
+* `dsl` - DSL classes for writing tests
+* `events` - classes for working with events and analytics
+* `proxy` - proxy server classes for intercepting and analyzing network traffic
+* `reporting` - 
+* `utils` - utility classes
+    * `allure` - Allure report extensions
+    * `video` - classes for test video recording
 
-Все тесты находятся в папке `src/test/` и разделены по пакетам:
-* `mobile` - пакеты с тестами
-  * `uipages` - классы PageObject модели разметки приложения
-  * `uitests` - классы с UI тестами
-* `resources` - ресурсы для тестов (конфигурация, тестовые данные)
+All tests are located in the `src/test/` folder and split by packages:
+* `mobile` - test packages
+    * `uipages` - Page Object classes for the app layout
+    * `uitests` - UI test classes
+* `resources` - test resources (configuration, test data)
 
-## Запуск тестов
+## Running Tests
 
-### Локальный запуск E2E тестов
+### Local Run of E2E Tests
 
-#### Подготовка к запуску
-1. Для мобильных тестов необходимо запустить Appium сервер, в терминале выполнить команду:
+#### Preparation for Launch
+1. For mobile tests, you need to start the Appium server. In the terminal, run:
    ```bash
    appium server --allow-cors
    ```
 
-#### Локальный запуск E2E тестов на Android и iOS:
-1. В папке `test/resources` создать файл конфигурации `config.properties`
-2. Заполнить конфигурационные настройки (либо будут применены настройки по умолчанию)
+#### Local Run of E2E Tests on Android and iOS
+1.	In the `test/resources` folder, create a configuration file `config.properties`
+2.	Fill in the configuration settings (otherwise default values will be applied)
 ```config.properties
-   # URL-адрес сервера Appium для подключения к мобильным устройствам
+    # URL of the Appium server to connect to mobile devices
     appium.url=http://localhost:4723/
-    # Платформа для тестирования (ANDROID или iOS)
+    # Platform for testing (ANDROID or iOS)
     platform=ANDROID
-    # Версия операционной системы Android для тестирования
+    # Android OS version for testing
     android.version=16
-    # Версия операционной системы iOS для тестирования
+    # iOS version for testing
     ios.version=18.5
-    # Название устройства Android для эмуляции
+    # Android device name for emulation
     android.device.name=Pixel_XL
-    # Название устройства iOS для эмуляции
+    # iOS device name for emulation
     ios.device.name=iPhone 16 Plus
-    # Имя файла приложения для Android
+    # Android app file name
     android.app.name=android.apk
-    # Имя файла приложения для iOS
+    # iOS app file name
     ios.app.name=ios.app
-    # Основная активность приложения Android
+    # Main activity of the Android app
     app.activity=MainActivity
-    # Идентификатор пакета приложения Android
+    # Android app package identifier
     app.package=com.ru.dev
-    # Автоматическое принятие всплывающих уведомлений на iOS
+    # Automatically accept alerts on iOS
     ios.auto_accept_alerts=true
-    # Автоматическое отклонение всплывающих уведомлений на iOS
+    # Automatically dismiss alerts on iOS
     ios.auto_dismiss_alerts=false
-    # Режим работы Android-эмулятора без графического интерфейса
+    # Run Android emulator in headless mode
     android.headless.mode=true
-
-    # Включение/отключение записи видео для тестов на Android
+    
+    # Enable/disable video recording for Android tests
     android.video.recording.enabled=false
-    # Включение/отключение записи видео для тестов на iOS
+    # Enable/disable video recording for iOS tests
     ios.video.recording.enabled=false
-    # Размер видеозаписи тестов
+    # Test video resolution
     video.recording.size=640x360
-    # Качество видеозаписи тестов (от 1 до 100)
+    # Test video quality (from 1 to 100)
     video.recording.quality=20
-    # Битрейт видеозаписи тестов в битах в секунду
+    # Test video bitrate in bits per second
     video.recording.bitrate=50000
-    # Директория для сохранения видеозаписей тестов
+    # Directory for saving test videos
     video.recording.output.dir=build/videos
-
-    # Настройки автоматического запуска и выключения эмулятора/симулятора
-    # Автоматический запуск эмулятора/симулятора перед тестами
+    
+    # Emulator/simulator auto start and shutdown settings
+    # Automatically start emulator/simulator before tests
     emulator.auto.start=true
-    # Автоматическое выключение эмулятора/симулятора после тестов
+    # Automatically shut down emulator/simulator after tests
     emulator.auto.shutdown=true
 ```
-3. Выбрать папку с тестами или отдельные тесты для запуска, вызвать меню и нажать `Run ...`
+3. Select the folder with tests or specific tests to run, open the context menu, and click `Run ...`
 
-### Автоматический запуск Appium
-Фреймворк поддерживает автоматический подъем и остановку локального Appium сервера без необходимости глобальной установки Appium и драйверов. Для этого используется подпроект `appium-runner` (Node.js), а Gradle-плагин автоматически скачивает нужную версию Node.js и управляет запуском.
+### Automatic Appium Startup
+The framework supports automatically starting and stopping a local Appium server without requiring a global installation of Appium and drivers. This is done via the `appium-runner` (Node.js) subproject, and a Gradle plugin automatically downloads the required Node.js version and manages the lifecycle.
 
-Как это работает при `./gradlew test`:
-- Если включено автозапуск (по умолчанию), Gradle выполняет:
-  1) `nodeRunnerSetup` — устанавливает npm-зависимости в `appium-runner` (эквивалент `npm install`)
-  2) `startAppiumLocal` — запускает Appium (`npm start` внутри `appium-runner`) и ждёт готовности `/status` до 60 сек
-  3) `ensureAppium` — дополнительно проверяет доступность `/status` (до 10 попыток по 1 сек)
-  4) По завершении тестов — `stopAppiumLocal` (если включено), останавливает локальный процесс Appium
+How it works when running `./gradlew test`:
+- If auto-start is enabled (default), Gradle performs:
+    1) `nodeRunnerSetup` — installs npm dependencies in `appium-runner` (equivalent to `npm install`)
+    2) `startAppiumLocal` — starts Appium (`npm start` inside `appium-runner`) and waits for `/status` to be ready for up to 60s
+    3) `ensureAppium` — additionally checks availability of `/status` (up to 10 attempts, 1s interval)
+    4) After tests finish — `stopAppiumLocal` (if enabled) stops the local Appium process
 
-Основные Gradle-свойства (значения по умолчанию в скобках):
-- `-Pappium.auto.start=true|false` (true) — включает/выключает всю механику автозапуска Appium
-- `-Pappium.local.start=true|false` (true) — поднимать ли локальный Appium перед тестами
-- `-Pappium.local.stop=true|false` (true) — останавливать ли локальный Appium после тестов
-- `-Pappium.url=http://localhost:4723/` — базовый URL Appium (по умолчанию `http://localhost:4723/`)
-- `-PskipAppiumCheck=true|false` (false) — пропустить проверку доступности Appium (`ensureAppium`)
+Key Gradle properties (defaults in parentheses):
+- `-Pappium.auto.start=true|false` (**true**) — enable/disable the entire Appium auto-start mechanism
+- `-Pappium.local.start=true|false` (**true**) — whether to start local Appium before tests
+- `-Pappium.local.stop=true|false` (**true**) — whether to stop local Appium after tests
+- `-Pappium.url=http://localhost:4723/` — base Appium URL (default `http://localhost:4723/`)
+- `-PskipAppiumCheck=true|false` (**false**) — skip Appium availability check (`ensureAppium`)
 
-Готовые сценарии запуска:
-- Локальный автозапуск (по умолчанию):
+Ready-to-use run scenarios:
+- Local auto-start (default):
   ```bash
   ./gradlew test -Pplatform=ANDROID
   ```
-- Использовать уже запущенный или удалённый Appium:
+- Use an already running or remote Appium instance:
   ```bash
   ./gradlew test -Pappium.auto.start=false -Pappium.url=http://remote-host:4723/ -Pplatform=ANDROID
   ```
-- Оставить локальный Appium работать после тестов:
+- Keep local Appium running after tests:
   ```bash
   ./gradlew test -Pappium.local.stop=false
   ```
-- Предварительно установить npm-зависимости (полезно при нестабильной сети/CI-кэше):
+- Pre-install npm dependencies (useful with unstable network/CI cache):
   ```bash
   ./gradlew nodeRunnerSetup
   ```
-- Вручную запустить/остановить Appium без запуска тестов:
+- Manually start/stop Appium without running tests:
   ```bash
   ./gradlew startAppiumLocal
   ./gradlew stopAppiumLocal
   ```
 
-Примечания и диагностика:
-- Порт и драйверы: локальный запуск использует скрипт `npm start` из `appium-runner` (Appium + `uiautomator2`, `xcuitest`) и слушает порт `4723`. Для нестандартного порта запустите вручную:
+Notes and diagnostics:
+- Port and drivers: local startup uses the `npm start` script from `appium-runner` (Appium + `uiautomator2`, `xcuitest`) and listens on port `4723`.  
+  For a custom port, run manually:
   ```bash
   cd appium-runner && npm start -- --port 4725
   ```
-  и укажите `-Pappium.url=http://localhost:4725/` при запуске тестов.
-- Время ожидания: `startAppiumLocal` ждёт готовности до ~60 сек, `ensureAppium` — до ~10 сек. Если сервер не успел подняться — сборка упадёт с подсказкой.
-- FFmpeg: перед тестами выполняется проверка `checkFfmpeg`. Установите FFmpeg (см. раздел «Начало работы»), если запись видео включена.
-- Node.js: скачивается и используется автоматически. Глобальная установка Appium и драйверов не обязательна.
-- Настройка URL также возможна через `src/test/resources/config.properties` (`appium.url=...`). Параметр из командной строки `-Pappium.url=...` переопределит значение из конфигурации на время запуска.
+  and specify `-Pappium.url=http://localhost:4725/` when running the tests.
+- Timeouts: `startAppiumLocal` waits for readiness for ~60s, `ensureAppium` — up to ~10s. If the server doesn’t start in time, the build will fail with a hint.
+- FFmpeg: before tests, `checkFfmpeg` is executed. Install FFmpeg (see the “Getting Started” section) if video recording is enabled.
+- Node.js: downloaded and used automatically. A global installation of Appium and drivers is not required.
+- You can also set the URL via `src/test/resources/config.properties` (`appium.url=...`). A CLI parameter `-Pappium.url=...` will override the config value for the current run.
 
-### Запуск тестов с тегами
-Для запуска тестов с определенными тегами используйте параметр `-Ptag`:
+### Running Tests with Tags
+To run tests with specific tags, use the `-Ptag` parameter:
 
 ```bash
 ./gradlew test -Ptag=Smoke,Regression
 ```
 
-Это запустит только тесты, помеченные аннотацией `@Tag("Smoke")` или `@Tag("Regression")`.
+This will run only the tests annotated with `@Tag("Smoke")` or `@Tag("Regression")`.
 
-### Запуск тестов с автоматическим управлением эмуляторами
-Для автоматического запуска и остановки эмуляторов/симуляторов:
+### Running Tests with Automatic Emulator Management
+To automatically start and stop emulators/simulators:
 
 ```bash
 ./gradlew test -Pemulator.auto.start=true -Pemulator.auto.shutdown=true
 ```
 
-## Написание тестов
+## Writing Tests
 
-### Структура UI теста
-Тесты должны находиться в папке `test/kotlin/uitests/` и использовать PageObject модель с разметкой элементов.
-Тесты необходимо разделять по пакетам, в зависимости от того, к какому функционалу относится тот или иной тест.
-Каждый тест должен помечаться аннотацией `@Test`.
+### UI Test Structure
+Tests must be located in the `test/kotlin/uitests/` folder and use the Page Object model with element mappings.
+Organize tests into packages depending on the product area the test belongs to.
+Each test must be annotated with `@Test`.
 
-### Типы тестов
-Фреймворк поддерживает несколько типов тестов:
+### Test Types
+The framework supports several types of tests:
 
-1. **Мобильные тесты** - наследуются от класса `MobileTest` и используются для тестирования мобильных приложений на Android и iOS
-3. **Параметризованные тесты** - используют аннотации `@ParameterizedTest` и различные источники данных
-4. **Тесты с тегами** - помечаются аннотацией `@Tag` для выборочного запуска
+1. **Mobile tests** — inherit from the `MobileTest` class and are used to test mobile applications on Android and iOS
+2. **Parameterized tests** — use the `@ParameterizedTest` annotation with various data sources
+3. **Tagged tests** — are marked with the `@Tag` annotation for selective execution
 
-### Пропуск тестов с аннотацией Skip
-Фреймворк предоставляет аннотацию `@Skip` для условного пропуска тестов:
+### Skipping Tests with the `@Skip` Annotation
+The framework provides the `@Skip` annotation for conditionally skipping tests:
 
 ```kotlin
-// Пропустить тест безусловно
+// Unconditionally skip the test
 @Test
 @Skip()
-@DisplayName("Этот тест будет пропущен")
+@DisplayName("This test will be skipped")
 fun testToBeSkipped() {
-    // Этот код не будет выполнен
+    // This code will not be executed
 }
 
-// Пропустить тест только на Android
+// Skip the test only on Android
 @Test
 @Skip(platform = "android")
-@DisplayName("Тест пропускается только на Android")
+@DisplayName("Test is skipped only on Android")
 fun testSkipOnAndroid() {
-    // Этот код будет выполнен только на iOS
+    // This code will run only on iOS
 }
 
-// Пропустить тест только на iOS
+// Skip the test only on iOS
 @Test
 @Skip(platform = "ios")
-@DisplayName("Тест пропускается только на iOS")
+@DisplayName("Test is skipped only on iOS")
 fun testSkipOnIOS() {
-    // Этот код будет выполнен только на Android
+    // This code will run only on Android
 }
 ```
 
-Аннотация `@Skip` полезна для:
-- Временного отключения тестов, которые находятся в разработке
-- Создания платформо-специфичных тестов, которые должны выполняться только на одной платформе
-- Пропуска тестов, которые зависят от функциональности, доступной только на определенной платформе
+The `@Skip` annotation is useful for:
+- Temporarily disabling tests that are under development
+- Creating platform-specific tests that should run only on a single platform
+- Skipping tests that depend on functionality available only on a specific platform
 
-### Специальные блоки для организации тестов
-Фреймворк предоставляет специальные блоки для организации тестов:
+### Special Blocks for Organizing Tests
+The framework provides special blocks to organize tests:
 
-- `context.run { ... }` - Основной блок выполнения теста
-- `optionalAndroid({ ... })` - Блок кода, который выполняется только на платформе Android
-- `optionalIos({ ... })` - Блок кода, который выполняется только на платформе iOS
-- `optional({ ... })` - Опциональный блок кода, если не выполнится, то тест не упадет (полезно для проверки элементов, которые могут отображаться не всегда)
-- `onlyAndroid { ... }` - Блок кода, который выполняется только на платформе Android
-- `onlyIos { ... }` - Блок кода, который выполняется только на платформе iOS
+- `context.run { ... }` — Main execution block of a test
+- `optionalAndroid({ ... })` — Code block executed only on Android
+- `optionalIos({ ... })` — Code block executed only on iOS
+- `optional({ ... })` — Optional code block; if it fails, the test won’t fail (useful for elements that may not always appear)
+- `onlyAndroid { ... }` — Code block executed only on Android
+- `onlyIos { ... }` — Code block executed only on iOS
 
-Пример структуры теста:
+#### Example Test Structure
 ```kotlin
 class ExampleTest : MobileTest() {
 
     @Test
-    @DisplayName("Название теста")
-    @Description("Описание того, что должен делать тест, если не достаточно информации из названия")
-    @Feature("Название фичи")
+    @DisplayName("Test Name")
+    @Description("A description of what the test should do if the title is not sufficient")
+    @Feature("Feature Name")
     fun openAppExample() {
         context.run {
-            "Загрузка стартового экрана приложения" {
-              // ...
-              "Проверка 1" {
-                 // ...
-              }
+            "Loading the app's start screen" {
+                // ...
+                "Assertion 1" {
+                    // ...
+                }
             }
 
             onlyAndroid {
-                "Шаг выполняемый только на Android" {
+                "Step executed only on Android" {
                     // ...
-                    "Проверка 1" {
+                    "Assertion 1" {
                         // ...
                     }
                 }
             }
 
             onlyIos {
-                "Шаг выполняемый только на iOS" {
+                "Step executed only on iOS" {
                     // ...
-                    "Проверка 1" {
+                    "Assertion 1" {
                         // ...
                     }
                 }
@@ -317,9 +318,9 @@ class ExampleTest : MobileTest() {
 
             optionalAndroid(
                 {
-                    "Шаг выполняемый только на Android" {
+                    "Step executed only on Android" {
                         // ...
-                        "Проверка 1" {
+                        "Assertion 1" {
                             // ...
                         }
                     }
@@ -328,9 +329,9 @@ class ExampleTest : MobileTest() {
 
             optionalIos(
                 {
-                    "Шаг выполняемый только на iOS" {
+                    "Step executed only on iOS" {
                         // ...
-                        "Проверка 1" {
+                        "Assertion 1" {
                             // ...
                         }
                     }
@@ -339,9 +340,9 @@ class ExampleTest : MobileTest() {
 
             optional(
                 {
-                    "Опциональный шаг, если не выполнится то тест не упадет" {
+                    "Optional step; if it fails, the test will not fail" {
                         // ...
-                        "Проверка отображения виджета который 50/50 отобразится" {
+                        "Check display of a widget that may or may not appear (50/50)" {
                             // ...
                         }
                     }
@@ -352,47 +353,47 @@ class ExampleTest : MobileTest() {
 }
 ```
 
-Пример теста:
+Example test:
 ```kotlin
 class SmokeTest : MobileTest() {
 
     @Test
-    @DisplayName("Название теста")
-    @Description("Описание того, что должен делать тест, если не достаточно информации из названия")
-    @Feature("Название фичи, тесты будут группироваться в отчете по фичам")
+    @DisplayName("Test Name")
+    @Description("A description of what the test should do if the title is not sufficient")
+    @Feature("Feature name; tests will be grouped by feature in the report")
     fun openAppExample() {
         context.run {
-            "Загрузка приложения" {
-                "Экран с выбором региона отображается" {
+            "App launch" {
+                "Region selection screen is displayed" {
                     checkVisible(ExampleScreen.ruRegion)
                 }
             }
 
-            "Выбрать регион" {
+            "Select region" {
                 click(ExampleScreen.ruRegion)
 
-                "Кнопка 'Home' на навигационной панели отображается" {
+                "'Home' button on the navigation bar is visible" {
                     checkVisible(ExampleScreen.homeNavBar)
                 }
-                "Кнопка 'Catalog' на навигационной панели отображается" {
+                "'Catalog' button on the navigation bar is visible" {
                     checkVisible(ExampleScreen.catNavBar)
                 }
-                "Кнопка 'Cart' на навигационной панели отображается" {
+                "'Cart' button on the navigation bar is visible" {
                     checkVisible(ExampleScreen.cartNavBar)
                 }
-                "Кнопка 'Profile' на навигационной панели отображается" {
+                "'Profile' button on the navigation bar is visible" {
                     checkVisible(ExampleScreen.profileNavBar)
                 }
             }
 
-            "Пробежимся по навбару" {
+            "Walk through the navbar" {
                 click(ExampleScreen.profileNavBar)
                 click(ExampleScreen.cartNavBar)
                 click(ExampleScreen.catNavBar)
                 click(ExampleScreen.homeNavBar)
             }
 
-            "Проскроллим туда-сюда" {
+            "Scroll back and forth" {
                 scrollDown(scrollCount = 5)
                 scrollUp(scrollCount = 2)
             }
@@ -401,63 +402,64 @@ class SmokeTest : MobileTest() {
 }
 ```
 
-### Жизненный цикл теста
-Фреймворк поддерживает стандартные методы жизненного цикла JUnit 5:
+### Test Lifecycle
+The framework supports standard JUnit 5 lifecycle methods:
 
 ```kotlin
-// Выполняется один раз перед всеми тестами в классе
+// Runs once before all tests in the class
 @BeforeAll
 fun setUpAll() {
-    // Инициализация общих ресурсов
+    // Initialize shared resources
 }
 
-// Выполняется перед каждым тестом
+// Runs before each test
 @BeforeEach
 fun setUp(testInfo: TestInfo) {
-    // Подготовка к тесту
-    // testInfo содержит информацию о текущем тесте
+    // Prepare for the test
+    // testInfo contains information about the current test
 }
 
-// Выполняется после каждого теста
+// Runs after each test
 @AfterEach
 fun tearDown(testInfo: TestInfo) {
-    // Ожидает все асинхронные проверки по ивентам
+    // Wait for all asynchronous event checks
     awaitAllEventChecks()
-    // Закрытие приложения
+    // Close the application
     app.close()
-    // Сохранение видеозаписи теста
+    // Save the test video recording
 }
 
-// Выполняется один раз после всех тестов в классе
+// Runs once after all tests in the class
 @AfterAll
 fun tearDownAll() {
-    // Освобождение общих ресурсов
+    // Release shared resources
 }
 ```
 
-Базовый класс `MobileTest` уже содержит реализацию этих методов, которые автоматически:
-- Запускают и останавливают эмуляторы/симуляторы (если включено)
-- Начинают и останавливают запись видео (если включено)
-- Ожидают завершения асинхронных проверок событий
-- Закрывают приложение после теста
+The base class `MobileTest` already implements these lifecycle methods, which automatically:
+- start and stop emulators/simulators (if enabled)
+- start and stop video recording (if enabled)
+- wait for completion of asynchronous event checks
+- close the application after each test
 
-## Описание структуры PageObject
-В каждый метод нам необходимо передавать локатор элемента на странице который описывается в PageObject модели.
-Каждый элемент относится к определенному классу в PageObject модели соответствующий определенному виджету, экрану и т.д.
-PageObject модель должна располагаться в папке `test/kotlin/uipages/` и разделена по пакетам, которые относятся к тому или иному функционалу.
+## Page Object Structure
 
-Пример описания элемента в PageObject модели:
+Each method should receive a locator of the UI element on the page, defined in the Page Object model.  
+Every element belongs to a specific class in the Page Object model corresponding to a widget, screen, etc.  
+The Page Object model should be located in `test/kotlin/uipages/` and organized into packages by feature area.
+
+Example of an element definition in a Page Object model:
 ```kotlin
 object ExampleScreen {
 
-    // Стандартное определение элемента с разными локаторами для Android и iOS
+    // Standard element definition with different locators for Android and iOS
     val ruRegionRussiaText = PageElement(
         android = XPath("""//android.widget.TextView[@text="Россия"]"""),
         ios = Value("Россия")
     )
 
-    // Использование списка альтернативных локаторов для Android
-    // Фреймворк попробует найти элемент по каждому локатору из списка
+    // Using a list of alternative locators for Android.
+    // The framework will try each locator in the list until the element is found.
     val ruRegionRussiaTextWithAlternatives = PageElement(
         androidList = listOf(Text("Russia"), Text("Россия")),
         ios = Name("Россия")
@@ -470,7 +472,7 @@ object ExampleScreen {
 
     val findOfferBar = PageElement(
         android = Text("Найти товар"),
-        ios = null  // Элемент доступен только на Android
+        ios = null  // Element available only on Android
     )
 
     val favorites = PageElement(
@@ -478,207 +480,208 @@ object ExampleScreen {
         ios = Name("IconDual/24/Stroke/heartEmptyWhiteBlack")
     )
 
-    // Использование AccessibilityId для обеих платформ
+    // Using AccessibilityId for both platforms
     val accessebilityIdLocator = PageElement(
         android = AccessibilityId("Поиск"),
         ios = AccessibilityId("Поиск")
     )
 
-    // Использование UIAutomator для Android
+    // Using UIAutomator for Android
     val androidUIAutomatorLocator = PageElement(
         android = AndroidUIAutomator("new UiSelector().text(\"Поиск\")")
     )
 
-    // Использование Class Chain для iOS
+    // Using Class Chain for iOS
     val iOSClassChainLocator = PageElement(
         ios = IOSClassChain("**/XCUIElementTypeStaticText[`name == \"Поиск\"`]")
     )
 
-    // Использование Predicate String для iOS
+    // Using Predicate String for iOS
     val iOSPredicateStringLocator = PageElement(
         ios = IOSPredicateString("name == \"Поиск\"")
     )
 }
 ```
 
-Поиск элементов на странице доступно по аттрибутам: `id`, `resource-id`, `text`, `contains-text`, `content-desc`, `xpath`, `value`, `name`, `label`, `accessibility-id`, `android-uiautomator`, `ios-class-chain`, `ios-predicate-string`
+Element search on a page is available by attributes: `id`, `resource-id`, `text`, `contains-text`, `content-desc`, `xpath`, `value`, `name`, `label`, `accessibility-id`, `android-uiautomator`, `ios-class-chain`, `ios-predicate-string`
 
-### Расширенные возможности локаторов
+### Advanced Locator Capabilities
 
-Фреймворк поддерживает несколько продвинутых стратегий локации элементов:
+The framework supports several advanced strategies for locating elements:
 
-1. **Альтернативные локаторы** - Возможность указать список альтернативных локаторов для Android с помощью параметра `androidList`. Фреймворк будет последовательно пытаться найти элемент по каждому локатору из списка.
+1. **Alternative locators** — You can provide a list of alternative locators for Android via the `androidList` parameter. The framework will try each locator in order until the element is found.
 
-2. **Платформо-зависимые локаторы** - Возможность указать разные локаторы для Android и iOS, что позволяет писать кросс-платформенные тесты.
+2. **Platform-specific locators** — You can specify different locators for Android and iOS to write cross-platform tests.
 
-3. **Специализированные локаторы** - Поддержка платформо-специфичных локаторов, таких как AndroidUIAutomator, IOSClassChain и IOSPredicateString, для более гибкого поиска элементов.
+3. **Specialized locators** — Support for platform-specific locators such as `AndroidUIAutomator`, `IOSClassChain`, and `IOSPredicateString` for more flexible element search.
 
-## Описание методов (к каждой функции добавлена документация с подробным описанием)
+## Method Descriptions (each function includes detailed documentation)
 
-### Методы извлечения данных
-- `getText()` - Получить текст из [element] найденном на экране
-- `getNumber()` - Получить числовое значение из [element] найденного на экране (универсальный парсер из «грязного» текста)
+### Data Retrieval Methods
+- `getText()` — Get text from an [element] found on the screen
+- `getNumber()` — Extract a numeric value from an [element] found on the screen (a universal parser from “noisy” text)
 
 ### StepContext
-- `click()` - Найти элемент на экране по его [element] и кликнуть по нему
-- `click(eventName, eventData)` - Найти и кликнуть по элементу, связанному с событием [eventName] и данными [eventData]
-- `typeText()` - Найти элемент на экране по его [element] и ввести [text]
-- `tapArea()` - Нажать в области экрана по [x] и [y]
-- `tapElementArea()` - Нажать в области [element] по его [x] и [y]
-- `scrollDown()` - Выполнить скроллирование вниз
-- `scrollUp()` - Выполнить скроллирование вверх
-- `scrollRight()` - Выполнить скроллирование вправо
-- `scrollLeft()` - Выполнить скроллирование влево
-- `swipeDown()` - Выполнить свайп в [element] вниз
-- `swipeUp()` - Выполнить свайп в [element] вверх
-- `swipeRight()` - Выполнить свайп в [element] вправо
-- `swipeLeft()` - Выполнить свайп в [element] влево
-- `openDeeplink(deeplink)` - Выполняет открытие переданной в параметры ссылки диплинка (поддерживается для Android и iOS)
+- `click()` — Find an [element] on the screen and tap it
+- `click(eventName, eventData)` — Find and tap the element associated with [eventName] and [eventData]
+- `typeText()` — Find an [element] on the screen and input [text]
+- `tapArea()` — Tap on the screen at coordinates [x], [y]
+- `tapElementArea()` — Tap within an [element] at its relative [x], [y]
+- `scrollDown()` — Scroll down
+- `scrollUp()` — Scroll up
+- `scrollRight()` — Scroll right
+- `scrollLeft()` — Scroll left
+- `swipeDown()` — Swipe down within an [element]
+- `swipeUp()` — Swipe up within an [element]
+- `swipeRight()` — Swipe right within an [element]
+- `swipeLeft()` — Swipe left within an [element]
+- `openDeeplink(deeplink)` — Open the provided deeplink URL (supported on Android and iOS)
+
   ```kotlin
-  // Примеры использования:
-  openDeeplink("project://main")      // Открытие главной страницы
-  openDeeplink("project://catalog")   // Открытие страницы каталога
-  openDeeplink("project://cart")      // Открытие страницы корзины
-  openDeeplink("project://profile")   // Открытие страницы профиля
+  // Usage examples:
+  openDeeplink("project://main")      // Open the main page
+  openDeeplink("project://catalog")   // Open the catalog page
+  openDeeplink("project://cart")      // Open the cart page
+  openDeeplink("project://profile")   // Open the profile page
   ```
 
 ### ExpectationContext
-- `checkVisible()` - Проверить виден ли [element] на экране
-- `checkHasEvent(eventName, eventData)` - Проверяет наличие события [eventName] и данных [eventData] в EventStorage
-- `checkHasEvent(eventName, eventDataFile)` - Проверяет наличие события [eventName] и данных из файла [eventDataFile] в EventStorage
-- `checkHasEventAsync(eventName, eventData)` - Проверяет событие [eventName] и данные [eventData] асинхронно в EventStorage исходя из производимых после вызова функции действий пользователя
-- `checkHasEventAsync(eventName, eventDataFile)` - Проверяет событие [eventName] и данные из файла [eventDataFile] асинхронно в EventStorage
+- `checkVisible()` — Verify that an [element] is visible on the screen
+- `checkHasEvent(eventName, eventData)` — Verifies the presence of event [eventName] with [eventData] in EventStorage
+- `checkHasEvent(eventName, eventDataFile)` — Verifies the presence of event [eventName] with data from [eventDataFile] in EventStorage
+- `checkHasEventAsync(eventName, eventData)` — Asynchronously verifies event [eventName] with [eventData] in EventStorage based on user actions performed **after** the function call
+- `checkHasEventAsync(eventName, eventDataFile)` — Asynchronously verifies event [eventName] with data from [eventDataFile] in EventStorage
 
-### Вспомогательные методы
-- `awaitAllEventChecks()` - Ожидает завершения всех асинхронных проверок событий (вызывается в методе tearDown())
+### Helper Methods
+- `awaitAllEventChecks()` — Waits for completion of all asynchronous event checks (called in `tearDown()`)
 
-### Описание возможных параметров, допустимых для передачи в функции (к каждой параметру добавлена документация с подробным описанием):
-- `element: PageElement?` - элемент
-- `elementNumber: Int?` - номер найденного элемента начиная с 1
-- `timeoutBeforeExpectation: Long` - количество секунд, до того как будет производиться поиск элемента
-- `timeoutExpectation: Long` - количество секунд в течение которого производится поиск элемента
-- `pollingInterval: Long` - частота опроса элемента в миллисекундах
-- `scrollCount: Int` - количество скроллирований до элемента, если элемент не найден на текущей странице
-- `scrollCapacity: Double` - модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу
-- `scrollDirection: ScrollDirection` - направление скроллирования экрана
-- `x: Int`, `y: Int` - передача точки `x` и `y` на экране для функций `tapArea()` и `tapElementArea()`
-- `eventName: String` - название события для поиска в EventStorage
-- `eventData: String` - JSON-строка с данными для проверки в событии
-- `eventDataFile: File` - файл с JSON-данными для проверки в событии
-- `deeplink: String` - строка с диплинком для открытия в приложении
+### Description of Allowed Parameters (each parameter is documented in detail)
+- `element: PageElement?` — the element
+- `elementNumber: Int?` — index of the found element starting from 1
+- `timeoutBeforeExpectation: Long` — seconds to wait **before** starting to search for the element
+- `timeoutExpectation: Long` — number of seconds to keep searching for the element
+- `pollingInterval: Long` — polling frequency in milliseconds
+- `scrollCount: Int` — number of scroll attempts toward the element if not found on the current screen
+- `scrollCapacity: Double` — scroll height modifier `[0.0 - 1.0]`; at `1.0` the screen scrolls by one full page
+- `scrollDirection: ScrollDirection` — direction of screen scrolling
+- `x: Int`, `y: Int` — screen coordinates for `tapArea()` and `tapElementArea()`
+- `eventName: String` — event name to search for in EventStorage
+- `eventData: String` — JSON string with data to validate in the event
+- `eventDataFile: File` — file containing JSON data to validate in the event
+- `deeplink: String` — deeplink string to open in the app
 
-## Работа с событиями и аналитикой
-Фреймворк предоставляет мощные возможности для проверки событий аналитики, отправляемых приложением. Для этого используется класс `EventStorage`, который хранит все события, перехваченные прокси-сервером.
+## Working with Events & Analytics
+The framework provides powerful capabilities for validating analytics events sent by the app. It uses the `EventStorage` class, which stores all events intercepted by the proxy server.
 
-### Архитектура работы с событиями
+### Event Processing Architecture
 
-Система работы с событиями состоит из следующих компонентов:
+The event pipeline consists of the following components:
 
-1. **Прокси-сервер** - перехватывает сетевой трафик приложения и извлекает события аналитики
-2. **EventStorage** - хранит все перехваченные события в памяти
-3. **EventMatcher** - сопоставляет события с ожидаемыми шаблонами
-4. **EventHandler** - обрабатывает события и выполняет проверки
+1. **Proxy Server** — intercepts the app’s network traffic and extracts analytics events
+2. **EventStorage** — stores all intercepted events in memory
+3. **EventMatcher** — matches events against expected patterns
+4. **EventHandler** — processes events and performs checks
 
-Эта архитектура позволяет:
-- Перехватывать события без модификации приложения
-- Проверять события синхронно или асинхронно
-- Использовать гибкие шаблоны для сопоставления данных
-- Взаимодействовать с UI на основе событий
+This architecture enables:
+- Intercepting events without modifying the application
+- Checking events synchronously or asynchronously
+- Using flexible patterns to match data
+- Interacting with the UI based on events
 
-### Проверка событий
+### Event Verification
 
-Для проверки событий используются следующие методы:
+The following methods are used to verify events:
 
-| Метод | Описание | Параметры |
-|-------|----------|-----------|
-| `checkHasEvent(eventName, eventData)` | Синхронная проверка наличия события | `eventName`: имя события<br>`eventData`: JSON-строка с данными<br>`timeoutEventExpectation`: таймаут ожидания (сек) |
-| `checkHasEventAsync(eventName, eventData)` | Асинхронная проверка события | `eventName`: имя события<br>`eventData`: JSON-строка с данными<br>`timeoutEventExpectation`: таймаут ожидания (сек) |
-| `checkHasEvent(eventName, eventDataFile)` | Проверка с данными из файла | `eventName`: имя события<br>`eventDataFile`: файл с JSON-данными<br>`timeoutEventExpectation`: таймаут ожидания (сек) |
-| `checkHasEventAsync(eventName, eventDataFile)` | Асинхронная проверка с данными из файла | `eventName`: имя события<br>`eventDataFile`: файл с JSON-данными<br>`timeoutEventExpectation`: таймаут ожидания (сек) |
+| Method | Description | Parameters |
+|-------|-------------|------------|
+| `checkHasEvent(eventName, eventData)` | Synchronous check for event presence | `eventName`: event name<br>`eventData`: JSON string with data<br>`timeoutEventExpectation`: wait timeout (sec) |
+| `checkHasEventAsync(eventName, eventData)` | Asynchronous event check | `eventName`: event name<br>`eventData`: JSON string with data<br>`timeoutEventExpectation`: wait timeout (sec) |
+| `checkHasEvent(eventName, eventDataFile)` | Check using data from a file | `eventName`: event name<br>`eventDataFile`: file with JSON data<br>`timeoutEventExpectation`: wait timeout (sec) |
+| `checkHasEventAsync(eventName, eventDataFile)` | Asynchronous check using data from a file | `eventName`: event name<br>`eventDataFile`: file with JSON data<br>`timeoutEventExpectation`: wait timeout (sec) |
 
-### Шаблоны для сопоставления значений в eventData
+### Matching Patterns for Values in `eventData`
 
-При проверке событий поддерживаются следующие шаблоны для значений в JSON:
+When validating events, the following patterns are supported for JSON values:
 
-| Шаблон | Описание | Пример |
-|--------|----------|--------|
-| `"*"` | Соответствует любому значению (wildcard) | `{"user_id": "*"}` |
-| `""` | Соответствует только пустому значению | `{"comment": ""}` |
-| `"~value"` | Проверяет частичное совпадение (подстрока) | `{"product_name": "~iPhone"}` |
-| `"^value"` | Проверяет начало строки | `{"url": "^https://"}` |
-| `"$value"` | Проверяет конец строки | `{"file_name": "$pdf"}` |
-| `"#number"` | Проверяет числовое значение | `{"price": "#100"}` |
-| `"<number"` | Проверяет, что число меньше указанного | `{"quantity": "<10"}` |
-| `">number"` | Проверяет, что число больше указанного | `{"rating": ">4"}` |
-| Обычное значение | Проверяет точное соответствие | `{"status": "success"}` |
+| Pattern | Description | Example |
+|---------|-------------|---------|
+| `"*"` | Matches any value (wildcard) | `{"user_id": "*"}` |
+| `""` | Matches only an empty value | `{"comment": ""}` |
+| `"~value"` | Checks for partial match (substring) | `{"product_name": "~iPhone"}` |
+| `"^value"` | Checks that the string starts with `value` | `{"url": "^https://"}` |
+| `"$value"` | Checks that the string ends with `value` | `{"file_name": "$pdf"}` |
+| `"#number"` | Checks for an exact numeric value | `{"price": "#100"}` |
+| `"<number"` | Checks that the number is less than the specified value | `{"quantity": "<10"}` |
+| `">number"` | Checks that the number is greater than the specified value | `{"rating": ">4"}` |
+| Plain value | Checks for exact match | `{"status": "success"}` |
 
-#### Примеры использования шаблонов
+#### Usage Examples
 
 ```kotlin
-// Проверка события с любым значением для поля "loc"
+// Check event with any value for "loc"
 checkHasEvent(
     eventName = "view_item",
     eventData = """{"loc": "*"}""",
-    timeoutEventExpectation = 5  // Ждем событие 5 секунд
+    timeoutEventExpectation = 5  // Wait up to 5 seconds for the event
 )
 
-// Проверка события с пустым значением для поля "comment"
+// Check event where "comment" field is empty
 checkHasEvent(
     eventName = "add_comment",
     eventData = """{"comment": ""}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события, где значение поля "product_name" содержит подстроку "iPhone"
+// Check event where "product_name" contains substring "iPhone"
 checkHasEvent(
     eventName = "view_item",
     eventData = """{"product_name": "~iPhone"}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события, где URL начинается с https://
+// Check event where "url" starts with https://
 checkHasEvent(
     eventName = "open_url",
     eventData = """{"url": "^https://"}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события, где имя файла заканчивается на .pdf
+// Check event where "file_name" ends with .pdf
 checkHasEvent(
     eventName = "download_file",
     eventData = """{"file_name": "$pdf"}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события с точным числовым значением
+// Check event with exact numeric value
 checkHasEvent(
     eventName = "purchase",
     eventData = """{"price": "#100"}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события, где количество меньше 10
+// Check event where "quantity" is less than 10
 checkHasEvent(
     eventName = "add_to_cart",
     eventData = """{"quantity": "<10"}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события, где рейтинг больше 4
+// Check event where "rating" is greater than 4
 checkHasEvent(
     eventName = "rate_product",
     eventData = """{"rating": ">4"}""",
     timeoutEventExpectation = 5
 )
 
-// Проверка события с точным совпадением значения поля "status"
+// Check event with exact match for "status"
 checkHasEvent(
     eventName = "api_call",
     eventData = """{"status": "success"}""",
     timeoutEventExpectation = 5
 )
 
-// Комбинирование нескольких шаблонов
+// Combine multiple patterns in one event
 checkHasEvent(
     eventName = "purchase",
     eventData = """
@@ -694,16 +697,16 @@ checkHasEvent(
 )
 ```
 
-#### Синхронная проверка событий
+#### Synchronous Event Verification
 
-Синхронная проверка блокирует выполнение теста до получения события или истечения таймаута:
+A synchronous check blocks test execution until the event is received or the timeout expires:
 
 ```kotlin
-"Проверка отправки события при клике на товар" {
-    // Выполняем действие
+"Verify event is sent when tapping a product" {
+    // Perform the action
     click(MobileExamplePage.productCard)
     
-    // Проверяем, что событие было отправлено
+    // Verify that the event was sent
     checkHasEvent(
         eventName = "product_click",
         eventData = """
@@ -714,18 +717,18 @@ checkHasEvent(
                 "list_name": "featured_products"
             }
         """,
-        timeoutEventExpectation = 5  // Ждем событие 5 секунд
+        timeoutEventExpectation = 5  // Wait for the event up to 5 seconds
     )
 }
 ```
 
-#### Асинхронная проверка событий
+#### Asynchronous Event Verification
 
-Асинхронная проверка не блокирует выполнение теста, что позволяет продолжать взаимодействие с приложением:
+An asynchronous check does **not** block test execution, allowing you to continue interacting with the app:
 
 ```kotlin
-"Проверка отправки события при клике на товар (асинхронно)" {
-    // Запускаем асинхронную проверку
+"Verify event is sent when tapping a product (asynchronously)" {
+    // Start the asynchronous check
     checkHasEventAsync(
         eventName = "product_click",
         eventData = """
@@ -734,58 +737,58 @@ checkHasEvent(
                 "category": "electronics"
             }
         """,
-        timeoutEventExpectation = 10  // Ждем событие 10 секунд
+        timeoutEventExpectation = 10  // Wait up to 10 seconds for the event
     )
 
-    // Продолжаем выполнение теста без ожидания проверки события
+    // Continue the test without waiting for the event check
     click(MobileExamplePage.productCard)
     click(MobileExamplePage.addToCartButton)
     // ...
 }
 ```
 
-При использовании асинхронных проверок необходимо вызвать метод `awaitAllEventChecks()` для ожидания завершения всех проверок. Этот метод можно вызывать:
+When using asynchronous checks, you must call `awaitAllEventChecks()` to wait for all checks to complete. You can call this method:
 
-1. **В методе `tearDown()`** - для автоматического ожидания всех асинхронных проверок в конце теста:
+1. **In the `tearDown()` method** — to automatically wait for all asynchronous checks at the end of each test:
 
 ```kotlin
 @AfterEach
 fun tearDown() {
-    // Ожидаем завершения всех асинхронных проверок
+    // Wait for all asynchronous event checks to complete
     awaitAllEventChecks()
-    // Закрываем приложение
+    // Close the application
     app.close()
 }
 ```
 
-2. **Внутри теста** - если нужно дождаться завершения асинхронных проверок в определенной точке теста:
+2. **Inside the test** — if you need to wait for asynchronous checks to complete at a specific point:
 
 ```kotlin
-"Проверка наличия события асинхронно" {
-    // Запускаем асинхронную проверку
+"Check event presence asynchronously" {
+    // Start the asynchronous check
     checkHasEventAsync(
         eventName = "App_Start",
         timeoutEventExpectation = 10
     )
-    
-    // Выполняем другие действия
+
+    // Perform other actions
     click(MobileExamplePage.searchBar)
-    
-    // Ожидаем завершения всех асинхронных проверок в этой точке теста
+
+    // Wait for all asynchronous checks to complete at this point in the test
     awaitAllEventChecks()
-    
-    // Продолжаем выполнение теста
+
+    // Continue the test execution
 }
 ```
 
-Базовый класс `MobileTest` уже содержит вызов `awaitAllEventChecks()` в методе `tearDown()`, поэтому в большинстве случаев вам не нужно явно вызывать этот метод, если вы наследуетесь от `MobileTest`.
+The base class `MobileTest` already calls `awaitAllEventChecks()` in its `tearDown()` method, so in most cases you don’t need to call it explicitly if your tests inherit from `MobileTest`.
 
-#### Проверка событий с данными из файла
+#### Verifying Events Using Data from a File
 
-Для сложных или повторяющихся проверок удобно хранить ожидаемые данные в отдельных JSON-файлах:
+For complex or repeated checks, it’s convenient to store expected data in separate JSON files:
 
 ```kotlin
-"Проверка события с данными из файла" {
+"Verify event with data from a file" {
     checkHasEvent(
         eventName = "purchase_complete",
         eventDataFile = File("src/test/resources/events/purchase_event.json")
@@ -793,65 +796,65 @@ fun tearDown() {
 }
 ```
 
-Содержимое файла `purchase_event.json`:
+Contents of `purchase_event.json`:
 ```json
 {
-    "transaction_id": "*",
-    "value": ">100",
-    "currency": "USD",
-    "items": [
-        {
-            "item_id": "*",
-            "item_name": "~iPhone",
-            "price": "*"
-        }
-    ]
+  "transaction_id": "*",
+  "value": ">100",
+  "currency": "USD",
+  "items": [
+    {
+      "item_id": "*",
+      "item_name": "~iPhone",
+      "price": "*"
+    }
+  ]
 }
 ```
 
-### Взаимодействие с элементами на основе событий
+### Interacting with Elements Based on Events
 
-Фреймворк позволяет находить и взаимодействовать с элементами на основе связанных с ними событий аналитики:
+The framework allows you to locate and interact with elements based on the analytics events associated with them:
 
 ```kotlin
-"Нажимаем на товар, который отправляет определенное событие" {
+"Tap the item that emits a specific event" {
     click(
-        eventName = "view_item_in_list", 
-        eventData = """{"loc": "SNS"}""", 
-        scrollCount = 1, 
-        eventPosition = "first"  // Можно указать "first" или "last"
+        eventName = "view_item_in_list",
+        eventData = """{"loc": "SNS"}""",
+        scrollCount = 1,
+        eventPosition = "first"  // You can specify "first" or "last"
     )
 }
 ```
 
-Это позволяет создавать более гибкие тесты, которые могут адаптироваться к изменениям в UI, но сохраняют привязку к бизнес-логике через события аналитики.
+This approach enables more flexible tests that can adapt to UI changes while maintaining a strong link to business logic through analytics events.
 
-#### Расширенные возможности взаимодействия с элементами на основе событий
+#### Advanced Interaction with Elements Based on Events
 
 ```kotlin
-// Клик по первому элементу, связанному с указанным событием
+// Click the first element associated with the specified event
 click(
     eventName = "view_item_in_list",
     eventData = """{"category": "electronics"}""",
     eventPosition = "first"
 )
 
-// Клик по последнему элементу, связанному с указанным событием
+// Click the last element associated with the specified event
 click(
     eventName = "view_item_in_list",
     eventData = """{"category": "electronics"}""",
     eventPosition = "last"
 )
 
-// Клик с прокруткой до элемента
+// Click with scrolling to the element
 click(
     eventName = "view_item_in_list",
     eventData = """{"category": "electronics"}""",
-    scrollCount = 3,  // Прокрутить до 3 раз, если элемент не виден
+    scrollCount = 3,  // Scroll up to 3 times if the element is not visible
     eventPosition = "first"
 )
 
-// Ввод текста в поле, связанное с событием
+// Type text into a field associated with the event
 typeText(
     eventName = "search_query",
     eventData = """{"source": "main_page"}""",
@@ -860,171 +863,171 @@ typeText(
 )
 ```
 
-### Отладка событий
+### Event Debugging
 
-Для отладки событий можно использовать метод `printAllEvents()`, который выводит все перехваченные события в консоль:
+For debugging events, you can use the `printAllEvents()` method, which prints all intercepted events to the console:
 
 ```kotlin
-"Отладка событий" {
-    // Выполняем действия
+"Event debugging" {
+    // Perform actions
     click(MobileExamplePage.productCard)
-    
-    // Выводим все события в консоль
+
+    // Print all events to the console
     printAllEvents()
 }
 ```
 
-Также можно использовать метод `getEventCount(eventName)` для получения количества событий с указанным именем:
+You can also use the `getEventCount(eventName)` method to get the number of events with the specified name:
 
 ```kotlin
-"Проверка количества событий" {
-    // Выполняем действия
+"Verify the number of events" {
+    // Perform actions
     click(MobileExamplePage.productCard)
     
-    // Проверяем, что было отправлено ровно одно событие
+    // Verify that exactly one event was sent
     val count = getEventCount("product_click")
-    assert(count == 1) { "Ожидалось 1 событие, получено $count" }
+    assert(count == 1) { "Expected 1 event, got $count" }
 }
 ```
 
 ## Allure
-В ходе прогонов, генерируется отчет и записывается в Allure. Фреймворк предоставляет расширенную интеграцию с Allure для улучшения организации и визуализации тестовых отчетов.
+During test runs, reports are generated and recorded in Allure. The framework provides extended Allure integration to improve the organization and visualization of test reports.
 
-### Основные возможности Allure интеграции
+### Key Features of Allure Integration
 
-- Автоматическая генерация отчетов о выполнении тестов
-- Группировка тестов по фичам, эпикам и историям с помощью аннотаций `@Feature`, `@Epic`, `@Story`
-- Детальное описание тестов с помощью аннотаций `@DisplayName` и `@Description`
-- Организация тестов в наборы (suites) с помощью кастомной аннотации `@Suite`
-- Прикрепление скриншотов, логов и видеозаписей к отчетам
-- Отслеживание шагов выполнения теста с подробной информацией
+- Automatic generation of test execution reports
+- Grouping tests by features, epics, and stories using annotations `@Feature`, `@Epic`, `@Story`
+- Detailed test descriptions using annotations `@DisplayName` and `@Description`
+- Organizing tests into suites with the custom annotation `@Suite`
+- Attaching screenshots, logs, and video recordings to reports
+- Tracking test execution steps with detailed information
 
-### Использование аннотации Suite
+### Using the Suite Annotation
 
-Для группировки тестов в логические наборы используйте аннотацию `@Suite`. Эта аннотация позволяет организовать тесты в структурированные группы в отчетах Allure, что улучшает навигацию и анализ результатов тестирования.
+To group tests into logical suites, use the `@Suite` annotation. This annotation allows you to organize tests into structured groups in Allure reports, improving navigation and analysis of test results.
 
 ```kotlin
-@Suite("Название Suite")
+@Suite("Suite Name")
 @ExtendWith(AllureExtension::class)
 class ExampleTest : MobileTest() {
-    // Тесты
+    // Tests
 }
 ```
 
-Аннотация `@Suite` работает совместно с `AllureExtension`, который добавляет пользовательские метки в отчеты Allure. Это позволяет:
+The `@Suite` annotation works together with `AllureExtension`, which adds custom labels to Allure reports. This enables you to:
 
-- Группировать тесты по функциональным областям
-- Создавать иерархическую структуру тестов
-- Улучшать навигацию в отчетах Allure
-- Упрощать анализ результатов тестирования
+- Group tests by functional areas
+- Create a hierarchical test structure
+- Improve navigation in Allure reports
+- Simplify analysis of test results
 
-Пример использования с дополнительными аннотациями:
+Example usage with additional annotations:
 
 ```kotlin
-@Suite("Мобильное приложение")
-@Feature("Корзина")
-@Story("Добавление товаров в корзину")
+@Suite("Mobile Application")
+@Feature("Cart")
+@Story("Adding items to cart")
 @ExtendWith(AllureExtension::class)
 class CartTest : MobileTest() {
     @Test
-    @DisplayName("Добавление товара в корзину со страницы товара")
+    @DisplayName("Add product to cart from product page")
     fun addProductToCartFromProductPage() {
-        // Тело теста
+        // Test body
     }
-    
+
     @Test
-    @DisplayName("Добавление товара в корзину из списка товаров")
+    @DisplayName("Add product to cart from product list")
     fun addProductToCartFromProductList() {
-        // Тело теста
+        // Test body
     }
 }
 ```
 
-### Генерация отчета
+### Report Generation
 
-Для генерации отчета в командной строке необходимо выполнить команду:
+To generate the report from the command line, run:
 
 ```bash
 allure serve build/allure-results
 ```
 
-## Расширенные возможности фреймворка
+## Advanced Framework Features
 
-### Автоматическое управление эмуляторами и симуляторами
+### Automatic Management of Emulators and Simulators
 
-Фреймворк предоставляет встроенную поддержку автоматического управления жизненным циклом эмуляторов Android и симуляторов iOS через класс `EmulatorManager`. Это позволяет запускать и останавливать эмуляторы/симуляторы автоматически в процессе выполнения тестов.
+The framework provides built-in support for automatically managing the lifecycle of Android emulators and iOS simulators via the `EmulatorManager` class. This allows emulators/simulators to be started and stopped automatically during test execution.
 
-#### Основные возможности
+#### Key Capabilities
 
-- Автоматический запуск эмулятора/симулятора перед началом тестирования
-- Автоматическая остановка эмулятора/симулятора после завершения тестов
-- Проверка работоспособности эмулятора/симулятора
-- Обработка краевых случаев и ошибок
-- Поддержка платформ Android и iOS
+- Automatic start of the emulator/simulator before testing begins
+- Automatic shutdown of the emulator/simulator after tests complete
+- Health checks for the emulator/simulator
+- Handling of edge cases and errors
+- Support for both Android and iOS platforms
 
-#### Настройка
+#### Configuration
 
-В `config.properties` или через командную строку можно настроить следующие параметры:
+You can configure the following parameters in `config.properties` or via the command line:
 
 ```properties
-# Автоматический запуск эмулятора/симулятора перед тестами
+# Automatically start the emulator/simulator before tests
 emulator.auto.start=true
-# Автоматическое выключение эмулятора/симулятора после тестов
+# Automatically shut down the emulator/simulator after tests
 emulator.auto.shutdown=true
 ```
 
-### Параметризованное тестирование
+### Parameterized Testing
 
-Фреймворк поддерживает параметризованное тестирование с использованием JUnit 5, что позволяет запускать один и тот же тест с разными входными данными. Это особенно полезно для тестирования одного и того же функционала с различными наборами данных без дублирования кода.
+The framework supports parameterized testing using JUnit 5, allowing the same test to run with different input data. This is especially useful for validating identical functionality with multiple datasets without duplicating code.
 
-#### Основные возможности
+#### Key Capabilities
 
-- Параметризация тестов с использованием встроенных источников данных
-- Поддержка CSV-файлов как источников тестовых данных
-- Поддержка JSON-файлов для сложных структур данных
-- Автоматический перезапуск только упавших тестов с теми же параметрами
-- Настраиваемые имена тестов с включением значений параметров
-- Комбинирование нескольких источников данных
+- Parameterizing tests using built-in data sources
+- Support for CSV files as test data sources
+- Support for JSON files for complex data structures
+- Automatic retry of only the failed parameterized cases with the same parameters
+- Customizable test names including parameter values
+- Combining multiple data sources
 
-#### Источники данных для параметризации
+#### Data Sources for Parameterization
 
-Фреймворк поддерживает следующие источники данных:
+The framework supports the following data sources:
 
-1. **@ValueSource** - простые значения одного типа (строки, числа, булевы значения)
-2. **@CsvSource** - данные в формате CSV непосредственно в аннотации
-3. **@CsvFileSource** - данные из CSV-файла
-4. **@MethodSource** - данные из метода, возвращающего Stream или Collection
-5. **@EnumSource** - значения из перечисления (enum)
-6. **@ArgumentsSource** - пользовательский источник аргументов
+1. **@ValueSource** — simple values of a single type (strings, numbers, booleans)
+2. **@CsvSource** — CSV data directly in the annotation
+3. **@CsvFileSource** — data from a CSV file
+4. **@MethodSource** — data from a method returning a `Stream` or `Collection`
+5. **@EnumSource** — values from an enum
+6. **@ArgumentsSource** — custom argument provider
 
-#### Примеры использования
+#### Usage Examples
 
-##### Простые значения с @ValueSource
+##### Simple values with @ValueSource
 
 ```kotlin
-@ParameterizedTest(name = "Поиск товара: {0}")
+@ParameterizedTest(name = "Product search: {0}")
 @ValueSource(strings = ["Телефон", "Ноутбук", "Наушники"])
-@DisplayName("Поиск различных товаров")
+@DisplayName("Search for various products")
 fun searchProductTest(searchQuery: String) {
     context.run {
-        "Открываем поиск" {
+        "Open search" {
             click(MobileExamplePage.searchBar)
         }
         
-        "Вводим поисковый запрос: $searchQuery" {
+        "Enter search query: $searchQuery" {
             typeText(MobileExamplePage.searchInput, searchQuery)
         }
         
-        "Проверяем результаты поиска" {
+        "Verify search results" {
             checkVisible(MobileExamplePage.searchResults)
         }
     }
 }
 ```
 
-##### Данные из CSV-файла
+##### Data from a CSV file
 
-Пример файла `test_data.csv`:
+Example `test_data.csv`:
 ```
 search_query,expected_result,min_results
 Телефон,Samsung Galaxy,5
@@ -1033,116 +1036,122 @@ search_query,expected_result,min_results
 ```
 
 ```kotlin
-@ParameterizedTest(name = "Поиск {0} с ожиданием {1} и минимум {2} результатов")
+@ParameterizedTest(name = "Search {0} expecting {1} with at least {2} results")
 @CsvFileSource(resources = ["/test_data.csv"], numLinesToSkip = 1)
-@DisplayName("Поиск с проверкой результатов из CSV")
+@DisplayName("Search with CSV-driven result checks")
 fun searchWithResultsTest(searchQuery: String, expectedResult: String, minResults: Int) {
     context.run {
-        "Открываем поиск" {
+        "Open search" {
             click(MobileExamplePage.searchBar)
         }
-        
-        "Вводим поисковый запрос: $searchQuery" {
+
+        "Enter search query: $searchQuery" {
             typeText(MobileExamplePage.searchInput, searchQuery)
         }
-        
-        "Проверяем результаты поиска" {
+
+        "Verify search results" {
             checkVisible(MobileExamplePage.searchResults)
-            
-            "Проверяем наличие ожидаемого результата: $expectedResult" {
+
+            "Verify expected result is present: $expectedResult" {
                 checkVisible(PageElement(
                     android = Text(expectedResult),
                     ios = Name(expectedResult)
                 ))
             }
-            
-            "Проверяем количество результатов (минимум $minResults)" {
-                // Проверка количества результатов
+
+            "Verify number of results (minimum $minResults)" {
+                // Validate the number of results
             }
         }
     }
 }
 ```
 
-##### Использование MethodSource для сложных данных
-
-```kotlin
-// Класс данных для теста
+// Data class for the test
+```
 data class TestData(val name: String, val param1: String, val param2: Int)
 
 class ParameterizedExampleTest : MobileTest() {
-    @ParameterizedTest(name = "Тест с данными из метода: {0}")
+    @ParameterizedTest(name = "Test with method-sourced data: {0}")
     @MethodSource("provideTestData")
-    @DisplayName("Параметризованный тест со сложными данными")
+    @DisplayName("Parameterized test with complex data")
     fun testWithMethodSource(testData: TestData) {
         context.run {
-            "Выполняем действия с данными: ${testData.name}" {
-                // Использование testData.param1, testData.param2 и т.д.
+            "Perform actions with data: ${testData.name}" {
+                // Use testData.param1, testData.param2, etc.
             }
         }
     }
 
-    // Метод, предоставляющий данные для теста
+    // Method that provides data for the test
     companion object {
         @JvmStatic
         fun provideTestData(): Stream<TestData> {
             return Stream.of(
-                TestData("Тест1", "param1", 100),
-                TestData("Тест2", "param2", 200),
-                TestData("Тест3", "param3", 300)
+                TestData("Test1", "param1", 100),
+                TestData("Test2", "param2", 200),
+                TestData("Test3", "param3", 300)
             )
         }
     }
 }
 ```
 
-##### Комбинирование источников данных
+##### Combining Data Sources
 
 ```kotlin
-@ParameterizedTest(name = "Платформа: {0}, Язык: {1}")
-@CsvSource(value = [
-    "ANDROID, ru",
-    "ANDROID, en",
-    "iOS, ru",
-    "iOS, en"
-])
-@DisplayName("Тест локализации на разных платформах")
+@ParameterizedTest(name = "Platform: {0}, Language: {1}")
+@CsvSource(
+    value = [
+        "ANDROID, ru",
+        "ANDROID, en",
+        "iOS, ru",
+        "iOS, en"
+    ]
+)
+@DisplayName("Localization test across platforms")
 fun testLocalization(platform: String, language: String) {
-    // Тело теста с использованием platform и language
+    // Test body using platform and language
 }
 ```
 
-### Настройки записи видео
+### Video Recording Settings
 
-В проект добавлена возможность записи видео во время выполнения тестов с использованием класса `VideoRecorder`. Это позволяет записывать видео выполнения тестов на мобильных устройствах для отладки, документирования и демонстрации работы приложения.
+The project includes the ability to record video during test execution using the `VideoRecorder` class.  
+This allows you to capture videos of test runs on mobile devices for debugging, documentation, and demonstration purposes.
 
-#### Основные возможности
+#### Key Features
 
-- Автоматическая запись видео во время выполнения тестов
-- Настройка размера, качества и битрейта видео
-- Интеграция с отчетами Allure
-- Поддержка платформ Android и iOS (с ограничениями)
+- Automatic video recording during test execution
+- Configurable video size, quality, and bitrate
+- Integration with Allure reports
+- Support for Android and iOS platforms (with limitations)
 
-#### Доступные параметры
+#### Available Parameters
 
-В `config.properties` или через командную строку можно настроить следующие параметры:
+You can configure the following parameters in `config.properties` or via the command line:
 
-- `android.video.recording.enabled` - включение/отключение записи видео для Android (true/false)
-- `ios.video.recording.enabled` - включение/отключение записи видео для iOS (true/false)
-- `video.recording.size` - размер записываемого видео (например, "1280x720")
-- `video.recording.quality` - качество записываемого видео (0-100)
-- `video.recording.bitrate` - битрейт видео (бит/с)
-- `video.recording.output.dir` - директория для сохранения видеозаписей
+- `android.video.recording.enabled` — enable/disable video recording for Android (`true`/`false`)
+- `ios.video.recording.enabled` — enable/disable video recording for iOS (`true`/`false`)
+- `video.recording.size` — video resolution (e.g., `"1280x720"`)
+- `video.recording.quality` — video quality (0–100)
+- `video.recording.bitrate` — video bitrate (in bits per second)
+- `video.recording.output.dir` — directory where videos will be saved
 
-#### Использование
+#### Usage
 
-Параметры можно задать при запуске тестов через командную строку с помощью флага `-P`:
+Parameters can be specified at test runtime via the command line using the `-P` flag:
 
 ```bash
-./gradlew test -Pandroid.video.recording.enabled=true -Pios.video.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.bitrate=1000000
+./gradlew test \
+  -Pandroid.video.recording.enabled=true \
+  -Pios.video.recording.enabled=true \
+  -Pvideo.recording.size=1280x720 \
+  -Pvideo.recording.quality=70 \
+  -Pvideo.recording.bitrate=1000000
 ```
 
-Если параметры не заданы, будут использованы значения из файла `config.properties` или значения по умолчанию:
+If parameters are not specified, the values from the `config.properties` file or the default values will be used:
 
 ```properties
 android.video.recording.enabled=true
@@ -1153,10 +1162,10 @@ video.recording.bitrate=500000
 video.recording.output.dir=build/videos
 ```
 
-#### Пример использования в CI/CD
+#### Example Usage in CI/CD
 
 ```yaml
-# Пример для GitLab CI
+# Example for GitLab CI
 test:
   script:
     - ./gradlew test -Pandroid.video.recording.enabled=true -Pios.video.recording.enabled=true -Pvideo.recording.size=1280x720 -Pvideo.recording.quality=70 -Pvideo.recording.output.dir=build/videos -Pvideo.recording.bitrate=500000
@@ -1165,15 +1174,15 @@ test:
       - build/videos/
 ```
 
-#### Основные возможности
+#### Key Features
 
-- Режим headless для запуска без графического интерфейса
-- Единый DSL для написания тестов
-- Интеграция с Allure для отчетов
+- Headless mode for running without a graphical interface
+- Unified DSL for writing tests
+- Integration with Allure for reporting
 
-#### Настройка
+#### Configuration
 
-В `config.properties` или через командную строку можно настроить следующие параметры:
+You can configure the following parameters in `config.properties` or via the command line:
 
 ```properties
 # Automatic emulator/simulator startup before tests
@@ -1182,17 +1191,17 @@ emulator.auto.start=true
 emulator.auto.shutdown=true
 ```
 
-## Заключение
+## Conclusion
 
-Фреймворк Easy Test Write предоставляет мощный и гибкий инструментарий для автоматизации тестирования мобильных и веб-приложений. Основные преимущества:
+The Easy Test Write framework provides a powerful and flexible toolkit for automating tests of mobile and web applications. Key advantages:
 
-- **Кросс-платформенность** - поддержка Android, iOS и веб-приложений
-- **Богатый DSL** - интуитивно понятный синтаксис для написания тестов
-- **Расширенная интеграция с Allure** - подробные отчеты о выполнении тестов
-- **Автоматическое управление эмуляторами** - запуск и остановка эмуляторов/симуляторов
-- **Запись видео** - автоматическая запись выполнения тестов
-- **Проверка аналитики** - встроенные инструменты для проверки событий аналитики
-- **Параметризованное тестирование** - поддержка различных источников данных
-- **Гибкие локаторы** - расширенные возможности поиска элементов
+- **Cross-platform** — supports Android, iOS, and web applications
+- **Rich DSL** — intuitive syntax for writing tests
+- **Enhanced Allure integration** — detailed execution reports
+- **Automatic emulator management** — start/stop emulators/simulators
+- **Video recording** — automatic capture of test runs
+- **Analytics validation** — built-in tools for verifying analytics events
+- **Parameterized testing** — support for multiple data sources
+- **Flexible locators** — advanced element search capabilities
 
-Фреймворк постоянно развивается, добавляются новые возможности и улучшается существующий функционал.
+The framework is continuously evolving, with new features being added and existing functionality improved.

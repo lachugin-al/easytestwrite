@@ -1,15 +1,15 @@
-package uipages.mobile
+package mobile.pages
 
 import controller.mobile.element.PageElement
 import controller.mobile.element.PageElement.*
 
 /**
- * Тестовая страница с разметкой
+ * Test page with markup/layout
  */
 object ExampleMobilePage {
 
     /**
-     * Наименование страны "Россия"
+     * Country name "Russia"
      */
     /*val ruRegionRussiaText = PageElement(
         androidList = listOf(Text("Russia"), Text("Россия")),
@@ -22,7 +22,7 @@ object ExampleMobilePage {
     )
 
     /**
-     * Нижняя навигационная панель, кнопка "Home"
+     * Bottom navigation bar, "Home" button
      */
     val homeNavBar = PageElement(
         android = ResourceId("homeNavBar"),
@@ -30,7 +30,7 @@ object ExampleMobilePage {
     )
 
     /**
-     * Нижняя навигационная панель, кнопка "Catalogue"
+     * Bottom navigation bar, "Catalogue" button
      */
     val catNavBar = PageElement(
         android = ResourceId("catNavBar"),
@@ -38,7 +38,7 @@ object ExampleMobilePage {
     )
 
     /**
-     * Нижняя навигационная панель, кнопка "Cart"
+     * Bottom navigation bar, "Cart" button
      */
     val cartNavBar = PageElement(
         android = ResourceId("cartNavBar"),
@@ -46,7 +46,7 @@ object ExampleMobilePage {
     )
 
     /**
-     * Нижняя навигационная панель, кнопка "Profile"
+     * Bottom navigation bar, "Profile" button
      */
     val profileNavBar = PageElement(
         android = ResourceId("profileNavBar"),
@@ -61,21 +61,21 @@ object ExampleMobilePage {
     )
 
     /**
-     * Поп-ап с разрешением на отправку Пуш-уведомлений
+     * Push notification permission pop-up
      */
     val pushAlertAllow = PageElement(
         ios = Name("Нет, спасибо")
     )
 
     /**
-     * Поп-ап с просьбой обновить приложение
+     * Pop-up prompting to update the app
      */
     val notNow = PageElement(
         android = Text("Не сейчас")
     )
 
     /**
-     *Поле поиска
+     * Search field
      */
     val searchBar = PageElement(
         android= ContentDesc("Поиск"),
@@ -83,7 +83,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Активное поле поиска
+     * Active search field
      */
     val activeSearchBar = PageElement(
         android= XPath("//android.widget.EditText"),
@@ -91,7 +91,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Первый товар в выдаче поиска
+     * First item in search results
      */
     val tapToItemOnSearchPage = PageElement(
         android= ContentDesc("Изображение товара"),
@@ -99,7 +99,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Кнопка добавить в корзину с карточки товара
+     * "Add to cart" button on the product page
      */
     val addToCartButtonInItem = PageElement(
         android = Text("В корзину"),
@@ -107,7 +107,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Первый размер при добавлении товара в корзину
+     * First size when adding a product to the cart
      */
     val tapToSizeInItem = PageElement(
         android=XPath("//android.widget.ScrollView/android.view.View[1]"),
@@ -115,14 +115,14 @@ object ExampleMobilePage {
     )
 
     /**
-     * Подпишитесь на наши обновления "Разрешить уведомления"
+     * "Subscribe to our updates" — "Allow notifications"
      */
     val allowNotice = PageElement(
         ios = Name("[PushAlertVC][acceptButton]")
     )
 
     /**
-     * Подпишитесь на наши обновления "Нет, спасибо"
+     * "Subscribe to our updates" — "No, thanks"
      */
     val dismissNotice = PageElement(
         ios = Name("WBDButton")
@@ -146,7 +146,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Поле сортировки
+     * Sorting field
      */
     val sortingField = PageElement(
         android = AccessibilityId("Сортировка"),
@@ -154,7 +154,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Выбор сортировки дешевле
+     * Choose sorting by cheaper (price descending)
      */
     val selectSortingByPriceDown = PageElement(
         android = XPath("//androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View[6]"),
@@ -162,7 +162,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Кнопка применить в сортировке
+     * "Apply" button in sorting
      */
     val acceptButtonInSorting = PageElement(
         android = Text("Применить"),
@@ -170,7 +170,7 @@ object ExampleMobilePage {
     )
 
     /**
-     *Поле поиска
+     * Search field
      */
     val searchbar = PageElement(
         android = Text("Поиск"),
@@ -178,16 +178,16 @@ object ExampleMobilePage {
     )
 
     /**
-     *Поле поиска
+     * Search field
      */
     val searchbar2 = PageElement(
         android = ContentDesc("Поиск"),
         ios = Name("Поиск")
     )
 
-    // Слишком длинный и не стабильный локатор - избегать таких конструкций!!!
+    // Locator is too long and unstable — avoid such constructions!!!
     /**
-     *Поисковой тег на экране поиска
+     * Search tag on the search screen
      */
     val selectSearchTag = PageElement(
         android = XPath("//android.widget.FrameLayout[@resource-id='com.wildberries.ru.dev:id/fragmentTabContainer']/androidx.compose.ui.platform.ComposeView/android.view.View/android.view.View/android.view.View[1]/android.view.View/android.view.View[2]"),
