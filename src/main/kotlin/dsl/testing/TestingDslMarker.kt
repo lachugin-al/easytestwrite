@@ -1,14 +1,15 @@
 package dsl.testing
 
 /**
- * DSL-маркер для ограничения областей видимости внутри тестового DSL.
+ * DSL marker to restrict scope visibility within the testing DSL.
  *
- * Аннотация [TestingDslMarker] применяется к классам DSL-контекстов ([TestingContext], [StepContext], [ExpectationContext]),
- * чтобы предотвратить некорректное пересечение вызовов между уровнями контекста в рамках одного теста.
+ * The [TestingDslMarker] annotation is applied to DSL context classes
+ * ([TestingContext], [StepContext], [ExpectationContext]) to prevent
+ * incorrect cross-calls between context levels within a single test.
  *
- * Использование маркера обеспечивает:
- * - Безопасность построения вложенных тестовых структур.
- * - Отсутствие конфликтов между методами разных уровней DSL.
+ * Using this marker ensures:
+ * - Safe construction of nested test structures.
+ * - No conflicts between methods from different DSL levels.
  *
  * @see TestingContext
  * @see StepContext

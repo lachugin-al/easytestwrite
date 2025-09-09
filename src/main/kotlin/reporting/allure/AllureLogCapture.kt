@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
- * Служебный класс для захвата логов со всех потоков и прикрепления их к отчетам Allure.
+ * Utility class for capturing logs from all threads and attaching them to Allure reports.
  */
 object AllureLogCapture {
     private val logQueue = ConcurrentLinkedQueue<String>()
@@ -19,8 +19,8 @@ object AllureLogCapture {
     private var initialized = false
 
     /**
-     * Инициализирует систему захвата логов путем добавления аппендера памяти к корневому логгеру.
-     * Должен вызываться один раз при запуске приложения.
+     * Initializes the log capture system by adding a memory appender to the root logger.
+     * Should be called once at application startup.
      */
     fun initialize() {
         if (initialized) return
@@ -36,21 +36,21 @@ object AllureLogCapture {
     }
 
     /**
-     * Получает все захваченные логи в виде одной строки.
+     * Returns all captured logs as a single string.
      */
     fun getLogs(): String {
         return logQueue.joinToString("\n")
     }
 
     /**
-     * Очищает все захваченные логи.
+     * Clears all captured logs.
      */
     fun clearLogs() {
         logQueue.clear()
     }
 
     /**
-     * Прикрепляет текущие логи к отчету Allure и очищает логи.
+     * Attaches the current logs to the Allure report and clears them afterwards.
      */
     fun attachLogsToAllureReport() {
         val logs = getLogs()
@@ -66,14 +66,14 @@ object AllureLogCapture {
     }
 
     /**
-     * Пользовательский аппендер Logback, который хранит события логирования в памяти.
+     * Custom Logback appender that stores logging events in memory.
      */
     private class MemoryAppender : AppenderBase<ILoggingEvent>() {
         override fun append(event: ILoggingEvent) {
             val formattedLog = "${event.timeStamp} [${event.threadName}] ${event.level} ${event.loggerName} - ${event.formattedMessage}"
             logQueue.add(formattedLog)
 
-            // Добавляем информацию об исключении, если оно присутствует
+            // Add exception details if present
             event.throwableProxy?.let { throwable ->
                 logQueue.add(throwable.message ?: "")
                 throwable.stackTraceElementProxyArray.forEach { stackTraceElement ->

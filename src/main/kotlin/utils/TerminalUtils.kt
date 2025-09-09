@@ -8,16 +8,16 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Утилитарный класс для взаимодействия с терминалом и устройствами эмуляции/симуляции.
+ * Utility class for interacting with the terminal and emulation/simulation devices.
  *
- * Позволяет выполнять команды операционной системы и получать информацию об эмуляторах Android и симуляторах iOS.
+ * Allows executing operating system commands and retrieving information about Android emulators and iOS simulators.
  */
 object TerminalUtils {
 
     private val logger = LoggerFactory.getLogger(TerminalUtils::class.java)
 
     /**
-     * Результат выполнения системной команды.
+     * Result of a system command execution.
      */
     data class CommandResult(
         val stdout: String,
@@ -27,14 +27,14 @@ object TerminalUtils {
     )
 
     /**
-     * Выполняет системную команду с расширенными настройками.
+     * Executes a system command with extended configuration.
      *
-     * @param command Команда и аргументы (без оболочки). Для шельных конструкций используйте shell=true.
-     * @param timeout Максимальная длительность выполнения. По истечении — процесс будет завершен.
-     * @param workingDir Рабочая директория процесса.
-     * @param env Переменные окружения (добавляются к существующим).
-     * @param charset Кодировка потоков процесса.
-     * @param shell Если true, команда будет исполнена через оболочку (bash -lc / cmd /c).
+     * @param command Command and arguments (without a shell). For shell constructs, use `shell = true`.
+     * @param timeout Maximum execution duration. Once exceeded — the process will be terminated.
+     * @param workingDir Working directory of the process.
+     * @param env Environment variables (added to existing ones).
+     * @param charset Charset for process output streams.
+     * @param shell If true, the command will be executed through a shell (bash -lc / cmd /c).
      */
     fun runCommand(
         command: List<String>,
@@ -117,15 +117,15 @@ object TerminalUtils {
         System.getProperty("os.name")?.lowercase()?.contains("win") == true
 
     /**
-     * Выполняет системную команду и обрабатывает результат выполнения.
+     * Executes a system command and processes the result.
      *
-     * Старый контракт: возвращает true при exitCode==0, иначе false; лог выводится в stdout/stderr.
-     * Сохранена обратная совместимость.
+     * Legacy contract: returns true if `exitCode == 0`, otherwise false; logs are printed to stdout/stderr.
+     * Backward compatibility preserved.
      */
     fun runCommand(command: List<String>, errorMessage: String): Boolean {
         val result = runCommand(command = command, timeout = Duration.ofMinutes(5))
         return if (!result.timedOut && result.exitCode == 0) {
-            println("Команда выполнена успешно: ${command.joinToString(" ")}")
+            println("Command executed successfully: ${command.joinToString(" ")}")
             true
         } else {
             val reason = buildString {
@@ -140,10 +140,10 @@ object TerminalUtils {
     }
 
     /**
-     * Выполняет системную команду и возвращает результат выполнения в виде строки (stdout).
+     * Executes a system command and returns the execution result as a string (stdout).
      *
-     * Старый контракт: при исключении возвращает пустую строку.
-     * Сохранена обратная совместимость.
+     * Legacy contract: returns an empty string in case of an exception.
+     * Backward compatibility preserved.
      */
     fun runCommand(command: List<String>): String {
         val result = runCommand(command = command, timeout = Duration.ofMinutes(5))

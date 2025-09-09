@@ -3,43 +3,43 @@ package dsl.testing
 import java.lang.annotation.Inherited
 
 /**
- * Аннотация для пропуска тестов при определенных условиях.
+ * Annotation for skipping tests under certain conditions.
  *
- * Эта аннотация может быть применена к тестовым методам для указания,
- * что тест должен быть пропущен на определенной платформе или на всех платформах.
- * Пропуск теста также распространяется на методы с аннотацией @BeforeEach.
+ * This annotation can be applied to test methods to indicate
+ * that the test should be skipped on a specific platform or on all platforms.
+ * Skipping also applies to methods annotated with @BeforeEach.
  *
- * Примеры использования:
+ * Usage examples:
  * ```
- * // Пропустить тест на всех платформах
+ * // Skip test on all platforms
  * @Skip
  * @Test
  * fun skippedTest() { ... }
  *
- * // Пропустить тест только на Android
+ * // Skip test only on Android
  * @Skip(platform = "android")
  * @Test
  * fun iosOnlyTest() { ... }
  *
- * // Пропустить тест только на iOS
+ * // Skip test only on iOS
  * @Skip(platform = "ios")
  * @Test
  * fun androidOnlyTest() { ... }
  *
- * // Пропустить тест с указанием причины
- * @Skip(reason = "Функциональность временно отключена")
+ * // Skip test with a reason
+ * @Skip(reason = "Functionality temporarily disabled")
  * @Test
  * fun temporarilyDisabledTest() { ... }
  *
- * // Пропустить тест на определенной платформе с указанием причины
- * @Skip(platform = "android", reason = "Функциональность не поддерживается на Android")
+ * // Skip test on a specific platform with a reason
+ * @Skip(platform = "android", reason = "Functionality not supported on Android")
  * @Test
  * fun notSupportedOnAndroidTest() { ... }
  * ```
  *
- * @param platform Платформа, на которой тест должен быть пропущен.
- *                 Если не указана (пустая строка), тест будет пропущен на всех платформах.
- * @param reason Причина пропуска теста. Если указана, будет отображена в отчете о выполнении теста.
+ * @param platform The platform on which the test should be skipped.
+ *                 If not specified (empty string), the test will be skipped on all platforms.
+ * @param reason The reason for skipping the test. If specified, it will be displayed in the test execution report.
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

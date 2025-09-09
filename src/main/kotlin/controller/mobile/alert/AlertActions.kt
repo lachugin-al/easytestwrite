@@ -8,15 +8,15 @@ import utils.DEFAULT_TIMEOUT_EXPECTATION
 interface AlertActions : AppContext {
 
     /**
-     * DSL-метод для работы с системными алертами из контекста шага.
+     * DSL method for working with system alerts from the step context.
      *
-     * @param accept если true — нажать «Accept» (accept), иначе — «Cancel» (dismiss).
-     * @param timeoutExpectation сколько секунд ждать появления алерта.
-     * @param pollingInterval Частота опроса элемента в миллисекундах.
+     * @param accept if true — press "Accept", otherwise — "Cancel" (dismiss).
+     * @param timeoutExpectation how many seconds to wait for the alert to appear.
+     * @param pollingInterval frequency of element polling in milliseconds.
      *
-     * Пример:
+     * Example:
      * ```
-     * "Обработка системного алерта" {
+     * "Handling system alert" {
      *     alert(accept = true)
      * }
      * ```

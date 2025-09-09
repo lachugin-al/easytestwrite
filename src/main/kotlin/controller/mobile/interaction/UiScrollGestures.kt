@@ -15,7 +15,7 @@ import java.time.Duration
 interface UiScrollGestures: UiElementFinding {
 
     /**
-     * Функция выполняющее скроллирование и свайп по направлениям
+     * Function that performs scroll and swipe in given directions.
      */
     override fun performScroll(
         element: PageElement?,
@@ -24,7 +24,7 @@ interface UiScrollGestures: UiElementFinding {
         scrollDirection: ScrollDirection
     ) {
         assert(scrollCapacity > 0.0 && scrollCapacity <= 1.0) {
-            "scrollCapacity имеет значение $scrollCapacity, но может принимать значения от 0.0 до 1.0"
+            "scrollCapacity is $scrollCapacity, but must be within 0.0 to 1.0"
         }
         if (element != null) {
             val el = waitForElements(element)
@@ -103,7 +103,7 @@ interface UiScrollGestures: UiElementFinding {
     }
 
     /**
-     * Функция для скроллирования экрана по вертикали
+     * Function to scroll the screen vertically.
      */
     private fun touchAndMoveVertical(center: Int, start: Int, end: Int) {
         val finger = PointerInput(PointerInput.Kind.TOUCH, "finger1")
@@ -135,7 +135,7 @@ interface UiScrollGestures: UiElementFinding {
     }
 
     /**
-     * Функция для скроллирования экрана по горизонтали
+     * Function to scroll the screen horizontally.
      */
     private fun touchAndMoveHorizontal(center: Int, start: Int, end: Int) {
         val finger = PointerInput(PointerInput.Kind.TOUCH, "finger1")
@@ -166,12 +166,12 @@ interface UiScrollGestures: UiElementFinding {
         driver.perform(ImmutableList.of(swipe))
     }
 
-    // ---- DSL жестов (StepContext.*) ----
+    // ---- Gestures DSL (StepContext.*) ----
 
     /**
-     * Выполнить скроллирование вниз
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Scroll down.
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.scrollDown(
         scrollCount: Int = DEFAULT_SCROLL_COUNT,
@@ -179,9 +179,9 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element = null, scrollCount, scrollCapacity, ScrollDirection.Down)
 
     /**
-     * Выполнить скроллирование вверх
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Scroll up.
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.scrollUp(
         scrollCount: Int = DEFAULT_SCROLL_COUNT,
@@ -189,9 +189,9 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element = null, scrollCount, scrollCapacity, ScrollDirection.Up)
 
     /**
-     * Выполнить скроллирование вправо
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Scroll right.
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.scrollRight(
         scrollCount: Int = DEFAULT_SCROLL_COUNT,
@@ -199,9 +199,9 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element = null, scrollCount, scrollCapacity, ScrollDirection.Right)
 
     /**
-     * Выполнить скроллирование влево
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Scroll left.
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.scrollLeft(
         scrollCount: Int = DEFAULT_SCROLL_COUNT,
@@ -209,10 +209,10 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element = null, scrollCount, scrollCapacity, ScrollDirection.Left)
 
     /**
-     * Выполнить свайп вниз
-     * @param element элемент;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Swipe down.
+     * @param element the element;
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.swipeDown(
         element: PageElement?,
@@ -221,10 +221,10 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element, scrollCount, scrollCapacity, ScrollDirection.Down)
 
     /**
-     * Выполнить свайп вверх
-     * @param element элемент;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Swipe up.
+     * @param element the element;
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.swipeUp(
         element: PageElement?,
@@ -233,10 +233,10 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element, scrollCount, scrollCapacity, ScrollDirection.Up)
 
     /**
-     * Выполнить свайп вправо
-     * @param element элемент;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Swipe right.
+     * @param element the element;
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.swipeRight(
         element: PageElement?,
@@ -245,15 +245,14 @@ interface UiScrollGestures: UiElementFinding {
     ) = performScroll(element, scrollCount, scrollCapacity, ScrollDirection.Right)
 
     /**
-     * Выполнить свайп влево
-     * @param element элемент;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
+     * Swipe left.
+     * @param element the element;
+     * @param scrollCount number of scroll attempts if the element is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
      */
     fun StepContext.swipeLeft(
         element: PageElement?,
         scrollCount: Int = DEFAULT_SCROLL_COUNT,
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY
     ) = performScroll(element, scrollCount, scrollCapacity, ScrollDirection.Left)
-
 }

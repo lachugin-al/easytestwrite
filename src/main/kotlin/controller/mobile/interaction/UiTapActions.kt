@@ -17,13 +17,14 @@ import java.time.Duration
 interface UiTapActions : UiElementFinding {
 
     /**
-     * Нажать в области экрана по [x] [y]
-     * @param x точка по [x] в области экрана;
-     * @param y точка по [y] в области экрана;
-     * @param timeoutBeforeExpectation максимальное количество секунд ожидания перед выполнением нажатия.
-     * Если указан параметр [waitCondition], в течение этого времени будет ожидаться выполнение заданного условия.
-     * Если [waitCondition] не задан, будет ожидаться стабилизация UI (отсутствие изменений в исходном коде страницы) в течение указанного времени.
-     * Если значение равно 0, ожидание перед нажатием не производится.
+     * Tap in the screen area at coordinates [x], [y].
+     *
+     * @param x the X coordinate on the screen;
+     * @param y the Y coordinate on the screen;
+     * @param timeoutBeforeExpectation maximum number of seconds to wait before performing the tap.
+     * If the [waitCondition] parameter is provided, the tap will wait for that condition to be met within this time.
+     * If [waitCondition] is not provided, the tap will wait for UI stabilization (no DOM changes)
+     * within the specified time. If the value is 0, no wait is performed before the tap.
      */
     fun StepContext.tapArea(
         x: Int,
@@ -37,7 +38,7 @@ interface UiTapActions : UiElementFinding {
         } else if (timeoutBeforeExpectation > 0) {
             val beforeWait = WebDriverWait(driver, timeoutBeforeExpectation)
 
-            // ожидание стабилизации страницы
+            // wait for page stabilization
             var previousPageSource = driver.pageSource
             beforeWait.until {
                 val currentPageSource = driver.pageSource
@@ -59,17 +60,19 @@ interface UiTapActions : UiElementFinding {
     }
 
     /**
-     * Нажать в области [element] по его [x] [y]
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param x точка по [x] в области элемента;
-     * @param y точка по [y] в области элемента;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Tap within the [element] area at coordinates [x], [y].
+     *
+     * @param element the target element;
+     * @param elementNumber index of the found element starting from 1;
+     * @param x the X coordinate relative to the element;
+     * @param y the Y coordinate relative to the element;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no DOM changes)
+     *        before starting the element search;
+     * @param timeoutExpectation number of seconds to wait for the element to appear;
+     * @param pollingInterval frequency of element polling in milliseconds;
+     * @param scrollCount number of scroll attempts if the element is not found on the current screen;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0], with 1.0 scrolling a full screen;
+     * @param scrollDirection scroll direction;
      */
     fun StepContext.tapElementArea(
         element: PageElement?,

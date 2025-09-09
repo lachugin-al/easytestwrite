@@ -1,11 +1,11 @@
 package reporting.allure
 
 /**
- * Используется для пометки тестового класса как Suite (набор тестов).
- * Эта аннотация устанавливает имя Suite в отчетах Allure.
+ * Used to mark a test class as a Suite (a set of tests).
+ * This annotation sets the Suite name in Allure reports.
  *
- * @property value Имя Suite, которое будет отображаться в отчетах Allure.
- *                 Если не указано, используется пустая строка.
+ * @property value Suite name to be displayed in Allure reports.
+ *                 If not specified, an empty string is used.
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

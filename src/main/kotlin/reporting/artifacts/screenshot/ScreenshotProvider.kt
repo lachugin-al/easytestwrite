@@ -4,13 +4,13 @@ import io.appium.java_client.AppiumDriver
 import org.openqa.selenium.OutputType
 
 /**
- * Интерфейс для получения «сырых» байтов скриншота.
+ * Interface for obtaining raw screenshot bytes.
  */
 interface ScreenshotProvider {
     fun getRawScreenshot(): ByteArray
 }
 
-/** Провайдер для AppiumDriver. */
+/** Provider for AppiumDriver. */
 class AppiumScreenshotProvider(
     private val driver: AppiumDriver<*>
 ) : ScreenshotProvider {

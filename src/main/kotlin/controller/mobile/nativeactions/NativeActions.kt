@@ -14,17 +14,17 @@ import io.appium.java_client.ios.IOSDriver
 interface NativeActions : AppContext {
 
     /**
-     * Универсальный метод для отправки нативных команд (например, нажатий клавиш) на мобильное устройство.
+     * Universal method for sending native commands (e.g., key presses) to a mobile device.
      *
-     * Используйте этот метод для передачи платформенно-зависимых команд в рамках тестовых сценариев.
+     * Use this method to send platform-dependent commands in test scenarios.
      *
-     * @param androidKey Клавиша Android (например, AndroidKey.BACK, AndroidKey.ENTER).
-     *                   Передаётся для платформы Android, для остальных платформ параметр игнорируется.
-     * @param iosKey Строка-код клавиши для iOS (например, "\n" для Enter).
-     *               Передаётся для iOS, для остальных платформ параметр игнорируется.
+     * @param androidKey Android key (e.g., AndroidKey.BACK, AndroidKey.ENTER).
+     *                   Passed only for the Android platform; ignored for others.
+     * @param iosKey String code of the iOS key (e.g., "\n" for Enter).
+     *               Passed only for iOS; ignored for others.
      *
-     * @throws IllegalArgumentException если не передан необходимый параметр для указанной платформы.
-     * @throws UnsupportedOperationException если метод вызван для неподдерживаемой платформы (например, Web).
+     * @throws IllegalArgumentException if the required parameter is not provided for the current platform.
+     * @throws UnsupportedOperationException if the method is called for an unsupported platform (e.g., Web).
      */
     fun StepContext.performNativeAction(
         androidKey: AndroidKey? = null,
@@ -32,33 +32,33 @@ interface NativeActions : AppContext {
     ) {
         when (AppConfig.getPlatform()) {
             Platform.ANDROID -> {
-                val androidDriver = driver as? AndroidDriver ?: error("Driver не AndroidDriver")
+                val androidDriver = driver as? AndroidDriver ?: error("Driver is not AndroidDriver")
                 if (androidKey != null) {
                     androidDriver.pressKey(KeyEvent(androidKey))
                 } else {
-                    throw IllegalArgumentException("Необходимо передать параметр androidKey для Android-платформы")
+                    throw IllegalArgumentException("Parameter androidKey must be provided for Android platform")
                 }
             }
 
             Platform.IOS -> {
-                val iosDriver = driver as? IOSDriver ?: error("Driver не IOSDriver")
+                val iosDriver = driver as? IOSDriver ?: error("Driver is not IOSDriver")
                 if (iosKey != null) {
                     iosDriver.keyboard.pressKey(iosKey)
                 } else {
-                    throw IllegalArgumentException("Необходимо передать параметр iosKey для iOS-платформы")
+                    throw IllegalArgumentException("Parameter iosKey must be provided for iOS platform")
                 }
             }
         }
     }
 
     /**
-     * Выполняет нативное нажатие клавиши Enter (или Return) на мобильном устройстве.
+     * Performs a native Enter (or Return) key press on a mobile device.
      *
-     * Использует платформо-зависимые ключи для Android и iOS:
+     * Uses platform-dependent keys for Android and iOS:
      * - Android: AndroidKey.ENTER
      * - iOS: "\n"
      *
-     * @throws IllegalArgumentException если платформа не поддерживается или драйвер не инициализирован.
+     * @throws IllegalArgumentException if the platform is not supported or the driver is not initialized.
      */
     fun StepContext.tapEnter() {
         performNativeAction(

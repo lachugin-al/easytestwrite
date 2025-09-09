@@ -36,13 +36,13 @@ import dsl.testing.SkipConditionExtension
 import org.junit.jupiter.api.extension.ExtendWith
 
 /**
- * Базовый контроллер для мобильных тестов.
+ * Base controller for mobile tests.
  *
- * Основной класс, который содержит общую инфраструктуру для работы с драйверами Appium/Web,
- * взаимодействия с UI-элементами, отправки действий пользователя, проверки событий в EventStorage,
- * а также вспомогательных операций для скроллирования и свайпов на экране.
+ * The main class that contains the common infrastructure for working with Appium/Web drivers,
+ * interacting with UI elements, sending user actions, verifying events in EventStorage,
+ * as well as helper operations for scrolling and swiping on the screen.
  *
- * Данный класс должен наследоваться всеми тестовыми классами.
+ * All test classes must extend this class.
  */
 @ExtendWith(SkipConditionExtension::class)
 open class MobileTest:
@@ -61,16 +61,16 @@ open class MobileTest:
     AlertActions
 {
 
-    // ---- инфраструктура и зависимости ----
+    // ---- infrastructure and dependencies ----
     override val logger: Logger = LoggerFactory.getLogger(MobileTest::class.java)
 
     override lateinit var app: App
     protected lateinit var context: TestingContext
 
-    // Хранилище событий
+    // Event storage
     override val eventsFileStorage = EventStorage
 
-    // CoroutineScope для управления жизненным циклом корутин
+    // CoroutineScope for managing coroutine lifecycle
     override val scope = CoroutineScope(Dispatchers.Default)
     override val jobs = mutableListOf<Deferred<*>>()
 
@@ -81,110 +81,110 @@ open class MobileTest:
         @BeforeAll
         @JvmStatic
         fun setUpAll() {
-            // Проверяем, включен ли автозапуск эмулятора
+            // Check if emulator auto-start is enabled
             if (AppConfig.isEmulatorAutoStartEnabled()) {
-                // Запуск эмулятора перед всеми тестами
-                logger.info("Запуск эмулятора перед всеми тестами")
+                // Start emulator before all tests
+                logger.info("Starting emulator before all tests")
                 emulatorStarted = EmulatorManager.startEmulator()
                 if (!emulatorStarted) {
-                    logger.error("Не удалось запустить эмулятор")
+                    logger.error("Failed to start emulator")
                 }
             } else {
-                logger.info("Автозапуск эмулятора отключен в настройках")
+                logger.info("Emulator auto-start is disabled in settings")
             }
         }
 
         @AfterAll
         @JvmStatic
         fun tearDownAll() {
-            // Проверяем, включено ли автовыключение эмулятора
+            // Check if emulator auto-shutdown is enabled
             if (AppConfig.isEmulatorAutoShutdownEnabled()) {
-                // Остановка эмулятора после всех тестов
-                logger.info("Остановка эмулятора после всех тестов")
+                // Stop emulator after all tests
+                logger.info("Stopping emulator after all tests")
                 EmulatorManager.stopEmulator()
             } else {
-                logger.info("Автовыключение эмулятора отключено в настройках")
+                logger.info("Emulator auto-shutdown is disabled in settings")
             }
         }
     }
 
-    // ---- жизненный цикл ----
-// Функционал, выполняемый перед каждым тестом
+    // ---- lifecycle ----
+    // Executed before each test
     @BeforeEach
     fun setUp(testInfo: TestInfo) {
-        // Очистка логов перед началом теста
+        // Clear logs before the test
         AllureLogCapture.clearLogs()
-        // Инициализация системы захвата логов
+        // Initialize log capturing system
         AllureLogCapture.initialize()
-        // Очистка хранилища событий перед началом теста
+        // Clear event storage before the test
         EventStorage.clear()
 
-        // Проверяем, был ли успешно запущен эмулятор, если он требуется
+        // Check if emulator was successfully started, if required
         if (AppConfig.getPlatform() == Platform.ANDROID &&
             AppConfig.isEmulatorAutoStartEnabled() &&
             !emulatorStarted
         ) {
-            logger.warn("Эмулятор не был успешно запущен в setUpAll(), пробуем запустить снова")
+            logger.warn("Emulator was not successfully started in setUpAll(), attempting to start again")
             emulatorStarted = EmulatorManager.startEmulator()
             if (!emulatorStarted) {
-                logger.error("Не удалось запустить эмулятор перед тестом")
-                throw RuntimeException("Не удалось инициализировать Android-драйвер. Проверьте запущен ли эмулятор.")
+                logger.error("Failed to start emulator before the test")
+                throw RuntimeException("Failed to initialize Android driver. Make sure the emulator is running.")
             }
         }
 
-        // Гарантируем Wi‑Fi на эмуляторе Android перед каждым тестом
+        // Ensure Wi-Fi connectivity on Android emulator before each test
         if (AppConfig.getPlatform() == Platform.ANDROID) {
             val needEnsure = AppConfig.isEmulatorAutoStartEnabled() || (EmulatorManager.getEmulatorId() != null)
             if (needEnsure) {
                 val wifiOk = EmulatorManager.ensureAndroidWifiConnectivity()
                 if (!wifiOk) {
-                    logger.error("Не удалось обеспечить использование Wi‑Fi на Android эмуляторе перед тестом")
-                    throw RuntimeException("Wi‑Fi не настроен на эмуляторе. Остановите тест или проверьте окружение.")
+                    logger.error("Failed to ensure Wi-Fi connectivity on Android emulator before the test")
+                    throw RuntimeException("Wi-Fi is not configured on the emulator. Stop the test or check the environment.")
                 }
             }
         }
 
-        // Инициализация приложения
+        // Initialize the application
         app = App().launch()
         context = TestingContext(driver)
 
-        // Запуск записи видео
+        // Start video recording
         val testName = testInfo.displayName
         VideoRecorder.startRecording(driver, testName)
 
-        // Запуск AnrWatcher для Android
+        // Start AnrWatcher for Android
         if (AppConfig.getPlatform() == Platform.ANDROID) {
             val androidDriver = driver as? AndroidDriver<MobileElement>
             androidDriver?.let { AnrWatcher.start(it) }
         }
     }
 
-    // Функционал, выполняемый после каждого теста
+    // Executed after each test
     @AfterEach
     fun tearDown(testInfo: TestInfo) {
-        // Ожидание завершения всех проверок событий
+        // Wait for all event checks to complete
         awaitAllEventChecks()
 
-        // Остановка записи видео
+        // Stop video recording
         val testName = testInfo.displayName
         VideoRecorder.stopRecording(driver, testName)
 
-        // Остановка AnrWatcher для Android
+        // Stop AnrWatcher for Android
         if (AppConfig.getPlatform() == Platform.ANDROID) {
             AnrWatcher.stop()
         }
 
-        // Прикрепление логов к отчету Allure
+        // Attach logs to Allure report
         AllureLogCapture.attachLogsToAllureReport()
 
-        // Закрытие приложения
+        // Close the application
         closeApp()
     }
 
     /**
-     * Закрывает приложение.
-     * Этот метод может быть вызван из внешних классов, например, из SkipConditionExtension,
-     * когда тест пропускается из-за аннотации @Skip.
+     * Closes the application.
+     * This method can be called from external classes, for example, from SkipConditionExtension,
+     * when a test is skipped due to the @Skip annotation.
      */
     fun closeApp() {
         if (this::app.isInitialized) {
@@ -193,13 +193,4 @@ open class MobileTest:
             logger.debug("closeApp() called, but 'app' is not initialized; skipping close.")
         }
     }
-
-
-
-
-
-
-
-
-
 }

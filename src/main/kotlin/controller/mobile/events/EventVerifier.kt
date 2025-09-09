@@ -33,17 +33,18 @@ interface EventVerifier {
     val scope: CoroutineScope
     val jobs: MutableList<Deferred<*>>
 
-    // Публичные DSL-обёртки
+    // Public DSL wrappers
     /**
-     * Проверяет наличие события и его данные в EventFileStorage с указанной периодичностью в течение заданного времени.
+     * Verifies the presence of an event and its data in EventFileStorage with a given polling interval
+     * during the specified time.
      *
-     * @param eventName Название события для поиска;
-     * @param eventData Перечень данных в виде `Json String` или `Json File`, которые мы хотим проверить в событии;
-     *                  Поддерживает шаблоны для значений:
-     *                  - "*" - соответствует любому значению (wildcard)
-     *                  - "" - соответствует только пустому значению
-     *                  - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *                  - Любое другое значение - проверяется точное соответствие
+     * @param eventName The name of the event to search for;
+     * @param eventData A list of data provided as `Json String` or `Json File` that we want to verify in the event;
+     *                  Supports value patterns:
+     *                  - "*" - matches any value (wildcard)
+     *                  - "" - matches only an empty value
+     *                  - "~value" - checks partial match (if 'value' is a substring of the value)
+     *                  - Any other value - checks exact equality
      * {
      *   "items": [
      *     {
@@ -55,28 +56,29 @@ interface EventVerifier {
      *     }
      *   ]
      * }
-     * @param timeoutExpectation Время в секундах, в течение которого будет происходить проверка;
-     * @return true если событие найдено, false если нет.
+     * @param timeoutExpectation Time in seconds during which the verification will be performed;
+     * @return true if the event is found, false otherwise.
      */
     fun ExpectationContext.checkHasEvent(
         eventName: String,
         eventData: String? = null,
         timeoutEventExpectation: Long = DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION
     ) {
-        // Вызов основной функции с уже подготовленной строкой JSON
+        // Call the core function with the prepared JSON string
         checkHasEventInternal(eventName, eventData, timeoutEventExpectation)
     }
 
     /**
-     * Проверяет наличие события и его данные в EventFileStorage с указанной периодичностью в течение заданного времени.
+     * Verifies the presence of an event and its data in EventFileStorage with a given polling interval
+     * during the specified time.
      *
-     * @param eventName Название события для поиска;
-     * @param eventData Перечень данных в виде `Json String` или `Json File`, которые мы хотим проверить в событии;
-     *                  Поддерживает шаблоны для значений:
-     *                  - "*" - соответствует любому значению (wildcard)
-     *                  - "" - соответствует только пустому значению
-     *                  - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *                  - Любое другое значение - проверяется точное соответствие
+     * @param eventName The name of the event to search for;
+     * @param eventData A list of data provided as `Json String` or `Json File` that we want to verify in the event;
+     *                  Supports value patterns:
+     *                  - "*" - matches any value (wildcard)
+     *                  - "" - matches only an empty value
+     *                  - "~value" - checks partial match (if 'value' is a substring of the value)
+     *                  - Any other value - checks exact equality
      * {
      *   "items": [
      *     {
@@ -88,8 +90,8 @@ interface EventVerifier {
      *     }
      *   ]
      * }
-     * @param timeoutExpectation Время в секундах, в течение которого будет происходить проверка;
-     * @return true если событие найдено, false если нет.
+     * @param timeoutExpectation Time in seconds during which the verification will be performed;
+     * @return true if the event is found, false otherwise.
      */
     fun ExpectationContext.checkHasEvent(
         eventName: String,
@@ -101,18 +103,18 @@ interface EventVerifier {
     }
 
     /**
-     * Внутренняя функция ожидания события в EventStorage в течение заданного времени.
+     * Internal function that waits for an event in EventStorage for the specified time.
      *
-     * @param eventName Название события, которое ожидается.
-     * @param eventData Ожидаемое содержимое события в формате JSON (опционально).
-     *                  Поддерживает шаблоны для значений:
-     *                  - "*" - соответствует любому значению (wildcard)
-     *                  - "" - соответствует только пустому значению
-     *                  - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *                  - Любое другое значение - проверяется точное соответствие
-     * @param timeoutExpectation Таймаут ожидания события в секундах.
+     * @param eventName The name of the event expected.
+     * @param eventData The expected event payload in JSON format (optional).
+     *                  Supports value patterns:
+     *                  - "*" - matches any value (wildcard)
+     *                  - "" - matches only an empty value
+     *                  - "~value" - checks partial match (if 'value' is a substring of the value)
+     *                  - Any other value - checks exact equality
+     * @param timeoutExpectation Timeout for waiting for the event in seconds.
      *
-     * @throws Exception если событие не найдено за отведённое время.
+     * @throws Exception if the event is not found within the allotted time.
      */
     private fun ExpectationContext.checkHasEventInternal(
         eventName: String,
@@ -123,35 +125,35 @@ interface EventVerifier {
         val timeoutInMillis = timeoutEventExpectation * 1000
 
         if (eventData != null) {
-            println("Ожидание события '$eventName' с данными '$eventData'")
+            println("Waiting for event '$eventName' with data '$eventData'")
         } else {
-            println("Ожидание события '$eventName'...")
+            println("Waiting for event '$eventName'...")
         }
 
         runCatching {
             runBlocking {
                 val result = withTimeoutOrNull(timeoutInMillis) {
                     while (true) {
-                        // Получить все события из EventStorage
+                        // Get all events from EventStorage
                         val allEvents = eventsFileStorage.getEvents()
 
-                        // Перебрать события
+                        // Iterate over events
                         for (event in allEvents) {
-                            // Пропустить уже обработанные события
+                            // Skip already matched events
                             if (eventsFileStorage.isEventAlreadyMatched(event.event_num)) continue
 
-                            // Проверка совпадения по названию события
+                            // Check event name match
                             if (event.name == eventName) {
                                 if (eventData == null) {
-                                    // Если дополнительные данные не требуются, отметить событие как найденное
+                                    // If no additional data required, mark the event as matched
                                     eventsFileStorage.markEventAsMatched(event.event_num)
                                     return@withTimeoutOrNull true
                                 }
 
-                                // Если ожидаются конкретные данные, сериализовать event.data в JSON
+                                // If specific data is expected, serialize event.data to JSON
                                 val eventDataJson = event.data?.let { Json.encodeToString(EventData.serializer(), it) }
 
-                                // Проверить, содержатся ли в событии ожидаемые данные
+                                // Check whether the event contains the expected data
                                 if (eventDataJson != null && containsJsonData(eventDataJson, eventData)) {
                                     eventsFileStorage.markEventAsMatched(event.event_num)
                                     return@withTimeoutOrNull true
@@ -159,41 +161,41 @@ interface EventVerifier {
                             }
                         }
 
-                        // Подождать перед следующей проверкой
+                        // Wait before the next check
                         delay(pollingInterval)
                     }
                 } ?: false
 
-                // Assert that the result is true and is of type Boolean
+                // Assert that the result is true and of type Boolean
                 try {
                     if (result as Boolean) {
-                        println("Ожидаемое событие '$eventName' найдено.")
+                        println("Expected event '$eventName' found.")
                     } else {
                         if (eventData != null) {
-                            throw NoSuchElementException("Ожидаемое событие '$eventName' с данными '$eventData' не обнаружено за $timeoutEventExpectation секунд.")
+                            throw NoSuchElementException("Expected event '$eventName' with data '$eventData' was not found within $timeoutEventExpectation seconds.")
                         } else {
-                            throw NoSuchElementException("Ожидаемое событие '$eventName' не обнаружено за $timeoutEventExpectation секунд.")
+                            throw NoSuchElementException("Expected event '$eventName' was not found within $timeoutEventExpectation seconds.")
                         }
                     }
                 } catch (e: ClassCastException) {
-                    throw Exception("Ошибка приведения результата проверки к Boolean: $result", e)
+                    throw Exception("Failed to cast verification result to Boolean: $result", e)
                 }
             }
         }.getOrThrow()
     }
 
     /**
-     * Проверяет наличие события и данные в EventFileStorage с указанной периодичностью в течение заданного времени.
-     * Проверку можно производить после действия, причем проверка будет производиться ассинхронно и не блокирует основной поток
-     * Так как событие может придти позже после нескольких действий связанных между собой;
+     * Verifies the presence of an event and its data in EventFileStorage with a given polling interval
+     * during the specified time. The check can be performed after an action and runs asynchronously without
+     * blocking the main thread, since the event may arrive later after several related actions.
      *
-     * @param eventName Название события для поиска;
-     * @param eventData Перечень данных в виде `Json String` или `Json File`, которые мы хотим проверить в событии;
-     *                  Поддерживает шаблоны для значений:
-     *                  - "*" - соответствует любому значению (wildcard)
-     *                  - "" - соответствует только пустому значению
-     *                  - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *                  - Любое другое значение - проверяется точное соответствие
+     * @param eventName The name of the event to search for;
+     * @param eventData A list of data provided as `Json String` or `Json File` that we want to verify in the event;
+     *                  Supports value patterns:
+     *                  - "*" - matches any value (wildcard)
+     *                  - "" - matches only an empty value
+     *                  - "~value" - checks partial match (if 'value' is a substring of the value)
+     *                  - Any other value - checks exact equality
      * {
      *   "items": [
      *     {
@@ -205,10 +207,11 @@ interface EventVerifier {
      *     }
      *   ]
      * }
-     * @param timeoutExpectation Время в секундах, в течение которого будет происходить проверка;
-     * @return true если событие найдено, false если нет.
+     * @param timeoutExpectation Time in seconds during which the verification will be performed;
+     * @return true if the event is found, false otherwise.
      *
-     * В конце теста в функции `@AfterEach - tearDown()` необходимо вызвать функцию awaitAllEventChecks, для того, чтобы тест подождал завершения всех проверок, которые запустились и выполняются асинхронно.
+     * At the end of the test in `@AfterEach - tearDown()`, you must call `awaitAllEventChecks`
+     * to ensure the test waits for all asynchronous verifications to finish.
      */
     fun ExpectationContext.checkHasEventAsync(
         eventName: String,
@@ -219,17 +222,17 @@ interface EventVerifier {
     }
 
     /**
-     * Проверяет наличие события и данные в EventFileStorage с указанной периодичностью в течение заданного времени.
-     * Проверку можно производить после действия, причем проверка будет производиться ассинхронно и не блокирует основной поток
-     * Так как событие может придти позже после нескольких действий связанных между собой;
+     * Verifies the presence of an event and its data in EventFileStorage with a given polling interval
+     * during the specified time. The check can be performed after an action and runs asynchronously without
+     * blocking the main thread, since the event may arrive later after several related actions.
      *
-     * @param eventName Название события для поиска;
-     * @param eventData Перечень данных в виде `Json String` или `Json File`, которые мы хотим проверить в событии;
-     *                  Поддерживает шаблоны для значений:
-     *                  - "*" - соответствует любому значению (wildcard)
-     *                  - "" - соответствует только пустому значению
-     *                  - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *                  - Любое другое значение - проверяется точное соответствие
+     * @param eventName The name of the event to search for;
+     * @param eventData A list of data provided as `Json String` or `Json File` that we want to verify in the event;
+     *                  Supports value patterns:
+     *                  - "*" - matches any value (wildcard)
+     *                  - "" - matches only an empty value
+     *                  - "~value" - checks partial match (if 'value' is a substring of the value)
+     *                  - Any other value - checks exact equality
      * {
      *   "items": [
      *     {
@@ -241,10 +244,11 @@ interface EventVerifier {
      *     }
      *   ]
      * }
-     * @param timeoutExpectation Время в секундах, в течение которого будет происходить проверка;
-     * @return true если событие найдено, false если нет.
+     * @param timeoutExpectation Time in seconds during which the verification will be performed;
+     * @return true if the event is found, false otherwise.
      *
-     * В конце теста в функции `@AfterEach - tearDown()` необходимо вызвать функцию awaitAllEventChecks, для того, чтобы тест подождал завершения всех проверок, которые запустились и выполняются асинхронно.
+     * At the end of the test in `@AfterEach - tearDown()`, you must call `awaitAllEventChecks`
+     * to ensure the test waits for all asynchronous verifications to finish.
      */
     fun ExpectationContext.checkHasEventAsync(
         eventName: String,
@@ -256,19 +260,19 @@ interface EventVerifier {
     }
 
     /**
-     * Асинхронная проверка наличия события в EventStorage.
+     * Asynchronous check for the presence of an event in EventStorage.
      *
-     * Проверка выполняется в фоне без блокировки основного потока теста.
-     * Позволяет продолжать выполнение теста, пока происходит ожидание события в EventStorage.
+     * The check runs in the background without blocking the main test thread.
+     * Allows the test to continue while waiting for the event in EventStorage.
      *
-     * @param eventName Название события для поиска.
-     * @param eventData Строка JSON с данными, которые должны присутствовать в событии (может быть null для проверки только по имени).
-     *                  Поддерживает шаблоны для значений:
-     *                  - "*" - соответствует любому значению (wildcard)
-     *                  - "" - соответствует только пустому значению
-     *                  - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *                  - Любое другое значение - проверяется точное соответствие
-     * @param timeoutExpectation Время ожидания события в секундах.
+     * @param eventName The name of the event to search for.
+     * @param eventData JSON string with data that must be present in the event (can be null to check by name only).
+     *                  Supports value patterns:
+     *                  - "*" - matches any value (wildcard)
+     *                  - "" - matches only an empty value
+     *                  - "~value" - checks partial match (if 'value' is a substring of the value)
+     *                  - Any other value - checks exact equality
+     * @param timeoutExpectation Time to wait for the event in seconds.
      */
     private fun ExpectationContext.checkHasEventAsyncInternal(
         eventName: String,
@@ -282,28 +286,28 @@ interface EventVerifier {
             val initialEventCount = eventsFileStorage.getEvents().size
 
             if (eventData != null) {
-                println("Ожидание события '$eventName' с данными '$eventData'")
+                println("Waiting for event '$eventName' with data '$eventData'")
             } else {
-                println("Ожидание события '$eventName'...")
+                println("Waiting for event '$eventName'...")
             }
 
             val result = withTimeoutOrNull(timeoutInMillis) {
                 while (true) {
-                    // Получаем только новые события, появившиеся после начала ожидания
+                    // Get only new events that appeared after the wait started
                     val newEvents = eventsFileStorage.getEvents().drop(initialEventCount)
 
                     for (event in newEvents) {
-                        // Пропускаем события, которые уже были проверены
+                        // Skip events that have already been checked
                         if (eventsFileStorage.isEventAlreadyMatched(event.event_num)) continue
 
-                        // Проверяем совпадение имени события
+                        // Check event name
                         if (event.name == eventName) {
                             if (eventData == null) {
                                 eventsFileStorage.markEventAsMatched(event.event_num)
                                 return@withTimeoutOrNull true
                             }
 
-                            // Сериализуем EventData и проверяем наличие всех требуемых данных
+                            // Serialize EventData and verify the presence of required data
                             val eventDataJson = event.data?.let { Json.encodeToString(EventData.serializer(), it) }
                             if (eventDataJson != null && containsJsonData(eventDataJson, eventData)) {
                                 eventsFileStorage.markEventAsMatched(event.event_num)
@@ -312,36 +316,36 @@ interface EventVerifier {
                         }
                     }
 
-                    // Делаем паузу перед следующей проверкой
+                    // Pause before the next check
                     delay(pollingInterval)
                 }
             } ?: false
 
-            // Проверяем результат выполнения задачи
+            // Validate the task result
             try {
                 if (result as Boolean) {
-                    println("Ожидаемое событие '$eventName' найдено.")
+                    println("Expected event '$eventName' found.")
                 } else {
                     if (eventData != null) {
-                        assert(false) { "Событие '$eventName' с данными '$eventData' не было обнаружено за $timeoutEventExpectation секунд." }
+                        assert(false) { "Event '$eventName' with data '$eventData' was not found within $timeoutEventExpectation seconds." }
                     } else {
-                        assert(false) { "Событие '$eventName' не было обнаружено за $timeoutEventExpectation секунд." }
+                        assert(false) { "Event '$eventName' was not found within $timeoutEventExpectation seconds." }
                     }
                 }
             } catch (e: ClassCastException) {
-                throw Exception("Невозможно привести результат ожидания к типу Boolean: $result", e)
+                throw Exception("Cannot cast await result to Boolean: $result", e)
             }
         }
 
-        // Добавляем задачу в список для последующего ожидания
+        // Add the task to the list for later awaiting
         jobs.add(job)
     }
 
     /**
-     * Ожидание завершения всех запущенных асинхронных проверок событий.
+     * Waits for all launched asynchronous event checks to complete.
      *
-     * Этот метод необходимо вызывать в методе `@AfterEach` после выполнения теста,
-     * чтобы гарантировать, что все фоновые проверки событий завершены перед окончанием теста.
+     * This method must be called in the `@AfterEach` method after the test is executed
+     * to ensure that all background event checks are finished before the test ends.
      */
     fun awaitAllEventChecks() {
         runBlocking {
@@ -356,15 +360,15 @@ interface EventVerifier {
 }
 
 /**
- * DSL: построение PageElement по item из события и автоскролл до совпадения.
- * Опирается на EventVerifier + UiElementWaiting + UiScrollGestures.
+ * DSL: build a PageElement by an item from an event and auto-scroll until a match is found.
+ * Relies on EventVerifier + UiElementWaiting + UiScrollGestures.
  */
 interface EventDrivenUi : EventVerifier, UiElementFinding, UiScrollGestures {
     /**
-     * Построить PageElement по item из события, у которого где-нибудь в data встречаются все пары из eventData.
-     * Возвращает PageElement для дальнейшего использования (например, в методе click).
+     * Build a PageElement using an item from an event whose data contains all pairs from eventData somewhere.
+     * Returns a PageElement for further use (e.g., in the click method).
      *
-     * @param eventPosition позиция события для обработки: "first" - первое найденное, "last" - последнее найденное
+     * @param eventPosition which event to use: "first" - the first found, "last" - the last found
      */
     fun StepContext.pageElementMatchedEvent(
         eventName: String,
@@ -380,12 +384,12 @@ interface EventDrivenUi : EventVerifier, UiElementFinding, UiScrollGestures {
 
         while (attempt < maxAttempts) {
             try {
-                // Ждём событие по условиям
-                "Ждём событие $eventName (попытка ${attempt + 1}/$maxAttempts)" {
+                // Wait for the event by conditions
+                "Waiting for event $eventName (attempt ${attempt + 1}/$maxAttempts)" {
                     checkHasEvent(eventName, eventData, timeoutEventExpectation)
                 }
 
-                // Получаем подходящее событие
+                // Obtain the matching event
                 val matchedEvents = EventStorage.getEvents().filter {
                     it.name == eventName &&
                             it.data?.let { d ->
@@ -400,9 +404,9 @@ interface EventDrivenUi : EventVerifier, UiElementFinding, UiScrollGestures {
                 }
 
                 if (matchedEvent == null) {
-                    // Если событие не найдено, попробуем проскроллить и повторить попытку
+                    // If the event is not found, try to scroll and retry
                     if (attempt < maxAttempts - 1) {
-                        logger.info("Событие '$eventName' с фильтром '$eventData' не найдено. Скроллим (1 шаг) и пробуем снова...")
+                        logger.info("Event '$eventName' with filter '$eventData' not found. Scrolling (1 step) and retrying...")
                         performScroll(
                             element = null,
                             scrollCount = 1,
@@ -412,36 +416,36 @@ interface EventDrivenUi : EventVerifier, UiElementFinding, UiScrollGestures {
                         attempt++
                         continue
                     } else {
-                        throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено после $maxAttempts попыток (со скроллом)")
+                        throw NoSuchElementException("Event '$eventName' with filter '$eventData' was not found after $maxAttempts attempts (with scrolling)")
                     }
                 }
 
-                // Извлекаем массив items из body → event → data
+                // Extract the items array from body → event → data
                 val bodyObj = Json.parseToJsonElement(matchedEvent.data!!.body).jsonObject
                 val itemsArr = bodyObj["event"]!!.jsonObject["data"]!!.jsonObject["items"]!!.jsonArray
 
-                // Находим первый item, содержащий искомые пары, это будет первая карточка товара на странице
+                // Find the first item that contains the desired pairs — this will be the first product card on the page
                 val searchObj = Json.parseToJsonElement(eventData).jsonObject
                 val matched = itemsArr.firstOrNull { itemElem ->
                     searchObj.all { (key, sv) ->
                         findKeyValueInTree(itemElem, key, sv)
                     }
-                } ?: throw NoSuchElementException("В событии '$eventName' ни один item не соответствует $eventData")
+                } ?: throw NoSuchElementException("No item in event '$eventName' matches $eventData")
 
-                // Достаем у найденного item его поле "name"
+                // Get the found item's "name" field
                 val itemName = matched.jsonObject["name"]!!.jsonPrimitive.content
-                val positionTextCase = if (eventPosition.lowercase() == "last") "последнем" else "первом"
-                logger.info("Найден подходящий товар: '$itemName' в $positionTextCase событии по фильтрам (eventName=$eventName, filter=$eventData, position=$eventPosition)")
+                val positionTextCase = if (eventPosition.lowercase() == "last") "last" else "first"
+                logger.info("Matching product found: '$itemName' in the $positionTextCase event by filters (eventName=$eventName, filter=$eventData, position=$eventPosition)")
 
-                // Строим и возвращаем локатор
+                // Build and return the locator
                 return PageElement(
                     android = PageElement.Text(itemName),
                     ios = PageElement.Label(itemName)
                 )
             } catch (t: Throwable) {
-                // Если чек события не прошёл (например, по таймауту), пробуем проскроллить и повторить, если есть попытки
+                // If the event check failed (e.g., due to timeout), try to scroll and retry if attempts remain
                 if (attempt < maxAttempts - 1) {
-                    logger.info("Не удалось найти событие '$eventName' на попытке ${attempt + 1}: ${t.message}. Скроллим (1 шаг) и пробуем снова...")
+                    logger.info("Failed to find event '$eventName' on attempt ${attempt + 1}: ${t.message}. Scrolling (1 step) and retrying...")
                     performScroll(
                         element = null,
                         scrollCount = 1,
@@ -451,13 +455,13 @@ interface EventDrivenUi : EventVerifier, UiElementFinding, UiScrollGestures {
                     attempt++
                     continue
                 } else {
-                    // Попытки закончились — пробрасываем ошибку
-                    throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено после $maxAttempts попыток (со скроллом). Последняя ошибка: ${t.message}")
+                    // Attempts exhausted — propagate the error
+                    throw NoSuchElementException("Event '$eventName' with filter '$eventData' was not found after $maxAttempts attempts (with scrolling). Last error: ${t.message}")
                 }
             }
         }
 
-        // Теоретически недостижимо
-        throw NoSuchElementException("Событие '$eventName' с фильтром '$eventData' не найдено")
+        // Theoretically unreachable
+        throw NoSuchElementException("Event '$eventName' with filter '$eventData' was not found")
     }
 }

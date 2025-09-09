@@ -10,10 +10,10 @@ import reporting.artifacts.screenshot.ScreenshotProvider
 import java.io.ByteArrayInputStream
 
 /**
- * Базовый класс всех контекстов тестирования.
+ * Base class for all testing contexts.
  *
- * Предоставляет вспомогательные методы для выполнения кода в зависимости от платформы,
- * а также для безопасного выполнения опциональных действий без прерывания теста.
+ * Provides helper methods to execute code depending on the platform,
+ * as well as to safely run optional actions without failing the test.
  *
  * @see TestingDslMarker
  */
@@ -21,44 +21,44 @@ import java.io.ByteArrayInputStream
 abstract class BaseContext {
 
     /**
-     * Драйвер, предоставляемый потомками для скриншотов.
+     * Driver provided by subclasses for taking screenshots.
      */
     protected abstract val driver: Any
 
     /**
-     * Выполняет переданный блок кода только в случае, если целевая платформа — iOS.
+     * Executes the given block only if the target platform is iOS.
      *
-     * Блок [action] будет проигнорирован для всех остальных платформ.
+     * The [action] block will be ignored for all other platforms.
      *
-     * @param action Лямбда, содержащая действия для выполнения на iOS.
+     * @param action Lambda with actions to run on iOS.
      */
     fun onlyIos(action: () -> Unit) = action.invokeIfRequiredPlatform(Platform.IOS)
 
     /**
-     * Выполняет переданный блок кода только в случае, если целевая платформа — Android.
+     * Executes the given block only if the target platform is Android.
      *
-     * Блок [action] будет проигнорирован для всех остальных платформ.
+     * The [action] block will be ignored for all other platforms.
      *
-     * @param action Лямбда, содержащая действия для выполнения на Android.
+     * @param action Lambda with actions to run on Android.
      */
     fun onlyAndroid(action: () -> Unit) = action.invokeIfRequiredPlatform(Platform.ANDROID)
 
     /**
-     * Выполняет несколько блоков кода в безопасном режиме только для iOS платформы.
+     * Executes multiple blocks in a safe mode for the iOS platform only.
      *
-     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
-     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
-     * со следующего блока. Блоки будут выполнены только если текущая платформа - iOS.
+     * Each block is executed independently of the result of the previous blocks.
+     * If any block throws an error, it is swallowed and execution proceeds
+     * to the next block. Blocks are executed only when the current platform is iOS.
      *
-     * Пример использования:
+     * Example:
      * ```
      * optionalIos(
-     *     { "Шаг 1" { действие1() } },
-     *     { "Шаг 2" { действие2() } }
+     *     { "Step 1" { action1() } },
+     *     { "Step 2" { action2() } }
      * )
      * ```
      *
-     * @param actions Набор лямбд с необязательной логикой выполнения.
+     * @param actions A set of lambdas with optional logic to execute.
      */
     @Suppress("SwallowedException")
     fun optionalIos(vararg actions: () -> Unit) {
@@ -68,27 +68,27 @@ abstract class BaseContext {
             try {
                 action.invoke()
             } catch (e: Exception) {
-                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
+                // Errors are suppressed to continue executing subsequent steps
             }
         }
     }
 
     /**
-     * Выполняет несколько блоков кода в безопасном режиме только для Android платформы.
+     * Executes multiple blocks in a safe mode for the Android platform only.
      *
-     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
-     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
-     * со следующего блока. Блоки будут выполнены только если текущая платформа - Android.
+     * Each block is executed independently of the result of the previous blocks.
+     * If any block throws an error, it is swallowed and execution proceeds
+     * to the next block. Blocks are executed only when the current platform is Android.
      *
-     * Пример использования:
+     * Example:
      * ```
      * optionalAndroid(
-     *     { "Шаг 1" { действие1() } },
-     *     { "Шаг 2" { действие2() } }
+     *     { "Step 1" { action1() } },
+     *     { "Step 2" { action2() } }
      * )
      * ```
      *
-     * @param actions Набор лямбд с необязательной логикой выполнения.
+     * @param actions A set of lambdas with optional logic to execute.
      */
     @Suppress("SwallowedException")
     fun optionalAndroid(vararg actions: () -> Unit) {
@@ -98,19 +98,19 @@ abstract class BaseContext {
             try {
                 action.invoke()
             } catch (e: Exception) {
-                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
+                // Errors are suppressed to continue executing subsequent steps
             }
         }
     }
 
     /**
-     * Выполняет несколько блоков кода в безопасном режиме.
+     * Executes multiple blocks in a safe mode.
      *
-     * Каждый блок выполняется независимо от результата выполнения предыдущих блоков.
-     * Если в каком-либо блоке произойдёт ошибка, она будет проглочена, и выполнение продолжится
-     * со следующего блока.
+     * Each block is executed independently of the result of the previous blocks.
+     * If any block throws an error, it is swallowed and execution proceeds
+     * to the next block.
      *
-     * Пример использования:
+     * Example:
      * ```
      * optional(
      *     { step1() },
@@ -119,7 +119,7 @@ abstract class BaseContext {
      * )
      * ```
      *
-     * @param actions Набор лямбд с необязательной логикой выполнения.
+     * @param actions A set of lambdas with optional logic to execute.
      */
     @Suppress("SwallowedException")
     fun optional(vararg actions: () -> Unit) {
@@ -127,18 +127,18 @@ abstract class BaseContext {
             try {
                 action.invoke()
             } catch (e: Exception) {
-                // Ошибки подавляются, чтобы продолжить выполнение следующих шагов
+                // Errors are suppressed to continue executing subsequent steps
             }
         }
     }
 
     /**
-     * Снимает скриншот и прикрепляет его к Allure-отчёту.
-     * Выполняется в {@link #optional}.
+     * Takes a screenshot and attaches it to the Allure report.
+     * Executed within {@link #optional}.
      *
-     * @param name      Название вложения в отчёте.
-     * @param scale     Масштаб изображения (0.1–1.0).
-     * @param quality   Качество PNG (1–100).
+     * @param name    Attachment name in the report.
+     * @param scale   Image scale (0.1–1.0).
+     * @param quality JPEG quality (1–100).
      */
     fun takeScreenshot(
         name: String,
@@ -161,9 +161,9 @@ abstract class BaseContext {
     }
 
     /**
-     * Вспомогательная функция для условного выполнения блока кода в зависимости от платформы.
+     * Helper function to conditionally execute a block depending on the platform.
      *
-     * @param platform Платформа, для которой необходимо выполнить код.
+     * @param platform The platform for which the code should run.
      */
     private fun (() -> Unit).invokeIfRequiredPlatform(platform: Platform) {
         if (AppConfig.getPlatform() == platform) invoke()

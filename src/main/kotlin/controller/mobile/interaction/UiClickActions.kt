@@ -12,17 +12,19 @@ import utils.DEFAULT_TIMEOUT_EXPECTATION
 interface UiClickActions : UiElementFinding {
 
     /**
-     * Найти элемент на экране по его [element] и кликнуть по нему
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Find an element on the screen by its [element] and click it.
      *
-     * @exception java.util.NoSuchElementException элемент не найден
+     * @param element the target element;
+     * @param elementNumber the index of the found element starting from 1;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no DOM changes)
+     *        before starting the element search;
+     * @param timeoutExpectation number of seconds to wait for the element to appear;
+     * @param pollingInterval frequency of element polling in milliseconds;
+     * @param scrollCount number of scroll attempts if the element is not found on the current screen;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0], with 1.0 scrolling a full screen;
+     * @param scrollDirection direction of the scroll action;
+     *
+     * @exception java.util.NoSuchElementException if the element is not found
      */
     fun StepContext.click(
         element: PageElement?,
@@ -47,26 +49,28 @@ interface UiClickActions : UiElementFinding {
     }
 
     /**
-     * Найти элемент на экране, содержащий указанный текст, и кликнуть по нему.
+     * Find an element on the screen containing the specified text and click it.
      *
-     * Метод построит локатор по стратегии `PageElement.Contains` на всех платформах (Android, iOS, Web)
-     * и выполнит поиск элемента с возможностью скроллирования. Если элемент найден, выполняется клик.
+     * The method builds a locator using the `PageElement.Contains` strategy across all platforms
+     * (Android, iOS, Web) and performs element search with scrolling support.
+     * If the element is found, it performs a click.
      *
-     * Метод полезен в ситуациях, когда необходимо кликнуть по элементу, содержащему определённую подстроку
-     * (например, часть названия товара, кнопку с динамическим текстом и т.д.), без необходимости заранее
-     * знать точное имя или локатор элемента.
+     * Useful when you need to click an element containing a specific substring
+     * (e.g., part of a product name, a button with dynamic text, etc.) without having to know
+     * the exact name or locator in advance.
      *
-     * @param text текст, который точно соответствует в целевом элементе;
-     * @param containsText текст, который должен содержаться в целевом элементе;
-     * @param elementNumber номер найденного элемента, начиная с 1. Если null, будет использован первый найденный;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation максимальное время ожидания появления элемента, в секундах;
-     * @param pollingInterval интервал между попытками поиска элемента, в миллисекундах;
-     * @param scrollCount количество попыток скроллирования при неудачном поиске;
-     * @param scrollCapacity доля экрана, на которую производится один скролл [0.0 - 1.0];
-     * @param scrollDirection направление скроллирования (вниз, вверх и т.п.);
+     * @param text the exact text to match in the target element;
+     * @param containsText the substring that must be contained in the target element;
+     * @param elementNumber the index of the found element starting from 1. If null, the first found is used;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no DOM changes)
+     *        before starting the element search;
+     * @param timeoutExpectation maximum wait time for the element to appear, in seconds;
+     * @param pollingInterval interval between element search attempts, in milliseconds;
+     * @param scrollCount number of scroll attempts if the element is not found immediately;
+     * @param scrollCapacity fraction of the screen to scroll per action [0.0 - 1.0];
+     * @param scrollDirection direction of scrolling (down, up, etc.);
      *
-     * @throws java.util.NoSuchElementException если элемент, содержащий указанный текст, не найден после всех попыток.
+     * @throws java.util.NoSuchElementException if no element containing the specified text is found after all attempts.
      */
     fun StepContext.click(
         text: String? = null,
@@ -80,10 +84,10 @@ interface UiClickActions : UiElementFinding {
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ) {
         require(!(text == null && containsText == null)) {
-            "Необходимо указать либо 'text', либо 'contains'"
+            "Either 'text' or 'contains' must be specified"
         }
         require(!(text != null && containsText != null)) {
-            "Нельзя одновременно использовать 'text' и 'contains'"
+            "Cannot use both 'text' and 'contains' simultaneously"
         }
         val element = when {
             text != null -> PageElement(
@@ -96,7 +100,7 @@ interface UiClickActions : UiElementFinding {
                 ios = PageElement.Contains(containsText),
             )
 
-            else -> error("Указан и не text и не containsText")
+            else -> error("Neither text nor containsText specified")
         }
 
         waitForElements(

@@ -1,25 +1,25 @@
 package controller.mobile.interaction
 
 /**
- * Перечисление направлений скролла на мобильных устройствах и веб интерфейсах.
+ * Enumeration of scroll directions on mobile devices and web interfaces.
  *
- * Используется для управления направлением свайпа при прокрутке списка элементов
- * в рамках тестов UI-автоматизации.
+ * Used to control the swipe direction when scrolling a list of elements
+ * in UI automation tests.
  *
- * Реализовано в виде [sealed class] для обеспечения типовоявной безопасности
- * и удобства расширения в будущем.
+ * Implemented as a [sealed class] to ensure type safety
+ * and allow convenient future extensions.
  */
 sealed class ScrollDirection {
 
-    /** Скроллирование вниз (по вертикали). */
+    /** Scroll down (vertical). */
     object Down : ScrollDirection()
 
-    /** Скроллирование вверх (по вертикали). */
+    /** Scroll up (vertical). */
     object Up : ScrollDirection()
 
-    /** Скроллирование вправо (по горизонтали). */
+    /** Scroll right (horizontal). */
     object Right : ScrollDirection()
 
-    /** Скроллирование влево (по горизонтали). */
+    /** Scroll left (horizontal). */
     object Left : ScrollDirection()
 }

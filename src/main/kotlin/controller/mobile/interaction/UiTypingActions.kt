@@ -12,18 +12,18 @@ import utils.DEFAULT_TIMEOUT_EXPECTATION
 interface UiTypingActions : UiElementFinding {
 
     /**
-     * Найти элемент на экране по его [element] и ввести [text]
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param text текст;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Find an element on the screen by its [element] and type [text].
+     * @param element the element;
+     * @param elementNumber index of the found element starting from 1;
+     * @param text text to type;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no changes in page source) before starting the search;
+     * @param timeoutExpectation number of seconds during which the element is searched for;
+     * @param pollingInterval polling frequency in milliseconds;
+     * @param scrollCount number of scroll attempts toward the element if it is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
+     * @param scrollDirection scroll direction of the screen;
      *
-     * @exception java.util.NoSuchElementException элемент не найден
+     * @exception java.util.NoSuchElementException element not found
      */
     fun StepContext.typeText(
         element: PageElement?,

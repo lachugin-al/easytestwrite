@@ -3,18 +3,18 @@ package events
 import kotlinx.serialization.Serializable
 
 /**
- * Модель события, зафиксированного в процессе тестирования.
+ * Event model recorded during testing.
  *
- * Используется для сериализации и хранения данных о сетевых запросах,
- * отправленных приложением во время выполнения тестов.
+ * Used for serializing and storing data about network requests
+ * sent by the application during test execution.
  *
- * Все события записываются в формате [Event] и могут быть использованы
- * для валидации отправляемых данных и воспроизведения сетевого поведения.
+ * All events are recorded in the [Event] format and can be used
+ * to validate outgoing data and reproduce network behavior.
  *
- * @property event_time Метка времени события (например, Instant.now().toString()).
- * @property event_num Уникальный номер события в рамках одной сессии тестирования.
- * @property name Название события (например, HTTP-метод или логическое имя запроса).
- * @property data Детали события, включая тело запроса и метаинформацию [EventData].
+ * @property event_time Timestamp of the event (e.g., Instant.now().toString()).
+ * @property event_num Unique event number within a single testing session.
+ * @property name Event name (e.g., HTTP method or logical request name).
+ * @property data Event details, including request body and metadata [EventData].
  */
 @Serializable
 data class Event(
@@ -25,16 +25,16 @@ data class Event(
 )
 
 /**
- * Детальная информация о сетевом запросе, связанная с событием [Event].
+ * Detailed information about the network request associated with an [Event].
  *
- * Модель предназначена для хранения всей полезной нагрузки запроса,
- * включая URI запроса, IP-адрес отправителя, заголовки, параметры запроса и тело.
+ * The model stores the entire request payload,
+ * including the request URI, sender IP address, headers, query string, and body.
  *
- * @property uri Путь запроса без доменного имени (например, "/m/batch").
- * @property remoteAddress Адрес клиента, отправившего запрос (например, "192.168.1.2:53427").
- * @property headers Коллекция заголовков HTTP-запроса.
- * @property query Строка параметров запроса (query string), если есть.
- * @property body Тело запроса в формате JSON (строка).
+ * @property uri Request path without the domain name (e.g., "/m/batch").
+ * @property remoteAddress Client address that sent the request (e.g., "192.168.1.2:53427").
+ * @property headers Collection of HTTP request headers.
+ * @property query Query string, if present.
+ * @property body Request body in JSON format (string).
  */
 @Serializable
 data class EventData(

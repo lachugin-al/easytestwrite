@@ -6,13 +6,13 @@ import io.appium.java_client.MobileElement
 import org.slf4j.Logger
 
 /**
- * Единый контекст: все миксины получают driver из App.
- * Никаких собственных полей driver в интерфейсах больше не держим.
+ * Unified context: all mixins get the driver from App.
+ * We no longer keep separate driver fields in interfaces.
  */
 interface AppContext {
     val app: App
     val logger: Logger
 
     val driver: AppiumDriver<MobileElement>
-        get() = app.driver ?: throw IllegalStateException("Драйвер не инициализирован")
+        get() = app.driver ?: throw IllegalStateException("Driver is not initialized")
 }

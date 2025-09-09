@@ -20,12 +20,12 @@ plugins {
 }
 
 group = "wba"
-version = "0.1.3"
+version = "0.0.1"
 
 node {
     version.set("20.19.0")
     download.set(true)
-    // (опционально) nodeProjectDir.set(file("appium-runner"))
+    // (optional) nodeProjectDir.set(file("appium-runner"))
 }
 
 repositories {
@@ -58,7 +58,7 @@ dependencies {
 }
 
 tasks.test {
-    // Читаем все возможные Gradle -P свойства (если переданы)
+    // Read all possible Gradle -P properties (if provided)
     val platformProp = (project.findProperty("platform") as String?).orEmpty()
     val appiumUrlProp = (project.findProperty("appium.url") as String?).orEmpty()
     val androidVersionProp = (project.findProperty("android.version") as String?).orEmpty()
@@ -79,7 +79,7 @@ tasks.test {
     val videoRecordingBitrateProp = (project.findProperty("video.recording.bitrate") as String?).orEmpty()
     val videoRecordingOutputDirProp = (project.findProperty("video.recording.output.dir") as String?).orEmpty()
 
-    // Настраиваем JUnit Platform
+    // Configure JUnit Platform
     useJUnitPlatform {
         if (tagProp.isNotBlank()) {
             val tags = tagProp.split(",")
@@ -96,7 +96,7 @@ tasks.test {
         failOnPassedAfterRetry.set(false)
     }
 
-    // Прокидываем в JVM-системные свойства все значения
+    // Pass all values to JVM system properties
     listOf(
         "platform" to platformProp,
         "appium.url" to appiumUrlProp,
@@ -143,25 +143,24 @@ tasks.register("checkFfmpeg") {
         if (result.exitValue != 0) {
             throw GradleException("""
                 FFmpeg is not installed or not found in PATH!
-                Для работы записи видео требуется ffmpeg. 
-                Установите его:
-                - Mac:     brew install ffmpeg
-                - Linux:   sudo apt install ffmpeg
-                - Windows: choco install ffmpeg или winget install ffmpeg
+                Video recording requires ffmpeg. Please install it:
+                - macOS:  brew install ffmpeg
+                - Linux:  sudo apt install ffmpeg
+                - Windows: choco install ffmpeg  or  winget install ffmpeg
             """.trimIndent())
         } else {
-            println("FFmpeg найден, запись видео будет работать.")
+            println("FFmpeg found, video recording will work.")
         }
     }
 }
 
 /* -------------------------------  Appium utils  ------------------------------- */
 
-// Базовый URL Appium с дефолтом
+// Base Appium URL with default value
 fun appiumBaseUrl(project: Project): String =
     (project.findProperty("appium.url") as String?).orEmpty().ifBlank { "http://localhost:4723/" }
 
-// Проверка «жив ли Appium» (GET /status)
+// Check if Appium is alive (GET /status)
 fun isAppiumRunning(project: Project): Boolean {
     val baseUrl = appiumBaseUrl(project)
     val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
@@ -180,7 +179,7 @@ fun isAppiumRunning(project: Project): Boolean {
     }
 }
 
-// Достаём путь к npm из node-gradle (без reflection)
+// Get path to npm from node-gradle (no reflection)
 fun resolvedNpmPath(project: org.gradle.api.Project): String {
     val nodeExt = project.extensions.getByType(NodeExtension::class.java)
     val nodeDir = nodeExt.resolvedNodeDir.get().asFile
@@ -238,7 +237,7 @@ tasks.register("ensureAppium") {
     }
 }
 
-// Флаги автозапуска/остановки Appium
+// Flags to auto-start/stop Appium
 val autoStartAppium: Boolean = (project.findProperty("appium.auto.start") as String?)?.toBoolean() ?: true
 val startAppiumLocalProp: Boolean = (project.findProperty("appium.local.start") as String?)?.toBoolean() ?: true
 val stopAppiumLocalProp: Boolean = (project.findProperty("appium.local.stop") as String?)?.toBoolean() ?: true
@@ -250,7 +249,7 @@ tasks.register<NpmTask>("nodeRunnerSetup") {
     args.set(listOf("run", "setup"))
 }
 
-// Локальный процесс Appium, если мы его поднимали сами
+// Local Appium process if we started it ourselves
 val appiumProcKey = "__appiumProc__"
 val appiumLogFileKey = "__appiumLogFile__"
 val appiumLogWriterKey = "__appiumLogWriter__"
@@ -272,7 +271,7 @@ tasks.register("startAppiumLocal") {
 
         fun isUp(): Boolean = isAppiumRunning(project)
 
-        // Подготовим файл логов
+        // Prepare log file
         val logsDir = File(buildDir, "appium-logs")
         logsDir.mkdirs()
         val logFile = File(logsDir, "appium-${System.currentTimeMillis()}.log")
@@ -284,7 +283,7 @@ tasks.register("startAppiumLocal") {
         pb.directory(nodeRunnerDir)
         pb.redirectErrorStream(true)
 
-        // Добавим node/bin в PATH, чтобы npm корректно нашёл node (особенно на *nix)
+        // Add node/bin to PATH so npm can find node (especially on *nix)
         val env = pb.environment()
         val pathKey = env.keys.firstOrNull { it.equals("Path", ignoreCase = true) } ?: "PATH"
         val nodeBin = File(npm).parentFile.absolutePath
@@ -293,7 +292,7 @@ tasks.register("startAppiumLocal") {
         val process = pb.start()
         project.extensions.extraProperties.set(appiumProcKey, process)
 
-        // Log поток, который зеркалит stdout процесса в файл и в консоль Gradle
+        // Log forwarder that mirrors process stdout to file and Gradle console
         val writer = BufferedWriter(FileWriter(logFile, true))
         val t = Thread({
             process.inputStream.bufferedReader().useLines { seq ->
@@ -311,7 +310,7 @@ tasks.register("startAppiumLocal") {
         project.extensions.extraProperties.set(appiumLogWriterKey, writer)
         project.extensions.extraProperties.set(appiumLogThreadKey, t)
 
-        // ждём готовности
+        // Wait for readiness
         val attempts = 60
         val delayMs = 1000L
         var ok = false
@@ -322,7 +321,7 @@ tasks.register("startAppiumLocal") {
         if (!ok) {
             println("Appium failed to start in time, stopping process…")
             try { process.destroy() } catch (_: Exception) {}
-            // Log закрыть writer
+            // Close writer
             try { writer.close() } catch (_: Exception) {}
             throw GradleException("Failed to start Appium at $statusUrl within ${(attempts * delayMs) / 1000}s")
         }
@@ -331,7 +330,7 @@ tasks.register("startAppiumLocal") {
 }
 
 tasks.register("stopAppiumLocal") {
-    // оставляем общий флаг — но сама задача теперь no-op, если мы ничего не поднимали
+    // Keep the global flag — but the task becomes a no-op if we didn't start anything
     onlyIf { autoStartAppium && stopAppiumLocalProp }
     doLast {
         val extra = project.extensions.extraProperties
@@ -341,13 +340,13 @@ tasks.register("stopAppiumLocal") {
         val hasLogFile  = extra.has(appiumLogFileKey)
         val hasLogThread= extra.has(appiumLogThreadKey)
 
-        // если мы не стартовали локально (нет ни процесса, ни лог-ресурсов) — ничего не делаем
+        // If we didn’t start locally (no process or log resources) — do nothing
         if (!hasProc && !hasWriter && !hasLogFile && !hasLogThread) {
             println("No locally started Appium process to stop.")
             return@doLast
         }
 
-        // закрыть логгер (если был)
+        // Close logger (if present)
         if (hasWriter) {
             (extra.get(appiumLogWriterKey) as? java.io.BufferedWriter)?.let {
                 try { it.flush() } catch (_: Exception) {}
@@ -356,12 +355,12 @@ tasks.register("stopAppiumLocal") {
             try { extra.set(appiumLogWriterKey, null) } catch (_: Exception) {}
         }
 
-        // почистить ссылку на поток зеркалирования (демон; отдельно останавливать не требуется)
+        // Clean the mirror thread reference (daemon; no need to stop explicitly)
         if (hasLogThread) {
             try { extra.set(appiumLogThreadKey, null) } catch (_: Exception) {}
         }
 
-        // остановить локально запущенный процесс (если был)
+        // Stop locally started process (if any)
         if (hasProc) {
             val proc = extra.get(appiumProcKey)
             if (proc is Process && proc.isAlive) {
@@ -377,7 +376,7 @@ tasks.register("stopAppiumLocal") {
             try { extra.set(appiumProcKey, null) } catch (_: Exception) {}
         }
 
-        // вывести путь к логу, если он есть, и очистить ключ
+        // Print log path (if present) and clear the key
         if (hasLogFile) {
             val lastLog = (extra.get(appiumLogFileKey) as? String).orEmpty()
             if (lastLog.isNotBlank()) println("Last Appium log file: $lastLog")
@@ -406,32 +405,32 @@ tasks.named<Test>("test") {
 
 /* ------------------------------  publishing  ------------------------------ */
 
-// Проверяем, выполняется ли задача публикации
+// Check whether a publish task is being executed
 val isPublishTask = gradle.startParameter.taskNames.any { it.contains("publish") }
 
-// Настраиваем публикацию только если выполняется задача публикации
-// или добавляем пустую конфигурацию, чтобы избежать ошибок при других задачах
+// Configure publishing only when a publish task is running,
+// or add an empty configuration to avoid errors for other tasks
 if (isPublishTask) {
-    // Эти проверки выполняются только при задачах публикации
-    val propUser = findProperty("wbaNexusUser") as String?
-    val propPassword = findProperty("wbaNexusPassword") as String?
-    val envUser = System.getenv("WBA_NEXUS_USER")
-    val envPassword = System.getenv("WBA_NEXUS_PASSWORD")
+    // These checks are executed only for publishing tasks
+    val propUser = findProperty("nexusUser") as String?
+    val propPassword = findProperty("nexusPassword") as String?
+    val envUser = System.getenv("NEXUS_USER")
+    val envPassword = System.getenv("NEXUS_PASSWORD")
 
-    val wbaNexusUser: String = propUser
+    val nexusUser: String = propUser
         ?: envUser
         ?: throw GradleException(
-            "Не задан wbaNexusUser: " +
-                    "укажите в gradle.properties (wbaNexusUser=…) или через -P, " +
-                    "или задайте env WBA_NEXUS_USER"
+            "nexusUser is not set: " +
+                    "specify it in gradle.properties (nexusUser=…) or via -P, " +
+                    "or set env NEXUS_USER"
         )
 
-    val wbaNexusPassword: String = propPassword
+    val nexusPassword: String = propPassword
         ?: envPassword
         ?: throw GradleException(
-            "Не задан wbaNexusPassword: " +
-                    "укажите в gradle.properties (wbaNexusPassword=…) или через -P, " +
-                    "или задайте env WBA_NEXUS_PASSWORD"
+            "nexusPassword is not set: " +
+                    "specify it in gradle.properties (nexusPassword=…) or via -P, " +
+                    "or set env NEXUS_PASSWORD"
         )
 
     publishing {
@@ -447,19 +446,19 @@ if (isPublishTask) {
         }
         repositories {
             maven {
-                name = "wba-maven"
-                url = uri("https://wba-nexus.wb.ru/repository/wba-maven/")
+                name = "maven"
+                url = uri("https://nexus.someone.repository/repository/maven/")
                 credentials {
-                    username = wbaNexusUser
-                    password = wbaNexusPassword
+                    username = nexusUser
+                    password = nexusPassword
                 }
             }
         }
     }
 } else {
-    // Пустая конфигурация публикации для непубликационных задач
+    // Empty publishing configuration for non-publishing tasks
     publishing {
-        // Пустые публикации и репозитории
+        // Empty publications and repositories
     }
 }
 

@@ -7,19 +7,19 @@ import org.openqa.selenium.support.ui.ExpectedConditions
 import org.openqa.selenium.support.ui.WebDriverWait
 
 /**
- * Класс-обёртка для работы с системными алертами (native alerts) на устройствах Android и iOS.
+ * Wrapper class for working with system (native) alerts on Android and iOS devices.
  *
- * Предоставляет методы для:
- * - Проверки наличия алерта;
- * - Принятия алерта (accept);
- * - Отклонения алерта (dismiss);
- * - Получения текста алерта.
+ * Provides methods for:
+ * - Checking if an alert is present;
+ * - Accepting an alert;
+ * - Dismissing an alert;
+ * - Retrieving alert text.
  *
- * Использует WebDriverWait с заданным таймаутом ожидания появления алерта.
+ * Uses WebDriverWait with a specified timeout for waiting for alerts.
  *
- * @property driver AppiumDriver, управляющий мобильным устройством.
- * @property timeoutExpectation Время ожидания алерта в секундах.
- * @property pollingInterval Частота опроса элемента в миллисекундах.
+ * @property driver AppiumDriver that controls the mobile device.
+ * @property timeoutExpectation Timeout in seconds for waiting for an alert.
+ * @property pollingInterval Polling interval in milliseconds.
  */
 class AlertHandler(
     private val driver: AppiumDriver<MobileElement>,
@@ -28,9 +28,9 @@ class AlertHandler(
 ) {
 
     /**
-     * Проверяет наличие отображаемого системного алерта.
+     * Checks if a system alert is currently displayed.
      *
-     * @return true, если алерт найден за указанный [timeout]; false — если нет или возникла ошибка.
+     * @return true if an alert is found within [timeout]; false otherwise or if an error occurs.
      */
     fun isAlertPresent(): Boolean {
         return try {
@@ -45,11 +45,11 @@ class AlertHandler(
     }
 
     /**
-     * Принимает (нажимает Accept) текущий отображаемый системный алерт.
+     * Accepts the currently displayed system alert.
      *
-     * Используется, например, для разрешения доступа к геолокации, камере и т. п.
+     * Used, for example, to allow access to geolocation, camera, etc.
      *
-     * @throws NoAlertPresentException если алерт не отображается в течение [timeout] секунд.
+     * @throws NoAlertPresentException if the alert is not displayed within [timeout] seconds.
      */
     fun accept(): Unit {
         val wait = WebDriverWait(driver, timeoutExpectation, pollingInterval)
@@ -58,11 +58,11 @@ class AlertHandler(
     }
 
     /**
-     * Отклоняет (нажимает Cancel) текущий отображаемый системный алерт.
+     * Dismisses the currently displayed system alert.
      *
-     * Может использоваться, если необходимо отказаться от разрешений.
+     * Can be used if the user needs to deny permissions.
      *
-     * @throws NoAlertPresentException если алерт не отображается в течение [timeout] секунд.
+     * @throws NoAlertPresentException if the alert is not displayed within [timeout] seconds.
      */
     fun dismiss(): Unit {
         val wait = WebDriverWait(driver, timeoutExpectation, pollingInterval)
@@ -71,10 +71,10 @@ class AlertHandler(
     }
 
     /**
-     * Возвращает текст текущего отображаемого системного алерта.
+     * Returns the text of the currently displayed system alert.
      *
-     * @return Текст, отображаемый в теле алерта (например, "Разрешить приложению отслеживать Ваши действия")
-     * @throws NoAlertPresentException если алерт не отображается в течение [timeout] секунд.
+     * @return The text displayed in the alert body (e.g., "Allow the app to track your activity")
+     * @throws NoAlertPresentException if the alert is not displayed within [timeout] seconds.
      */
     fun getText(): String {
         val wait = WebDriverWait(driver, timeoutExpectation, pollingInterval)

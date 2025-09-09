@@ -16,11 +16,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Base64
 
 /**
- * Универсальный класс для записи видео во время выполнения мобильных тестов.
+ * Universal class for recording video during mobile test execution.
  *
- * Позволяет записывать видео выполнения тестов на мобильных устройствах Android и iOS.
- * Поддерживает настройку размера, качества и битрейта видео через конфигурационные параметры.
- * Записанные видео сохраняются в указанную директорию и могут быть прикреплены к отчету Allure.
+ * Allows recording of test execution videos on Android and iOS devices.
+ * Supports configuring video size, quality, and bitrate via configuration parameters.
+ * Recorded videos are saved to the specified directory and can be attached to the Allure report.
  */
 object VideoRecorder {
     private val logger = LoggerFactory.getLogger(VideoRecorder::class.java)
@@ -29,30 +29,30 @@ object VideoRecorder {
     private var isRecording = false
 
     /**
-     * Запускает запись видео для текущего теста.
+     * Starts video recording for the current test.
      *
-     * Метод инициализирует запись видео с использованием соответствующих команд Appium
-     * в зависимости от платформы (Android или iOS). Создает директорию для сохранения видео,
-     * если она не существует, и генерирует уникальное имя файла на основе имени теста и временной метки.
+     * Initializes recording using Appium commands depending on the platform (Android or iOS).
+     * Creates a directory for saving the video if it does not exist,
+     * and generates a unique file name based on the test name and timestamp.
      *
-     * @param driver Экземпляр AppiumDriver для взаимодействия с мобильным устройством
-     * @param testName Имя теста, которое будет использовано в названии файла видеозаписи
-     * @return True, если запись успешно запущена, иначе false
+     * @param driver Instance of AppiumDriver to interact with the mobile device
+     * @param testName Name of the test to be used in the video file name
+     * @return True if recording started successfully, false otherwise
      */
     fun startRecording(driver: AppiumDriver<MobileElement>, testName: String): Boolean {
         if (!AppConfig.isVideoRecordingEnabled()) {
             val platform = AppConfig.getPlatform()
-            logger.info("Запись видео отключена для платформы $platform. Для включения используйте параметр ${platform.name.lowercase()}.video.recording.enabled=true")
+            logger.info("Video recording is disabled for platform $platform. To enable, use parameter ${platform.name.lowercase()}.video.recording.enabled=true")
             return false
         }
 
         if (isRecording) {
-            logger.warn("Запись видео уже выполняется. Игнорируем запрос на запуск.")
+            logger.warn("Video recording is already in progress. Ignoring start request.")
             return false
         }
 
         try {
-            logger.info("Запуск записи видео для теста: $testName")
+            logger.info("Starting video recording for test: $testName")
             val outputDir = File(AppConfig.getVideoRecordingOutputDir())
             if (!outputDir.exists()) outputDir.mkdirs()
 
@@ -62,7 +62,7 @@ object VideoRecorder {
 
             when (AppConfig.getPlatform()) {
                 Platform.ANDROID -> {
-                    // Используем mobile:startMediaProjectionRecording для Android
+                    // Use mobile:startMediaProjectionRecording for Android
                     val androidOptions = mapOf(
                         "videoSize" to AppConfig.getVideoRecordingSize(),
                         "videoQuality" to AppConfig.getVideoRecordingQuality().toString(),
@@ -72,23 +72,23 @@ object VideoRecorder {
                     )
                     driver.executeScript("mobile:startMediaProjectionRecording", androidOptions)
                     logger.info(
-                        "Запись видео на Android начата с размером: ${AppConfig.getVideoRecordingSize()}, " +
-                                "качеством: ${AppConfig.getVideoRecordingQuality()}, " +
-                                "битрейтом: ${AppConfig.getVideoRecordingBitrate() / 1000} Kbps"
+                        "Video recording on Android started with size: ${AppConfig.getVideoRecordingSize()}, " +
+                                "quality: ${AppConfig.getVideoRecordingQuality()}, " +
+                                "bitrate: ${AppConfig.getVideoRecordingBitrate() / 1000} Kbps"
                     )
                 }
                 Platform.IOS -> {
-                    // Используем startRecordingScreen для iOS через интерфейс CanRecordScreen
+                    // Use startRecordingScreen for iOS via CanRecordScreen interface
                     if (driver is CanRecordScreen) {
                         driver.startRecordingScreen()
-                        logger.info("Запись видео на iOS начата через startRecordingScreen()")
+                        logger.info("Video recording on iOS started via startRecordingScreen()")
                     } else {
-                        logger.error("Драйвер не поддерживает запись экрана для iOS (не реализует CanRecordScreen)")
+                        logger.error("Driver does not support screen recording for iOS (does not implement CanRecordScreen)")
                         return false
                     }
                 }
                 else -> {
-                    logger.error("Запись видео не поддерживается для платформы: ${AppConfig.getPlatform()}")
+                    logger.error("Video recording is not supported for platform: ${AppConfig.getPlatform()}")
                     return false
                 }
             }
@@ -96,22 +96,23 @@ object VideoRecorder {
             isRecording = true
             return true
         } catch (e: Exception) {
-            logger.error("Не удалось начать запись видео: ${e.message}", e)
+            logger.error("Failed to start video recording: ${e.message}", e)
             return false
         }
     }
 
     /**
-     * Останавливает текущую запись видео и прикрепляет её к отчёту Allure.
+     * Stops the current video recording and attaches it to the Allure report.
      *
-     * Метод останавливает запись видео, декодирует полученный Base64-закодированный контент,
-     * сохраняет видеофайл в указанную директорию и, если требуется, прикрепляет видео к отчету Allure.
-     * Имя файла формируется на основе имени теста и временной метки, сгенерированной при старте записи.
+     * Stops the recording, decodes the Base64-encoded content,
+     * saves the video file to the specified directory,
+     * and attaches it to the Allure report if required.
+     * The file name is based on the test name and timestamp generated at start.
      *
-     * @param driver Экземпляр AppiumDriver для взаимодействия с мобильным устройством
-     * @param testName Имя теста, используется для логирования
-     * @param attachToAllure Флаг, указывающий, нужно ли прикреплять видео к отчету Allure (по умолчанию true)
-     * @return True, если запись успешно остановлена и сохранена, иначе false
+     * @param driver Instance of AppiumDriver to interact with the mobile device
+     * @param testName Name of the test (used for logging)
+     * @param attachToAllure Flag indicating whether to attach the video to the Allure report (default true)
+     * @return True if recording stopped and saved successfully, false otherwise
      */
     fun stopRecording(
         driver: AppiumDriver<MobileElement>,
@@ -119,12 +120,12 @@ object VideoRecorder {
         attachToAllure: Boolean = true
     ): Boolean {
         if (!isRecording) {
-            logger.warn("Запись видео не была включена в настройках.")
+            logger.warn("Video recording was not enabled in configuration.")
             return false
         }
 
         try {
-            logger.info("Остановка записи видео для теста: $testName")
+            logger.info("Stopping video recording for test: $testName")
 
             val base64Video: String = when (AppConfig.getPlatform()) {
                 Platform.ANDROID -> {
@@ -134,13 +135,13 @@ object VideoRecorder {
                     if (driver is CanRecordScreen) {
                         driver.stopRecordingScreen()
                     } else {
-                        logger.error("Драйвер не поддерживает запись экрана для iOS (не реализует CanRecordScreen)")
+                        logger.error("Driver does not support screen recording for iOS (does not implement CanRecordScreen)")
                         isRecording = false
                         return false
                     }
                 }
                 else -> {
-                    logger.error("Остановка записи видео не поддерживается для платформы: ${AppConfig.getPlatform()}")
+                    logger.error("Stopping video recording is not supported for platform: ${AppConfig.getPlatform()}")
                     isRecording = false
                     return false
                 }
@@ -148,64 +149,60 @@ object VideoRecorder {
 
             isRecording = false
 
-            // Декодируем и сохраняем видео
+            // Decode and save video
             val videoBytes = Base64.getDecoder().decode(base64Video)
             val videoPath = currentVideoPath ?: "${AppConfig.getVideoRecordingOutputDir()}/unknown_test.mp4"
             Files.write(Paths.get(videoPath), videoBytes)
-            logger.info("Видео сохранено в: $videoPath")
+            logger.info("Video saved at: $videoPath")
 
-            // Прикрепляем к отчету Allure, если запрошено
+            // Attach to Allure report if requested
             if (attachToAllure) {
                 Allure.addAttachment(
-                    "Запись теста",
+                    "Test Recording",
                     "video/mp4",
                     ByteArrayInputStream(videoBytes),
                     "mp4"
                 )
-                logger.info("Видео прикреплено к отчету Allure")
+                logger.info("Video attached to Allure report")
             }
 
             return true
         } catch (e: Exception) {
-            logger.error("Не удалось остановить запись видео: ${e.message}", e)
+            logger.error("Failed to stop video recording: ${e.message}", e)
             isRecording = false
             return false
         }
     }
 
     /**
-     * Проверяет, включена ли запись видео в текущей конфигурации.
+     * Checks if video recording is enabled in the current configuration.
      *
-     * Метод обращается к AppConfig для получения значения параметра для текущей платформы.
-     * Для Android и iOS используются платформо-специфичные параметры:
+     * Delegates to AppConfig to fetch the parameter for the current platform.
+     * For Android and iOS, platform-specific parameters are used:
      * - android.video.recording.enabled
      * - ios.video.recording.enabled
      *
-     * Для других платформ запись видео не поддерживается и всегда возвращается false.
+     * For other platforms, video recording is not supported and always returns false.
      *
-     * @return True, если запись видео включена в конфигурации для текущей платформы, иначе false
+     * @return True if video recording is enabled in configuration, false otherwise
      */
     fun isEnabled(): Boolean = AppConfig.isVideoRecordingEnabled()
 
     /**
-     * Проверяет, настроен ли размер видео с нестандартным значением.
+     * Checks if a non-default video size is configured.
      *
-     * Метод проверяет, отличается ли текущее значение параметра video.recording.size
-     * от стандартного значения "1280x720". Используется для определения,
-     * были ли применены пользовательские настройки размера видео.
+     * Verifies whether the current value of video.recording.size differs from the default "1280x720".
      *
-     * @return True, если размер видео отличается от стандартного значения, иначе false
+     * @return True if a custom video size is configured, false otherwise
      */
     fun isVideoSizeConfigured(): Boolean = AppConfig.getVideoRecordingSize() != "1280x720"
 
     /**
-     * Проверяет, настроено ли качество видео с нестандартным значением.
+     * Checks if a non-default video quality is configured.
      *
-     * Метод проверяет, отличается ли текущее значение параметра video.recording.quality
-     * от стандартного значения 70. Используется для определения,
-     * были ли применены пользовательские настройки качества видео.
+     * Verifies whether the current value of video.recording.quality differs from the default 70.
      *
-     * @return True, если качество видео отличается от стандартного значения, иначе false
+     * @return True if a custom video quality is configured, false otherwise
      */
     fun isVideoQualityConfigured(): Boolean = AppConfig.getVideoRecordingQuality() != 70
 }

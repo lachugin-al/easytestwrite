@@ -4,16 +4,15 @@ import io.qameta.allure.Allure.ThrowableRunnable
 import io.qameta.allure.Allure.step
 
 /**
- * Контекст выполнения всего теста.
+ * Execution context of the entire test.
  *
- * [TestingContext] представляет собой верхнеуровневую структуру теста,
- * объединяющую последовательность логических шагов ([StepContext]),
- * с автоматической интеграцией каждого шага в Allure-отчёт.
+ * [TestingContext] is a top-level test structure that combines a sequence of logical
+ * steps ([StepContext]) with automatic integration of each step into the Allure report.
  *
- * Каждый вызов `"Название шага" { ... }` создаёт новый [StepContext],
- * который в свою очередь может включать множество проверок ([ExpectationContext]).
+ * Each call `"Step name" { ... }` creates a new [StepContext], which in turn can include
+ * multiple checks ([ExpectationContext]).
  *
- * @property driver Объект драйвера (AppiumDriver для мобильных платформ или аналогичный объект для Web).
+ * @property driver Driver object (AppiumDriver for mobile platforms or a similar object for Web).
  *
  * @see BaseContext
  * @see StepContext
@@ -21,26 +20,26 @@ import io.qameta.allure.Allure.step
 @TestingDslMarker
 class TestingContext(override val driver: Any) : BaseContext() {
 
-    /** Счётчик шагов внутри теста для отображения в Allure-отчёте. */
+    /** Step counter within the test for displaying in the Allure report. */
     private var currentStep: Int = 1
 
     /**
-     * Создаёт новый тестовый шаг с привязкой к Allure-отчёту.
+     * Creates a new test step with binding to the Allure report.
      *
-     * Каждый шаг обрабатывается в рамках нового экземпляра [StepContext].
+     * Each step is handled within a new instance of [StepContext].
      *
-     * Пример использования:
+     * Usage example:
      * ```
-     * "Открыть экран авторизации" {
+     * "Open Authorization screen" {
      *     clickLoginButton()
-     *     "Проверка отображения поля ввода" {
+     *     "Verify input field is visible" {
      *         checkInputFieldVisible()
      *     }
      * }
      * ```
      *
-     * @receiver Название тестового шага.
-     * @param stepAction Лямбда с действиями и проверками внутри шага.
+     * @receiver Step title.
+     * @param stepAction Lambda with actions and assertions inside the step.
      */
     operator fun String.invoke(
         screenshotOnSuccess: Boolean = true,
@@ -49,15 +48,15 @@ class TestingContext(override val driver: Any) : BaseContext() {
         screenshotQuality: Int = 100,
         stepAction: StepContext.() -> Unit
     ) {
-        val title = "Шаг №$currentStep. $this"
+        val title = "Step #$currentStep. $this"
         step(title, ThrowableRunnable {
             val ctx = StepContext(driver)
             runCatching { ctx.stepAction() }
                 .onSuccess {
-                    if (screenshotOnSuccess) ctx.takeScreenshot("$title — успех", screenshotScale, screenshotQuality)
+                    if (screenshotOnSuccess) ctx.takeScreenshot("$title — success", screenshotScale, screenshotQuality)
                 }
                 .onFailure { t ->
-                    if (screenshotOnFailure) ctx.takeScreenshot("$title — ошибка", screenshotScale, screenshotQuality)
+                    if (screenshotOnFailure) ctx.takeScreenshot("$title — error", screenshotScale, screenshotQuality)
                     throw t
                 }
         })

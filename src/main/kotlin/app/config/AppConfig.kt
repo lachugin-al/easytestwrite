@@ -9,31 +9,31 @@ import java.net.URL
 import java.util.Properties
 
 /**
- * Конфигурационный класс для тестового фреймворка.
+ * Configuration class for the test framework.
  *
- * Загружает настройки из системных свойств JVM (–D), если они не передано то из файла `config.properties` и предоставляет типизированный доступ
- * к параметрам запуска тестов, включая:
- * - Платформу тестирования (Android, iOS, Web)
- * - Настройки подключения к Appium-серверу
- * - Данные об устройствах и приложениях
- * - Параметры запуска Playwright для веб-тестов
+ * Loads settings from JVM system properties (–D). If not provided, loads them from `config.properties`.
+ * Provides typed access to test run parameters, including:
+ * - Target platform (Android, iOS, Web)
+ * - Appium server connection settings
+ * - Device and application details
+ * - Playwright configuration for web tests
  *
- * Конфигурация загружается при первом обращении к объекту [AppConfig].
+ * Configuration is loaded on the first access to [AppConfig].
  *
- * @throws IllegalArgumentException если файл `config.properties` не найден
+ * @throws IllegalArgumentException if the `config.properties` file is not found
  */
 object AppConfig {
     private val logger: Logger = LoggerFactory.getLogger(AppConfig::class.java)
 
-    // Загрузчик .env
+    // .env loader
     private val dotenv: Dotenv? = runCatching {
         Dotenv.configure()
-            .ignoreIfMissing()     // если .env нет — ок
-            .ignoreIfMalformed()   // пропускаем кривые строки
+            .ignoreIfMissing()     // if .env is missing — it’s fine
+            .ignoreIfMalformed()   // skip malformed lines
             .load()
     }.getOrNull()
 
-    // Преобразуем "appium.url" -> "APPIUM_URL" и ищем в .env
+    // Transform "appium.url" -> "APPIUM_URL" and look it up in .env
     private fun envGet(key: String): String? {
         val k1 = key.uppercase().replace('.', '_')
         val k2 = key
@@ -49,17 +49,17 @@ object AppConfig {
                 .contextClassLoader
                 .getResourceAsStream("config.properties")
                 ?: throw IllegalArgumentException(
-                    "Файл config.properties не найден в директории test/resources"
+                    "File config.properties not found in test/resources directory"
                 )
             load(resourceStream)
-            logger.info("Конфигурация успешно загружена из config.properties")
+            logger.info("Configuration successfully loaded from config.properties")
         } catch (e: Exception) {
-            logger.error("Ошибка загрузки config.properties: ${e.message}", e)
+            logger.error("Failed to load config.properties: ${e.message}", e)
             throw e
         }
     }
 
-    // Приоритеты -> System.getProperty > .env/ENV > config.properties > default
+    // Priority -> System.getProperty > .env/ENV > config.properties > default
     private fun prop(name: String, default: String): String =
         System.getProperty(name)
             ?: envGet(name)
@@ -71,27 +71,27 @@ object AppConfig {
             ?: properties.getProperty(name)?.toBooleanStrictOrNull()
             ?: default
 
-    // URL Appium
+    // Appium URL
     private val appiumUrl: URL = URI(prop("appium.url", "http://localhost:4723/")).toURL()
 
-    // Платформа
+    // Target platform
     private val platform: Platform = runCatching {
         Platform.valueOf(prop("platform", "ANDROID"))
     }.getOrElse { Platform.ANDROID }
 
-    // Версии ОС
+    // OS versions
     private val androidVersion: String = prop("android.version", "16")
     private val iosVersion: String = prop("ios.version", "18.4")
 
-    // Имена устройств
+    // Device names
     private val androidDeviceName: String = prop("android.device.name", "WBA16")
     private val iosDeviceName: String = prop("ios.device.name", "iPhone 16 Plus")
 
-    // Пути к приложениям
+    // Application paths
     private val androidAppName: String = prop("android.app.name", "android.apk")
     private val iosAppName: String = prop("ios.app.name", "ios.app")
 
-    // Активити и пакет Android
+    // Android activity and package
     private val appActivity: String = prop(
         "app.activity",
         "MainActivity"
@@ -105,14 +105,14 @@ object AppConfig {
         "MOBILEAPP.DEV"
     )
 
-    // iOS alerts configuration - оба значения false по умолчанию
+    // iOS alerts configuration - both default to false
     private val iosAutoAcceptAlerts: Boolean = propBoolean("ios.auto_accept_alerts", false)
     private val iosAutoDismissAlerts: Boolean = propBoolean("ios.auto_dismiss_alerts", false)
 
     // Android headless mode
     private val androidHeadlessMode: Boolean = propBoolean("android.headless.mode", true)
 
-    // Настройки записи видео
+    // Video recording settings
     private val androidVideoRecordingEnabled: Boolean = propBoolean("android.video.recording.enabled", false)
     private val iosVideoRecordingEnabled: Boolean = propBoolean("ios.video.recording.enabled", false)
     private val videoRecordingSize: String = prop("video.recording.size", "640x360")
@@ -120,16 +120,16 @@ object AppConfig {
     private val videoRecordingBitrate: Int = prop("video.recording.bitrate", "100000").toInt()
     private val videoRecordingOutputDir: String = prop("video.recording.output.dir", "build/videos")
 
-    // Настройки автозапуска и автовыключения эмулятора/симулятора
+    // Emulator/simulator auto-start and auto-shutdown
     private val emulatorAutoStart: Boolean = propBoolean("emulator.auto.start", true)
     private val emulatorAutoShutdown: Boolean = propBoolean("emulator.auto.shutdown", true)
 
-    // Масштаб скриншота, применяемый при подготовке артефактов.
+    // Screenshot scaling applied when preparing artifacts.
     private val screenshotScale: Double =
         prop("screenshot.scale", "0.5").toDoubleOrNull()
             ?.coerceIn(0.1, 1.0) ?: 0.5
 
-    // Качество JPEG при сохранении скриншотов.
+    // JPEG quality when saving screenshots.
     private val screenshotQuality: Int =
         prop("screenshot.quality", "100").toIntOrNull()
             ?.coerceIn(1, 100) ?: 100
@@ -137,75 +137,75 @@ object AppConfig {
     // API
 
     /**
-     * @return true, если текущая платформа — Android.
+     * @return true if the current platform is Android.
      */
     fun isAndroid(): Boolean = platform == Platform.ANDROID
 
     /**
-     * @return true, если текущая платформа — iOS.
+     * @return true if the current platform is iOS.
      */
     fun isiOS(): Boolean = platform == Platform.IOS
 
     /**
-     * @return Текущая целевая платформа тестов.
+     * @return The current target platform for tests.
      */
     fun getPlatform(): Platform = platform
 
     /**
-     * @return URL Appium-сервера.
+     * @return The Appium server URL.
      */
     fun getAppiumUrl(): URL = appiumUrl
 
     /**
-     * @return Версия Android для тестового окружения.
+     * @return The Android version for the test environment.
      */
     fun getAndroidVersion(): String = androidVersion
 
     /**
-     * @return Версия iOS для тестового окружения.
+     * @return The iOS version for the test environment.
      */
     fun getIosVersion(): String = iosVersion
 
     /**
-     * @return Имя устройства Android, на котором будут выполняться тесты.
+     * @return The name of the Android device used for tests.
      */
     fun getAndroidDeviceName(): String = androidDeviceName
 
     /**
-     * @return Имя устройства iOS, на котором будут выполняться тесты.
+     * @return The name of the iOS device used for tests.
      */
     fun getIosDeviceName(): String = iosDeviceName
 
     /**
-     * @return Имя активности Android-приложения для запуска.
+     * @return The main activity of the Android app to launch.
      */
     fun getAppActivity(): String = appActivity
 
     /**
-     * @return Имя пакета Android-приложения.
+     * @return The Android app package name.
      */
     fun getAppPackage(): String = appPackage
 
     /**
-     * @return Bundle ID для iOS-приложения.
+     * @return The bundle ID of the iOS app.
      */
     fun getBundleId(): String = bundleId
 
     /**
-     * @return Значение для IOSMobileCapabilityType.AUTO_ACCEPT_ALERTS.
-     * По умолчанию false, если не указано в конфигурации.
+     * @return The value for IOSMobileCapabilityType.AUTO_ACCEPT_ALERTS.
+     * Defaults to false if not specified in the configuration.
      */
     fun getIosAutoAcceptAlerts(): Boolean = iosAutoAcceptAlerts
 
     /**
-     * @return Значение для IOSMobileCapabilityType.AUTO_DISMISS_ALERTS.
-     * По умолчанию false, если не указано в конфигурации.
+     * @return The value for IOSMobileCapabilityType.AUTO_DISMISS_ALERTS.
+     * Defaults to false if not specified in the configuration.
      */
     fun getIosAutoDismissAlerts(): Boolean = iosAutoDismissAlerts
 
     /**
-     * @return Имя APK или .app файла в зависимости от выбранной платформы.
-     * Для Web-платформы возвращается пустая строка.
+     * @return The name of the APK or .app file depending on the platform.
+     * Returns an empty string for Web.
      */
     fun getAppName(): String {
         return when (platform) {
@@ -215,20 +215,20 @@ object AppConfig {
     }
 
     /**
-     * @return true, если Android эмулятор запускается в headless-режиме (без окна).
+     * @return true if the Android emulator runs in headless mode (without UI).
      */
     fun isAndroidHeadlessMode(): Boolean = androidHeadlessMode
 
     /**
-     * Проверяет, включена ли запись видео для текущей платформы.
+     * Checks if video recording is enabled for the current platform.
      *
-     * Для Android и iOS используются платформо-специфичные параметры:
+     * For Android and iOS, platform-specific parameters are used:
      * - android.video.recording.enabled
      * - ios.video.recording.enabled
      *
-     * Для других платформ запись видео не поддерживается и всегда возвращается false.
+     * For other platforms, video recording is not supported and always returns false.
      *
-     * @return true, если запись видео включена для текущей платформы.
+     * @return true if video recording is enabled for the current platform.
      */
     fun isVideoRecordingEnabled(): Boolean = when (platform) {
         Platform.ANDROID -> androidVideoRecordingEnabled
@@ -237,57 +237,56 @@ object AppConfig {
     }
 
     /**
-     * @return Размер записываемого видео (например, "1280x720").
+     * @return The video recording resolution (e.g., "1280x720").
      */
     fun getVideoRecordingSize(): String = videoRecordingSize
 
     /**
-     * @return Качество записываемого видео (0-100).
+     * @return The video recording quality (0-100).
      */
     fun getVideoRecordingQuality(): Int = videoRecordingQuality
 
     /**
-     * @return Директория для сохранения видеозаписей.
+     * @return The output directory for video recordings.
      */
     fun getVideoRecordingOutputDir(): String = videoRecordingOutputDir
 
     /**
-     * @return Битрейт для записи видео (в битах в секунду).
+     * @return The video recording bitrate (bits per second).
      */
     fun getVideoRecordingBitrate(): Int = videoRecordingBitrate
 
     /**
-     * Проверяет, включен ли автоматический запуск эмулятора/симулятора.
+     * Checks if automatic start of emulator/simulator is enabled.
      *
-     * @return true, если автозапуск эмулятора/симулятора включен.
+     * @return true if auto-start is enabled.
      */
     fun isEmulatorAutoStartEnabled(): Boolean = emulatorAutoStart
 
     /**
-     * Проверяет, включено ли автоматическое выключение эмулятора/симулятора.
+     * Checks if automatic shutdown of emulator/simulator is enabled.
      *
-     * @return true, если автовыключение эмулятора/симулятора включено.
+     * @return true if auto-shutdown is enabled.
      */
     fun isEmulatorAutoShutdownEnabled(): Boolean = emulatorAutoShutdown
 
     /**
-     * Возвращает актуальный масштаб скриншотов.
+     * Returns the effective screenshot scale.
      *
-     * Значение уже приведено к диапазону **0.1..1.0**.
-     * По умолчанию — **0.5**, если не задано в конфигурации.
+     * Value is already clamped to **0.1..1.0**.
+     * Defaults to **0.5** if not specified in the configuration.
      *
-     * @return масштаб скриншотов (Double)
+     * @return screenshot scale (Double)
      */
     fun getScreenshotScale(): Double = screenshotScale
 
-
     /**
-     * Возвращает качество JPEG для скриншотов.
+     * Returns the JPEG quality for screenshots.
      *
-     * Значение уже приведено к диапазону **1..100**.
-     * По умолчанию — **100**, если не задано в конфигурации.
+     * Value is already clamped to **1..100**.
+     * Defaults to **100** if not specified in the configuration.
      *
-     * @return качество JPEG (Int)
+     * @return JPEG quality (Int)
      */
     fun getScreenshotQuality(): Int = screenshotQuality
 }

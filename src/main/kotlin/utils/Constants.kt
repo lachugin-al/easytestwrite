@@ -3,66 +3,66 @@ package utils
 import controller.mobile.interaction.ScrollDirection
 
 /**
- * Константы для настройки таймаутов, скроллинга и поиска элементов в тестах.
+ * Constants for configuring timeouts, scrolling, and element searching in tests.
  */
 
 /**
- * Количество секунд ожидания перед началом поиска элемента.
+ * Number of seconds to wait before starting element search.
  *
- * Используется для искусственной задержки перед стартом проверки.
+ * Used as an artificial delay before starting verification.
  */
 const val DEFAULT_TIMEOUT_BEFORE_EXPECTATION: Long = 0
 
 /**
- * Максимальное количество секунд, в течение которых осуществляется поиск элемента.
+ * Maximum number of seconds during which element search is performed.
  *
- * После превышения таймаута будет выброшено исключение [NoSuchElementException].
+ * After exceeding the timeout, a [NoSuchElementException] will be thrown.
  */
 const val DEFAULT_TIMEOUT_EXPECTATION: Long = 10
 
 /**
- * Максимальное количество секунд, в течение которых осуществляется проверка.
+ * Maximum number of seconds during which event verification is performed.
  *
- * После превышения таймаута будет выброшено исключение [Exception].
+ * After exceeding the timeout, an [Exception] will be thrown.
  */
 const val DEFAULT_TIMEOUT_EVENT_CHECK_EXPECTATION: Long = 15
 
 /**
- * Коэффициент для расчёта отступов от края экрана при скроллинге.
+ * Coefficient for calculating offsets from the edge of the screen when scrolling.
  *
- * Значение определяет, на какую часть экрана будет рассчитан свайп при прокрутке.
+ * The value defines what portion of the screen will be covered by the swipe during scrolling.
  */
 const val DEFAULT_SCROLL_COEFFICIENT = 0.75
 
 /**
- * Коэффициент для расчёта отступов от размеров элемента при выполнении свайпа.
+ * Coefficient for calculating offsets from the element size when performing a swipe.
  *
- * Используется для более точного свайпа по небольшим элементам.
+ * Used for more precise swipes on smaller elements.
  */
 const val DEFAULT_SWIPE_COEFFICIENT = 0.95
 
 /**
- * Количество допустимых скроллирований страницы при попытке найти элемент.
+ * Number of allowed scroll attempts when trying to find an element.
  *
- * Значение 0 означает, что поиск производится только на текущем экране без скроллинга.
+ * A value of 0 means the search is performed only on the current screen without scrolling.
  */
 const val DEFAULT_SCROLL_COUNT = 0
 
 /**
- * Доля экрана, которую пройдёт свайп за одну операцию скроллинга.
+ * Portion of the screen that will be scrolled in one swipe operation.
  *
- * Значение 1.0 означает полное прокручивание одной страницы.
+ * A value of 1.0 means a full page scroll.
  */
 const val DEFAULT_SCROLL_CAPACITY = 1.0
 
 /**
- * Частота опроса состояния элемента при ожидании его появления (в миллисекундах).
+ * Polling interval for checking element state while waiting for it to appear (in milliseconds).
  */
 const val DEFAULT_POLLING_INTERVAL = 1000L
 
 /**
- * Направление скроллинга по умолчанию при поиске элементов.
+ * Default scroll direction when searching for elements.
  *
- * Используется при автоскроллинге, если элемент не найден на первом экране.
+ * Used for auto-scrolling if the element is not found on the first screen.
  */
 val DEFAULT_SCROLL_DIRECTION = ScrollDirection.Down

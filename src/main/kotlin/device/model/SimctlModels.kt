@@ -3,19 +3,19 @@ package device.model
 import kotlinx.serialization.Serializable
 
 /**
- * Модель ответа при запросе списка симуляторов через `xcrun simctl list --json`.
+ * Response model for querying the list of simulators via `xcrun simctl list --json`.
  *
- * @property devices Карта, где ключ — название версии платформы, значение — список симуляторов.
+ * @property devices A map where the key is the platform version name, and the value is the list of simulators.
  */
 @Serializable
 data class SimulatorsResponse(val devices: Map<String, List<Simulator>>)
 
 /**
- * Модель симулятора iOS.
+ * iOS simulator model.
  *
- * @property udid Уникальный идентификатор устройства.
- * @property name Имя симулятора (например, "iPhone 15 Pro").
- * @property state Текущее состояние устройства (например, "Booted", "Shutdown").
+ * @property udid Unique device identifier.
+ * @property name Name of the simulator (e.g., "iPhone 15 Pro").
+ * @property state Current device state (e.g., "Booted", "Shutdown").
  */
 @Serializable
 data class Simulator(val udid: String, val name: String, val state: String)

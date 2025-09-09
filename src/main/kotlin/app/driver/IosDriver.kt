@@ -17,81 +17,82 @@ import java.io.IOException
 import java.util.HashMap
 
 /**
- * Обёртка для инициализации Appium-драйвера для платформы iOS.
+ * Wrapper for initializing the Appium driver for the iOS platform.
  *
- * Управляет процессом подключения к Appium-серверу и обработкой ошибок при запуске сессии.
+ * Manages the process of connecting to the Appium server and handling errors when starting the session.
  *
- * @property autoLaunch Флаг, управляющий автоматическим запуском приложения после старта сессии.
+ * @property autoLaunch Flag that controls automatic app launch after the session starts.
  */
 class IosDriver(private val autoLaunch: Boolean) {
 
     private val logger: Logger = LoggerFactory.getLogger(IosDriver::class.java)
 
     /**
-     * Создаёт экземпляр [io.appium.java_client.AppiumDriver] для iOS-платформы.
+     * Creates an instance of [io.appium.java_client.AppiumDriver] for the iOS platform.
      *
-     * В случае ошибок создания сессии выполняет повторные попытки в количестве, заданном через [retryCount].
+     * In case of session creation errors, retries the initialization for the number of attempts
+     * defined by [retryCount].
      *
-     * @param retryCount Количество оставшихся попыток инициализации драйвера.
-     * @return Экземпляр [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]> для работы с iOS.
-     * @throws RuntimeException в случае исчерпания всех попыток или других ошибок при инициализации.
+     * @param retryCount Number of remaining initialization attempts.
+     * @return Instance of [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]> for iOS.
+     * @throws RuntimeException if all attempts are exhausted or other initialization errors occur.
      */
     fun getIOSDriver(retryCount: Int): AppiumDriver<MobileElement> {
         return try {
-            logger.info("Инициализация iOS-драйвера (попыток осталось: $retryCount)")
+            logger.info("Initializing iOS driver (attempts left: $retryCount)")
             IOSDriver(AppConfig.getAppiumUrl(), getCapabilities())
         } catch (e: SessionNotCreatedException) {
-            logger.error("Ошибка создания сессии iOS-драйвера", e)
+            logger.error("iOS driver session creation error", e)
             if (retryCount > 0) {
-                logger.warn("Повторная попытка инициализации iOS-драйвера (осталось ${retryCount - 1})")
+                logger.warn("Retrying iOS driver initialization (remaining ${retryCount - 1})")
                 return getIOSDriver(retryCount - 1)
             } else {
                 logger.error(
                     """
-                    Не удалось создать сессию iOS-драйвера после нескольких попыток.
-                    Проверьте правильность версии платформы и имени устройства.
-                    Для получения списка доступных симуляторов выполните: 'xcrun simctl list devices available'
+                    Failed to create iOS driver session after multiple attempts.
+                    Check the correctness of the platform version and device name.
+                    To get a list of available simulators run: 'xcrun simctl list devices available'
                     """.trimIndent(), e
                 )
                 throw RuntimeException(
                     """
-                    Не удалось инициализировать iOS-драйвер.
-                    Проверьте правильность версии платформы и имени устройства.
-                    Для просмотра доступных симуляторов выполните: 'xcrun simctl list devices available'
+                    Failed to initialize the iOS driver.
+                    Check the correctness of the platform version and device name.
+                    To view available simulators run: 'xcrun simctl list devices available'
                     """.trimIndent(), e
                 )
             }
         } catch (e: WebDriverException) {
-            logger.error("Ошибка подключения к Appium-серверу для iOS", e)
-            throw RuntimeException("Не удалось подключиться к Appium-серверу для iOS", e)
+            logger.error("Error connecting to Appium server for iOS", e)
+            throw RuntimeException("Failed to connect to Appium server for iOS", e)
         } catch (e: IOException) {
-            logger.error("Ошибка IO при инициализации iOS-драйвера", e)
-            throw RuntimeException("Ошибка IO при инициализации iOS-драйвера", e)
+            logger.error("IO error during iOS driver initialization", e)
+            throw RuntimeException("IO error during iOS driver initialization", e)
         }
     }
 
     /**
-     * Формирует объект [org.openqa.selenium.remote.DesiredCapabilities] для создания сессии iOS-драйвера.
+     * Builds the [org.openqa.selenium.remote.DesiredCapabilities] object for creating the iOS driver session.
      *
-     * Задаёт параметры запуска, автоматическую обработку алертов, настройки клавиатуры и прочие параметры
-     * специфичные для тестирования на платформе iOS.
+     * Sets launch parameters, automatic alert handling, keyboard settings, and other
+     * options specific to iOS testing.
      *
-     * @return Конфигурация возможностей для запуска iOS-приложения через Appium.
-     * @throws RuntimeException если файл приложения не найден.
+     * @return Capabilities configuration for launching the iOS app via Appium.
+     * @throws RuntimeException if the app file is not found.
      */
     private fun getCapabilities(): DesiredCapabilities {
         val appFile = File(AppConfig.getAppName())
         if (!appFile.exists()) {
             throw RuntimeException(
                 """
-                Не найден файл приложения: ${AppConfig.getAppName()}.
-                Ожидалось наличие файла по пути: ${appFile.absolutePath}.
-                Скомпилируйте iOS-приложение и скопируйте .app файл в корень проекта.
+                Application file not found: ${AppConfig.getAppName()}.
+                Expected file path: ${appFile.absolutePath}.
+                Build the iOS application and copy the .app file into the project root.
                 """.trimIndent()
             )
         }
 
-        logger.info("Формирование DesiredCapabilities для iOS-драйвера")
+        logger.info("Building DesiredCapabilities for iOS driver")
         val capabilities = DesiredCapabilities()
         capabilities.setCapability(MobileCapabilityType.APP, appFile.absolutePath)
         capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest")
@@ -108,7 +109,7 @@ class IosDriver(private val autoLaunch: Boolean) {
         capabilities.setCapability(IOSMobileCapabilityType.PROCESS_ARGUMENTS, processArguments)
         capabilities.setCapability("settings[customSnapshotTimeout]", 3)
 
-        logger.info("DesiredCapabilities для iOS сформированы успешно")
+        logger.info("DesiredCapabilities for iOS successfully built")
         return capabilities
     }
 }

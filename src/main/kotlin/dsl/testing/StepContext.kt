@@ -4,13 +4,13 @@ import io.qameta.allure.Allure.step
 import io.qameta.allure.Allure.ThrowableRunnable
 
 /**
- * Контекст выполнения тестового шага.
+ * Test step execution context.
  *
- * [StepContext] используется для группировки проверок ([ExpectationContext]) внутри логических шагов теста,
- * автоматически интегрируя их в Allure-отчёты с удобной нумерацией проверок.
+ * [StepContext] is used to group assertions ([ExpectationContext]) within logical test steps,
+ * automatically integrating them into Allure reports with convenient numbering.
  *
- * Каждый вызов `"Название шага" { ... }` создаёт новый изолированный [ExpectationContext],
- * в рамках которого выполняются все проверки и валидации.
+ * Each call of `"Step name" { ... }` creates a new isolated [ExpectationContext],
+ * within which all assertions and validations are executed.
  *
  * @see BaseContext
  * @see ExpectationContext
@@ -18,24 +18,24 @@ import io.qameta.allure.Allure.ThrowableRunnable
 @TestingDslMarker
 class StepContext(override val driver: Any) : BaseContext() {
 
-    /** Счётчик проверок внутри одного шага для отображения в Allure-отчёте. */
+    /** Counter of checks within a single step for display in the Allure report. */
     private var currentCheck: Int = 1
 
     /**
-     * Создаёт новый тестовый шаг с привязкой к Allure-отчёту.
+     * Creates a new test step linked to the Allure report.
      *
-     * Каждый шаг включает в себя одну или несколько проверок, выполняемых в контексте [ExpectationContext].
+     * Each step includes one or more checks executed in the context of [ExpectationContext].
      *
-     * Пример использования:
+     * Example:
      * ```
-     * "Название шага" {
+     * "Step name" {
      *     checkSomething()
      *     validateAnotherThing()
      * }
      * ```
      *
-     * @receiver Название создаваемого шага.
-     * @param expectationRunnable Лямбда с проверками внутри шага.
+     * @receiver The name of the created step.
+     * @param expectationRunnable Lambda containing checks inside the step.
      */
     operator fun String.invoke(
         screenshotOnSuccess: Boolean = false,
@@ -44,15 +44,15 @@ class StepContext(override val driver: Any) : BaseContext() {
         screenshotQuality: Int = 100,
         expectationRunnable: ExpectationContext.() -> Unit
     ) {
-        val title = "Проверка №$currentCheck. $this"
+        val title = "Check #$currentCheck. $this"
         step(title, ThrowableRunnable {
             val ctx = ExpectationContext(driver)
             runCatching { ctx.expectationRunnable() }
                 .onSuccess {
-                    if (screenshotOnSuccess) ctx.takeScreenshot("$title — успех", screenshotScale, screenshotQuality)
+                    if (screenshotOnSuccess) ctx.takeScreenshot("$title — success", screenshotScale, screenshotQuality)
                 }
                 .onFailure { t ->
-                    if (screenshotOnFailure) ctx.takeScreenshot("$title — ошибка", screenshotScale, screenshotQuality)
+                    if (screenshotOnFailure) ctx.takeScreenshot("$title — failure", screenshotScale, screenshotQuality)
                     throw t
                 }
         })

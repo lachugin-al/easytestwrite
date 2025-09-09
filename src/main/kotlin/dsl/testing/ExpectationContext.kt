@@ -1,13 +1,13 @@
 package dsl.testing
 
 /**
- * Контекст проверок в тестовом фреймворке.
+ * Assertion context in the test framework.
  *
- * Используется для описания и выполнения ожиданий (assertions) внутри тестовых шагов.
- * Расширяет базовый функционал [BaseContext], добавляя поддержку платформо-зависимых действий
- * и безопасного выполнения вспомогательных проверок.
+ * Used for describing and executing expectations (assertions) inside test steps.
+ * Extends the base functionality of [BaseContext], adding support for
+ * platform-dependent actions and safe execution of auxiliary checks.
  *
- * Все проверки, выполняемые внутри [ExpectationContext], автоматически интегрируются в тестовый отчёт.
+ * All checks performed inside [ExpectationContext] are automatically integrated into the test report.
  *
  * @see BaseContext
  * @see StepContext

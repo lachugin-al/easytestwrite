@@ -5,39 +5,39 @@ import kotlinx.serialization.json.*
 internal object JsonMatchers {
 
     /**
-     * Проверяет, содержатся ли все ключи и значения из искомого JSON внутри JSON события.
+     * Checks whether all keys and values from the search JSON are contained within the event JSON.
      *
-     * Поддерживает шаблоны для значений:
-     * - "*" - соответствует любому значению (wildcard)
-     * - "" - соответствует только пустому значению
-     * - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     * - Любое другое значение - проверяется точное соответствие
+     * Supports value patterns:
+     * - "*" - matches any value (wildcard)
+     * - "" - matches only an empty value
+     * - "~value" - checks partial match (if 'value' is a substring of the actual value)
+     * - Any other value - exact equality is required
      *
-     * @param eventJson JSON-строка события (сериализованная EventData).
-     * @param searchJson JSON-строка с искомыми ключами и значениями для поиска.
-     * @return true, если все ключи/значения из searchJson найдены в eventJson, иначе false.
+     * @param eventJson JSON string of the event (serialized EventData).
+     * @param searchJson JSON string with the keys and values to search for.
+     * @return true if all keys/values from searchJson are found in eventJson, otherwise false.
      */
     fun containsJsonData(eventJson: String, searchJson: String): Boolean {
-        // Извлекаем поле "body" из eventJson и парсим его в JSON-объект
+        // Extract the "body" field from eventJson and parse it into a JSON object
         val evDataObj = Json.parseToJsonElement(eventJson).jsonObject
         val bodyStr = evDataObj["body"]!!.jsonPrimitive.content
         val bodyObj = Json.parseToJsonElement(bodyStr).jsonObject
 
-        // Переходим к узлу "event" → "data"
+        // Navigate to node "event" → "data"
         val dataElement = bodyObj["event"]!!.jsonObject["data"]!!
 
-        // Парсим искомые ключи и значения
+        // Parse search keys and values
         val searchObj = Json.parseToJsonElement(searchJson).jsonObject
 
-        // Для каждой пары (ключ, значение) проверяем наличие соответствия в дереве dataElement
+        // For each (key, value) pair, check for a corresponding match in the dataElement tree
         return searchObj.all { (key, sv) ->
             findKeyValueInTree(dataElement, key, sv)
         }
     }
 
     /**
-     * Рекурсивно обходит JsonElement и возвращает true,
-     * если где-нибудь найдётся запись “ключ = key” и её значение matchJsonElement(…, searchValue)
+     * Recursively traverses a JsonElement and returns true
+     * if a record “key = key” is found anywhere and its value matches matchJsonElement(…, searchValue).
      */
     fun findKeyValueInTree(
         element: JsonElement,
@@ -45,7 +45,7 @@ internal object JsonMatchers {
         searchValue: JsonElement
     ): Boolean = when (element) {
         is JsonObject -> element.entries.any { (k, v) ->
-            // либо тут совпадение по ключу+значению, либо идём глубже
+            // either a match by key+value here, or go deeper
             (k == key && matchJsonElement(v, searchValue))
                     || findKeyValueInTree(v, key, searchValue)
         }
@@ -55,39 +55,39 @@ internal object JsonMatchers {
     }
 
     /**
-     * Рекурсивная функция для сопоставления элементов JSON.
+     * Recursive function to match JSON elements.
      *
-     * Поддерживается сопоставление:
-     * - Примитивов с поддержкой шаблонов:
-     *   - "*" - соответствует любому значению (wildcard)
-     *   - "" - соответствует только пустому значению
-     *   - "~value" - проверяет частичное совпадение (если 'value' является подстрокой значения)
-     *   - Любое другое значение - проверяется точное соответствие
-     * - Объектов (по ключам и значениям),
-     * - Массивов (каждый элемент поиска должен быть найден в массиве события),
-     * - Строк, содержащих вложенные сериализованные JSON-объекты.
+     * Matching supports:
+     * - Primitives with pattern support:
+     *   - "*" - matches any value (wildcard)
+     *   - "" - matches only an empty value
+     *   - "~value" - checks partial match (if 'value' is a substring of the value)
+     *   - Any other value - exact equality is required
+     * - Objects (by keys and values),
+     * - Arrays (each element in the search array must be found in the event array),
+     * - Strings containing nested serialized JSON objects.
      *
-     * @param eventElement Элемент JSON, полученный из события.
-     * @param searchElement Элемент JSON, который необходимо найти внутри события.
-     * @return true, если элементы совпадают по структуре и содержимому, иначе false.
+     * @param eventElement JSON element obtained from the event.
+     * @param searchElement JSON element that must be found within the event.
+     * @return true if elements match by structure and content, otherwise false.
      */
     fun matchJsonElement(eventElement: JsonElement, searchElement: JsonElement): Boolean {
         return when {
-            // Сравнение примитивов с поддержкой шаблонов
+            // Primitive comparison with pattern support
             eventElement is JsonPrimitive && searchElement is JsonPrimitive -> {
                 when {
-                    searchElement.content == "*" -> true // Wildcard - соответствует любому значению
-                    searchElement.content == "" -> eventElement.content.isEmpty() // Пустая строка - соответствует только пустому значению
+                    searchElement.content == "*" -> true // Wildcard — matches any value
+                    searchElement.content == "" -> eventElement.content.isEmpty() // Empty string — matches only an empty value
                     searchElement.content.startsWith("~") -> eventElement.content.contains(
                         searchElement.content.substring(
                             1
                         )
-                    ) // Частичное совпадение
-                    else -> eventElement.content == searchElement.content // Точное соответствие
+                    ) // Partial match
+                    else -> eventElement.content == searchElement.content // Exact match
                 }
             }
 
-            // Сравнение вложенных JSON-строк: парсим строку и рекурсивно сравниваем
+            // Comparing nested JSON strings: parse the string and compare recursively
             eventElement is JsonPrimitive && eventElement.isString -> runCatching {
                 matchJsonElement(
                     Json.parseToJsonElement(eventElement.content),
@@ -95,21 +95,20 @@ internal object JsonMatchers {
                 )
             }.getOrDefault(false)
 
-            // Сравнение объектов: каждый ключ и значение должны соответствовать
+            // Object comparison: every key and value must match
             eventElement is JsonObject && searchElement is JsonObject ->
                 searchElement.all { (k, sv) ->
                     eventElement[k]?.let { matchJsonElement(it, sv) } ?: false
                 }
 
-            // Сравнение массивов: каждый элемент из искомого массива должен быть найден в массиве события
+            // Array comparison: every element from the search array must be found in the event array
             eventElement is JsonArray && searchElement is JsonArray ->
                 searchElement.all { se ->
                     eventElement.any { ee -> matchJsonElement(ee, se) }
                 }
 
-            // Иные случаи: элементы не совпадают
+            // Other cases: elements do not match
             else -> false
         }
     }
-
 }

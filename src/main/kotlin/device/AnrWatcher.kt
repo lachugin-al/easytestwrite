@@ -14,12 +14,12 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
- * Утилита для мониторинга и автоматической обработки ANR (Application Not Responding) диалогов в Android.
+ * Utility for monitoring and automatically handling ANR (Application Not Responding) dialogs in Android.
  *
- * ANR Watcher запускается в отдельном потоке и периодически проверяет наличие диалогов ANR.
- * При обнаружении диалога, он автоматически нажимает кнопку "Подождать" или "Закрыть".
+ * ANR Watcher runs in a separate coroutine and periodically checks for ANR dialogs.
+ * When a dialog is detected, it automatically presses the "Wait" or "Close" button.
  *
- * Рекомендуется запускать ANR Watcher один раз в начале всех тестов с помощью аннотации @BeforeAll.
+ * It is recommended to start ANR Watcher once at the beginning of all tests using the @BeforeAll annotation.
  */
 object AnrWatcher {
     private val logger: Logger = LoggerFactory.getLogger(AnrWatcher::class.java)
@@ -32,47 +32,47 @@ object AnrWatcher {
     }
 
     /**
-     * Запускает ANR Watcher для мониторинга ANR диалогов (универсальная версия с минимальным контрактом).
+     * Starts ANR Watcher for monitoring ANR dialogs (universal version with minimal contract).
      */
     fun start(driver: UiAutomatorDriver, intervalMillis: Long = 2000L) {
         if (job != null) {
-            logger.info("ANR Watcher уже запущен")
-            return  // уже запущен
+            logger.info("ANR Watcher is already running")
+            return  // already running
         }
 
-        logger.info("Запуск ANR Watcher с интервалом $intervalMillis мс")
+        logger.info("Starting ANR Watcher with interval $intervalMillis ms")
         job = CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 try {
                     val pageSource = driver.pageSource
-                    if (pageSource.contains("не отвечает", ignoreCase = true)) {
-                        logger.info("Обнаружено ANR-окно. Пытаемся нажать 'Подождать' или 'Закрыть'.")
+                    if (pageSource.contains("is not responding", ignoreCase = true)) {
+                        logger.info("ANR dialog detected. Attempting to press 'Wait' or 'Close'.")
 
                         try {
                             val waitButton = driver.findElementByAndroidUIAutomator(
-                                "new UiSelector().textContains(\"Подождать\")"
+                                "new UiSelector().textContains(\"Wait\")"
                             )
                             waitButton.click()
-                            logger.info("Нажата кнопка 'Подождать'")
+                            logger.info("'Wait' button pressed")
                         } catch (e: NoSuchElementException) {
                             try {
                                 val closeButton = driver.findElementByAndroidUIAutomator(
-                                    "new UiSelector().textContains(\"Закрыть приложение\")"
+                                    "new UiSelector().textContains(\"Close app\")"
                                 )
                                 closeButton.click()
-                                logger.info("Нажата кнопка 'Закрыть'")
+                                logger.info("'Close' button pressed")
                             } catch (ignored: NoSuchElementException) {
-                                logger.warn("Не удалось найти кнопки 'Подождать' или 'Закрыть'")
+                                logger.warn("Failed to find 'Wait' or 'Close' buttons")
                             }
                         }
                     }
 
                     delay(intervalMillis)
                 } catch (e: CancellationException) {
-                    // Игнорируем CancellationException, так как это ожидаемое поведение при отмене корутины
-                    logger.debug("Корутина ANR Watcher была отменена: ${e.message}")
+                    // Ignore CancellationException, as this is expected when the coroutine is cancelled
+                    logger.debug("ANR Watcher coroutine was cancelled: ${e.message}")
                 } catch (e: Exception) {
-                    logger.error("Ошибка в корутине ANR Watcher: ${e.message}", e)
+                    logger.error("Error in ANR Watcher coroutine: ${e.message}", e)
                     delay(intervalMillis)
                 }
             }
@@ -80,7 +80,7 @@ object AnrWatcher {
     }
 
     /**
-     * Запускает ANR Watcher для AndroidDriver (адаптер к универсальному контракту).
+     * Starts ANR Watcher for AndroidDriver (adapter for the universal contract).
      */
     fun start(driver: AndroidDriver<MobileElement>, intervalMillis: Long = 2000L) {
         val adapter = object : UiAutomatorDriver {
@@ -94,16 +94,16 @@ object AnrWatcher {
     }
 
     /**
-     * Останавливает ANR Watcher.
+     * Stops ANR Watcher.
      */
     fun stop() {
         try {
             job?.cancel()
             job = null
-            logger.info("ANR Watcher остановлен")
+            logger.info("ANR Watcher stopped")
         } catch (e: Exception) {
-            // Игнорируем JobCancellationException, так как это ожидаемое поведение при отмене корутины
-            logger.debug("Исключение при остановке ANR Watcher: ${e.message}")
+            // Ignore JobCancellationException, as this is expected when the coroutine is cancelled
+            logger.debug("Exception while stopping ANR Watcher: ${e.message}")
         }
     }
 }

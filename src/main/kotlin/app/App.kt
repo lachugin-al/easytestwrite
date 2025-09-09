@@ -12,43 +12,43 @@ import org.slf4j.LoggerFactory
 import proxy.WebServer
 
 /**
- * Основной управляющий класс для инициализации инфраструктуры тестового окружения.
+ * Main controller class for initializing the test environment infrastructure.
  *
- * В рамках одного экземпляра [App] управляется жизненный цикл:
- * - Драйвера Appium для Android/iOS
- * - Web-драйвера Playwright для веб-тестирования
- * - Локального веб-сервера [WebServer] для обслуживания вспомогательных запросов
+ * Within a single instance of [App], it manages the lifecycle of:
+ * - Appium driver for Android/iOS
+ * - Playwright web driver for web testing
+ * - Local [WebServer] for handling auxiliary requests
  *
- * После выполнения тестов все связанные ресурсы корректно освобождаются.
+ * After test execution, all related resources are properly released.
  */
 class App() : AutoCloseable {
     companion object {
-        /** Текущий запущенный экземпляр приложения. */
+        /** The currently running application instance. */
         lateinit var current: App
     }
 
     init {
-        // при создании сохраняем ссылку
+        // Save the reference when created
         current = this
     }
 
     private val logger: Logger = LoggerFactory.getLogger(App::class.java)
 
-    /** Экземпляр Appium-драйвера для мобильного тестирования (Android/iOS). */
+    /** Instance of the Appium driver for mobile testing (Android/iOS). */
     var driver: AppiumDriver<MobileElement>? = null
         private set
 
-    /** Локальный веб-сервер, используемый для вспомогательных целей в тестах. */
+    /** Local web server used for auxiliary purposes in tests. */
     val webServer = WebServer()
 
     /**
-     * Выполняет полную инициализацию окружения:
-     * - Создаёт новый драйвер для выбранной платформы
-     * - Запускает локальный [WebServer]
+     * Performs full environment initialization:
+     * - Creates a new driver for the selected platform
+     * - Starts the local [WebServer]
      *
-     * В случае, если предыдущий драйвер уже существует — он предварительно корректно закрывается.
+     * If a previous driver already exists — it is properly closed first.
      *
-     * @return текущий экземпляр [App] для удобства чейнинга вызовов
+     * @return current [App] instance for convenient call chaining
      */
     fun launch(): App {
         driver?.let {
@@ -62,9 +62,9 @@ class App() : AutoCloseable {
     }
 
     /**
-     * Создаёт новый экземпляр драйвера в зависимости от платформы, указанной в [app.config.AppConfig].
+     * Creates a new driver instance depending on the platform specified in [app.config.AppConfig].
      *
-     * Поддерживаемые платформы:
+     * Supported platforms:
      * - Android (AppiumDriver)
      * - iOS (AppiumDriver)
      * - Web (Playwright Page)
@@ -72,24 +72,24 @@ class App() : AutoCloseable {
     private fun createDriver() {
         when (AppConfig.getPlatform()) {
             Platform.ANDROID -> {
-                logger.info("Инициализация Android-драйвера")
+                logger.info("Initializing Android driver")
                 driver = AndroidDriver(autoLaunch = true).getAndroidDriver(3)
             }
 
             Platform.IOS -> {
-                logger.info("Инициализация iOS-драйвера")
+                logger.info("Initializing iOS driver")
                 driver = IosDriver(autoLaunch = true).getIOSDriver(3)
             }
         }
     }
 
     /**
-     * Корректно завершает работу всех активных компонентов:
-     * - Завершает мобильное приложение (если драйвер был инициализирован)
-     * - Останавливает локальный веб-сервер
-     * - Закрывает Playwright-страницу для веб-тестов
+     * Properly shuts down all active components:
+     * - Terminates the mobile application (if driver was initialized)
+     * - Stops the local web server
+     * - Closes the Playwright page for web tests
      *
-     * Все исключения во время закрытия ресурсов логируются и подавляются для предотвращения остановки процесса.
+     * All exceptions during resource shutdown are logged and suppressed to prevent process interruption.
      */
     override fun close() {
         when (AppConfig.getPlatform()) {
@@ -99,7 +99,7 @@ class App() : AutoCloseable {
                         it.terminateApp(AppConfig.getAppPackage())
                         it.quit()
                     } catch (e: WebDriverException) {
-                        logger.error("Ошибка при завершении сессии Appium-драйвера на Android", e)
+                        logger.error("Error while closing Appium driver session on Android", e)
                     } finally {
                         driver = null
                     }
@@ -112,7 +112,7 @@ class App() : AutoCloseable {
                         it.terminateApp(AppConfig.getBundleId())
                         it.quit()
                     } catch (e: WebDriverException) {
-                        logger.error("Ошибка при завершении сессии Appium-драйвера на iOS", e)
+                        logger.error("Error while closing Appium driver session on iOS", e)
                     } finally {
                         driver = null
                     }
@@ -124,7 +124,7 @@ class App() : AutoCloseable {
         try {
             webServer.close()
         } catch (e: Exception) {
-            logger.error("Ошибка при закрытии WebServer: ${e.message}", e)
+            logger.error("Error while closing WebServer: ${e.message}", e)
         }
     }
 }

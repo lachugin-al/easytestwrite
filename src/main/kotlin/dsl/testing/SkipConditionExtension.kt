@@ -9,121 +9,108 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.slf4j.LoggerFactory
 
 /**
- * JUnit расширение для обработки аннотации [Skip].
+ * JUnit extension for handling the [Skip] annotation.
  *
- * Это расширение проверяет наличие аннотации [Skip] на тестовом методе
- * и пропускает тест, если условие в аннотации истинно или если текущая платформа
- * соответствует указанной в аннотации.
- * Расширение также проверяет наличие аннотации [Skip] на тестовом методе
- * при выполнении методов с аннотацией @BeforeEach.
+ * This extension checks for the presence of the [Skip] annotation on a test method
+ * and skips the test if the annotation's condition is met or if the current platform
+ * matches the one specified in the annotation.
+ *
+ * The extension also checks for the [Skip] annotation on the corresponding test method
+ * when executing methods annotated with @BeforeEach.
  */
 class SkipConditionExtension : ExecutionCondition {
     private val logger = LoggerFactory.getLogger(SkipConditionExtension::class.java)
 
     override fun evaluateExecutionCondition(context: ExtensionContext): ConditionEvaluationResult {
-        // Получаем текущий метод (тестовый или @BeforeEach)
+        // Get the current method (test or @BeforeEach)
         val currentMethod = context.testMethod.orElse(null) ?: return ConditionEvaluationResult.enabled("No test method found")
 
-        // Проверяем, является ли текущий метод методом @BeforeEach
+        // Check if the current method is a @BeforeEach method
         val isBeforeEachMethod = currentMethod.isAnnotationPresent(org.junit.jupiter.api.BeforeEach::class.java)
 
-        // Если это метод @BeforeEach, нам нужно проверить аннотацию Skip на тестовом методе
+        // If it's a @BeforeEach method, we need to check the Skip annotation on the test method
         if (isBeforeEachMethod) {
-            // Получаем тестовый метод из контекста
             val testMethod = findTestMethod(context) ?: return ConditionEvaluationResult.enabled("No test method found for @BeforeEach")
 
-            // Проверяем наличие аннотации Skip на тестовом методе
             val skipAnnotation = testMethod.getAnnotation(Skip::class.java)
             if (skipAnnotation != null && shouldSkip(skipAnnotation)) {
                 val reason = if (skipAnnotation.reason.isNotEmpty()) ": ${skipAnnotation.reason}" else ""
-                // Закрываем приложение при пропуске теста
                 closeAppIfNeeded(context)
-                return ConditionEvaluationResult.disabled("Тестовый метод содержит аннотацию @Skip, подходящую под текущие условия$reason")
+                return ConditionEvaluationResult.disabled("Test method contains @Skip annotation matching current conditions$reason")
             }
         } else {
-            // Если это тестовый метод, проверяем наличие аннотации Skip на нем
+            // If it's a test method, check the Skip annotation directly
             val skipAnnotation = currentMethod.getAnnotation(Skip::class.java)
             if (skipAnnotation != null && shouldSkip(skipAnnotation)) {
                 val reason = if (skipAnnotation.reason.isNotEmpty()) ": ${skipAnnotation.reason}" else ""
-                // Закрываем приложение при пропуске теста
                 closeAppIfNeeded(context)
-                return ConditionEvaluationResult.disabled("Тестовый метод содержит аннотацию @Skip, подходящую под текущие условия$reason")
+                return ConditionEvaluationResult.disabled("Test method contains @Skip annotation matching current conditions$reason")
             }
         }
 
-        return ConditionEvaluationResult.enabled("Аннотация @Skip не найдена или условия не соответствуют")
+        return ConditionEvaluationResult.enabled("@Skip annotation not found or conditions not met")
     }
 
     /**
-     * Проверяет, должен ли тест быть пропущен на основе аннотации Skip.
+     * Checks whether the test should be skipped based on the Skip annotation.
      *
-     * @param skipAnnotation Аннотация Skip.
-     * @return true, если тест должен быть пропущен, false в противном случае.
+     * @param skipAnnotation The Skip annotation.
+     * @return true if the test should be skipped, false otherwise.
      */
     private fun shouldSkip(skipAnnotation: Skip): Boolean {
-        // Проверяем соответствие платформы
         return shouldSkipForPlatform(skipAnnotation.platform)
     }
 
     /**
-     * Определяет, должен ли тест быть пропущен для текущей платформы.
+     * Determines whether the test should be skipped for the current platform.
      *
-     * @param platform платформа, указанная в аннотации @Skip
-     * @return true, если тест должен быть пропущен на текущей платформе, иначе false
+     * @param platform The platform specified in the @Skip annotation.
+     * @return true if the test should be skipped on the current platform, false otherwise.
      */
     private fun shouldSkipForPlatform(platform: String): Boolean {
-        // Если платформа не указана, пропускаем тест на всех платформах
         if (platform.isEmpty()) {
             return true
         }
 
-        // Проверяем, соответствует ли текущая платформа указанной в аннотации
         return when (platform.lowercase()) {
             "ios" -> AppConfig.isiOS()
             "android" -> AppConfig.isAndroid()
-            else -> false // Если указана неизвестная платформа, не пропускаем тест
+            else -> false // Unknown platform, do not skip
         }
     }
 
     /**
-     * Находит тестовый метод из контекста выполнения.
-     * 
-     * @param context Контекст выполнения JUnit.
-     * @return Тестовый метод или null, если не найден.
+     * Finds the test method from the execution context.
+     *
+     * @param context The JUnit execution context.
+     * @return The test method or null if not found.
      */
     private fun findTestMethod(context: ExtensionContext): java.lang.reflect.Method? {
-        // Получаем имя тестового метода из контекста
         val testMethodName = context.testMethod.orElse(null)?.name ?: return null
-
-        // Получаем класс тестового метода
         val testClass = context.testClass.orElse(null) ?: return null
 
-        // Находим тестовый метод по имени
-        return testClass.methods.find { 
-            it.name == testMethodName && 
-            (it.isAnnotationPresent(org.junit.jupiter.api.Test::class.java) || 
-             it.isAnnotationPresent(org.junit.jupiter.api.TestTemplate::class.java))
+        return testClass.methods.find {
+            it.name == testMethodName &&
+                    (it.isAnnotationPresent(org.junit.jupiter.api.Test::class.java) ||
+                            it.isAnnotationPresent(org.junit.jupiter.api.TestTemplate::class.java))
         }
     }
 
     /**
-     * Закрывает приложение, если тест пропускается.
-     * 
-     * @param context Контекст выполнения JUnit.
+     * Closes the application if the test is skipped.
+     *
+     * @param context The JUnit execution context.
      */
     private fun closeAppIfNeeded(context: ExtensionContext) {
         try {
-            // Получаем экземпляр тестового класса
             val testInstance = context.testInstance.orElse(null)
 
-            // Проверяем, является ли тестовый класс экземпляром MobileTest
             if (testInstance is MobileTest) {
-                logger.info("Тест пропущен из-за аннотации @Skip. Закрываем приложение.")
-                // Закрываем приложение через публичный метод
+                logger.info("Test skipped due to @Skip annotation. Closing the app.")
                 testInstance.closeApp()
             }
         } catch (e: Exception) {
-            logger.error("Ошибка при попытке закрыть приложение: ${e.message}", e)
+            logger.error("Error while attempting to close the app: ${e.message}", e)
         }
     }
 }

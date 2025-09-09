@@ -16,69 +16,69 @@ import java.io.File
 import java.net.MalformedURLException
 
 /**
- * Инкапсулирует инициализацию Appium Android-драйвера.
+ * Encapsulates initialization of the Appium Android driver.
  *
- * Поддерживает настройку launch-поведения приложения и управление количеством попыток
- * переподключения в случае ошибок при старте сессии.
+ * Supports configuring the app launch behavior and controlling the number of
+ * reconnection attempts in case of session start errors.
  *
- * @property autoLaunch флаг, указывающий на необходимость автозапуска приложения после старта драйвера
+ * @property autoLaunch flag indicating whether the app should be auto-launched after the driver starts
  */
 class AndroidDriver(private val autoLaunch: Boolean) {
 
     private val logger: Logger = LoggerFactory.getLogger(AndroidDriver::class.java)
 
     /**
-     * Инициализирует экземпляр [io.appium.java_client.AppiumDriver] для работы с Android-платформой.
+     * Initializes an instance of [io.appium.java_client.AppiumDriver] for Android.
      *
-     * При возникновении ошибки создания сессии (SessionNotCreatedException) метод выполнит повторные попытки
-     * согласно значению [retryCount]. В случае других типов ошибок производится немедленная обработка.
+     * If a session creation error (SessionNotCreatedException) occurs, the method will perform
+     * retries according to the [retryCount] value. For other error types, it fails immediately.
      *
-     * @param retryCount количество оставшихся попыток инициализации драйвера
-     * @return корректно инициализированный экземпляр [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]>
-     * @throws RuntimeException если создать сессию не удалось после всех попыток
+     * @param retryCount remaining number of attempts to initialize the driver
+     * @return a properly initialized instance of [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]>
+     * @throws RuntimeException if the session cannot be created after all attempts
      */
     fun getAndroidDriver(retryCount: Int): AppiumDriver<MobileElement> {
         return try {
-            logger.info("Инициализация Android-драйвера (осталось попыток: $retryCount")
+            logger.info("Initializing Android driver (attempts left: $retryCount)")
             AndroidDriver(AppConfig.getAppiumUrl(), getCapabilities())
         } catch (e: SessionNotCreatedException) {
-            logger.error("Ошибка создания сессии Appium-драйвера", e)
+            logger.error("Failed to create Appium driver session", e)
             if (retryCount > 0) {
-                logger.warn("Повторная попытка инициализации Android-драйвера (осталось ${retryCount - 1})")
+                logger.warn("Retrying Android driver initialization (remaining: ${retryCount - 1})")
                 return getAndroidDriver(retryCount - 1)
             } else {
-                logger.error("Не удалось создать сессию Android-драйвера после всех попыток", e)
-                throw RuntimeException("Не удалось инициализировать Android-драйвер. Проверьте запущен ли эмулятор.", e)
+                logger.error("Unable to create Android driver session after all attempts", e)
+                throw RuntimeException("Failed to initialize Android driver. Ensure the emulator is running.", e)
             }
         } catch (e: WebDriverException) {
-            logger.error("Ошибка подключения к Appium-серверу", e)
-            throw RuntimeException("Не удалось подключиться к Appium-серверу", e)
+            logger.error("Error connecting to the Appium server", e)
+            throw RuntimeException("Could not connect to the Appium server", e)
         } catch (e: MalformedURLException) {
-            logger.error("Неверный формат URL Appium-сервера", e)
-            throw RuntimeException("Ошибка формата URL Appium-сервера", e)
+            logger.error("Invalid Appium server URL format", e)
+            throw RuntimeException("Appium server URL format error", e)
         }
     }
 
     /**
-     * Формирует и возвращает объект [org.openqa.selenium.remote.DesiredCapabilities] для конфигурации подключения к Android-устройству.
+     * Builds and returns a [org.openqa.selenium.remote.DesiredCapabilities] object for Android device configuration.
      *
-     * В рамках настройки устанавливаются параметры пути к APK-файлу, версии платформы, имени устройства,
-     * настройки поведения сессии (таймауты, автозапуск, автоматическая выдача разрешений и прочее).
+     * Sets parameters for the APK path, platform version, device name, and session behavior
+     * (timeouts, auto-launch, auto-grant permissions, etc.).
      *
-     * @return экземпляр [org.openqa.selenium.remote.DesiredCapabilities], готовый к использованию для создания сессии Appium
-     * @throws RuntimeException если APK-файл приложения не найден в ожидаемом месте
+     * @return an instance of [org.openqa.selenium.remote.DesiredCapabilities] ready to create an Appium session
+     * @throws RuntimeException if the app APK file is not found at the expected location
      */
     private fun getCapabilities(): DesiredCapabilities {
         val appFile = File(AppConfig.getAppName())
         if (!appFile.exists()) {
             throw RuntimeException("""
-                APK-файл приложения '${AppConfig.getAppName()}' не найден.
-                Ожидалось наличие файла по пути: ${appFile.absolutePath}.
-                Скомпилируйте Android-приложение и скопируйте APK в корень проекта.
+                App APK file '${AppConfig.getAppName()}' was not found.
+                Expected file path: ${appFile.absolutePath}.
+                Build the Android app and copy the APK to the project root.
             """.trimIndent())
         }
 
-        logger.info("Формирование DesiredCapabilities для Android-драйвера")
+        logger.info("Building DesiredCapabilities for the Android driver")
         val capabilities = DesiredCapabilities()
         capabilities.setCapability(MobileCapabilityType.APP, appFile.absolutePath)
         capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "UIAutomator2")
@@ -95,7 +95,7 @@ class AndroidDriver(private val autoLaunch: Boolean) {
         capabilities.setCapability(AndroidMobileCapabilityType.APP_ACTIVITY, AppConfig.getAppActivity())
         capabilities.setCapability(AndroidMobileCapabilityType.APP_PACKAGE, AppConfig.getAppPackage())
 
-        logger.info("DesiredCapabilities успешно сформированы")
+        logger.info("DesiredCapabilities built successfully")
         return capabilities
     }
 }

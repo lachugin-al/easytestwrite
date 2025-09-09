@@ -15,23 +15,23 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Класс для управления жизненным циклом эмуляторов и симуляторов.
+ * Class for managing the lifecycle of emulators and simulators.
  *
- * Предоставляет методы для запуска и остановки эмуляторов Android и симуляторов iOS.
- * Реализация учитывает различные краевые случаи и ошибки, которые могут возникнуть при работе с эмуляторами.
+ * Provides methods to start and stop Android emulators and iOS simulators.
+ * The implementation accounts for various edge cases and errors that may occur when working with emulators.
  */
 object EmulatorManager {
     private val logger: Logger = LoggerFactory.getLogger(EmulatorManager::class.java)
 
-    // Мьютекс для предотвращения гонок при параллельном запуске/остановке эмуляторов
+    // Mutex to prevent races when starting/stopping emulators in parallel
     private val emulatorMutex = Mutex()
 
-    // Таймауты
+    // Timeouts
     private const val EMULATOR_BOOT_TIMEOUT_SECONDS = 120
     private const val EMULATOR_STARTUP_TIMEOUT_SECONDS = 60
     private const val COMMAND_TIMEOUT_SECONDS = 30
 
-    // Универсальное ожидание условия без использования Thread.sleep
+    // Generic condition wait without using Thread.sleep
     private fun waitForCondition(
         timeout: Duration,
         pollInterval: Duration = Duration.ofMillis(500),
@@ -51,8 +51,8 @@ object EmulatorManager {
                     onTick?.invoke(elapsed)
                 }
             } catch (t: Throwable) {
-                // Не ломаем планировщик из-за исключений в condition/onTick
-                logger.debug("Ошибка в задаче ожидания: ${t.message}")
+                // Do not break the scheduler because of exceptions in condition/onTick
+                logger.debug("Error in wait task: ${t.message}")
             }
         }
 
@@ -74,27 +74,27 @@ object EmulatorManager {
     }
 
     /**
-     * Запускает эмулятор или симулятор в зависимости от текущей платформы.
+     * Starts an emulator or simulator depending on the current platform.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Неизвестная платформа
-     * - Неизвестное/пустое имя устройства
-     * - Уже запущен эмулятор/симулятор, но он неработоспособен
-     * - Невозможно получить ID устройства
-     * - Ошибка запуска процесса эмулятора/симулятора
-     * - Эмулятор/симулятор не стартует за таймаут
-     * - Параллельный запуск/гонки
-     * - Локализация/кодировка вывода
-     * - Исключения времени выполнения
-     * - Ошибки выполнения команд/зависания
+     * Handles the following edge cases:
+     * - Unknown platform
+     * - Unknown/empty device name
+     * - Emulator/simulator already running but not responsive
+     * - Unable to obtain device ID
+     * - Error starting emulator/simulator process
+     * - Emulator/simulator does not start within timeout
+     * - Parallel start/races
+     * - Output localization/encoding
+     * - Runtime exceptions
+     * - Command execution errors/hangs
      *
-     * @return `true`, если запуск успешен, иначе `false`.
+     * @return `true` if the start is successful, otherwise `false`.
      */
     fun startEmulator(): Boolean {
         return try {
-            // Используем мьютекс для предотвращения гонок при параллельном запуске
+            // Use a mutex to prevent races during parallel start
             if (!emulatorMutex.tryLock()) {
-                logger.warn("Другой поток уже выполняет операции с эмулятором, ожидаем...")
+                logger.warn("Another thread is already performing emulator operations, waiting...")
                 val acquired = waitForCondition(
                     timeout = Duration.ofSeconds(5),
                     pollInterval = Duration.ofMillis(200)
@@ -102,22 +102,22 @@ object EmulatorManager {
                     emulatorMutex.tryLock()
                 }
                 if (!acquired) {
-                    logger.error("Не удалось получить блокировку для запуска эмулятора")
+                    logger.error("Failed to acquire lock to start emulator")
                     return false
                 }
             }
 
-            // Проверяем платформу
+            // Check platform
             when (val platform = AppConfig.getPlatform()) {
                 Platform.ANDROID -> startAndroidEmulator()
                 Platform.IOS -> startIosSimulator()
                 else -> {
-                    logger.info("Запуск эмулятора не требуется для платформы $platform")
+                    logger.info("Emulator start is not required for platform $platform")
                     true
                 }
             }
         } catch (e: Exception) {
-            logger.error("Непредвиденная ошибка при запуске эмулятора: ${e.message}", e)
+            logger.error("Unexpected error when starting emulator: ${e.message}", e)
             false
         } finally {
             if (emulatorMutex.isLocked) {
@@ -127,23 +127,23 @@ object EmulatorManager {
     }
 
     /**
-     * Останавливает эмулятор или симулятор в зависимости от текущей платформы.
+     * Stops an emulator or simulator depending on the current platform.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Неизвестная платформа
-     * - Неудачная остановка устройства (и оно продолжает висеть)
-     * - Параллельный запуск/гонки
-     * - Локализация/кодировка вывода
-     * - Исключения времени выполнения
-     * - Ошибки выполнения команд/зависания
+     * Handles the following edge cases:
+     * - Unknown platform
+     * - Unsuccessful device stop (and it keeps hanging)
+     * - Parallel stop/races
+     * - Output localization/encoding
+     * - Runtime exceptions
+     * - Command execution errors/hangs
      *
-     * @return `true`, если остановка успешна, иначе `false`.
+     * @return `true` if the stop is successful, otherwise `false`.
      */
     fun stopEmulator(): Boolean {
         return try {
-            // Используем мьютекс для предотвращения гонок при параллельной остановке
+            // Use a mutex to prevent races during parallel stop
             if (!emulatorMutex.tryLock()) {
-                logger.warn("Другой поток уже выполняет операции с эмулятором, ожидаем...")
+                logger.warn("Another thread is already performing emulator operations, waiting...")
                 val acquired = waitForCondition(
                     timeout = Duration.ofSeconds(5),
                     pollInterval = Duration.ofMillis(200)
@@ -151,22 +151,22 @@ object EmulatorManager {
                     emulatorMutex.tryLock()
                 }
                 if (!acquired) {
-                    logger.error("Не удалось получить блокировку для остановки эмулятора")
+                    logger.error("Failed to acquire lock to stop emulator")
                     return false
                 }
             }
 
-            // Проверяем платформу
+            // Check platform
             when (val platform = AppConfig.getPlatform()) {
                 Platform.ANDROID -> stopAndroidEmulator()
                 Platform.IOS -> stopIosSimulator()
                 else -> {
-                    logger.info("Остановка эмулятора не требуется для платформы $platform")
+                    logger.info("Emulator stop is not required for platform $platform")
                     true
                 }
             }
         } catch (e: Exception) {
-            logger.error("Непредвиденная ошибка при остановке эмулятора: ${e.message}", e)
+            logger.error("Unexpected error when stopping emulator: ${e.message}", e)
             false
         } finally {
             if (emulatorMutex.isLocked) {
@@ -176,10 +176,10 @@ object EmulatorManager {
     }
 
     /**
-     * Проверяет наличие необходимых утилит для работы с эмуляторами/симуляторами.
+     * Checks for required utilities to work with emulators/simulators.
      *
-     * @param commands Список команд для проверки.
-     * @return `true`, если все утилиты доступны, иначе `false`.
+     * @param commands List of commands to check.
+     * @return `true` if all utilities are available, otherwise `false`.
      */
     private fun checkRequiredTools(commands: List<String>): Boolean {
         for (command in commands) {
@@ -194,11 +194,11 @@ object EmulatorManager {
                     timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
                 )
                 if (result.timedOut || result.exitCode != 0) {
-                    logger.error("Утилита '$command' не найдена в системе")
+                    logger.error("Utility '$command' not found on the system")
                     return false
                 }
             } catch (e: Exception) {
-                logger.error("Ошибка при проверке наличия утилиты '$command': ${e.message}", e)
+                logger.error("Error while checking utility '$command': ${e.message}", e)
                 return false
             }
         }
@@ -206,23 +206,23 @@ object EmulatorManager {
     }
 
     /**
-     * Ожидает полной загрузки эмулятора Android.
+     * Waits for Android emulator to fully boot.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Эмулятор не стартует за таймаут
-     * - Ошибки выполнения команд/зависания
-     * - Локализация/кодировка вывода
+     * Handles the following edge cases:
+     * - Emulator does not start within timeout
+     * - Command execution errors/hangs
+     * - Output localization/encoding
      *
-     * @param deviceId ID эмулятора, загрузку которого нужно дождаться.
-     * @return `true`, если эмулятор успешно загрузился, иначе `false`.
+     * @param deviceId ID of the emulator to wait for.
+     * @return `true` if the emulator has successfully booted, otherwise `false`.
      */
     private fun waitForEmulatorBoot(deviceId: String): Boolean {
         if (deviceId.isBlank()) {
-            logger.error("Невозможно дождаться загрузки эмулятора: пустой ID устройства")
+            logger.error("Cannot wait for emulator boot: empty device ID")
             return false
         }
 
-        val maxAttempts = EMULATOR_BOOT_TIMEOUT_SECONDS / 2 // Проверка каждые 2 секунды
+        val maxAttempts = EMULATOR_BOOT_TIMEOUT_SECONDS / 2 // Check every 2 seconds
         for (i in 1..maxAttempts) {
             try {
                 val result = TerminalUtils.runCommand(
@@ -231,43 +231,43 @@ object EmulatorManager {
                 )
 
                 if (result.timedOut) {
-                    logger.warn("Таймаут при проверке загрузки эмулятора $deviceId, попытка $i/$maxAttempts")
+                    logger.warn("Timeout while checking boot status of emulator $deviceId, attempt $i/$maxAttempts")
                     continue
                 }
 
                 val bootCompleted = result.stdout.trim()
 
                 if (bootCompleted == "1") {
-                    // Дополнительная проверка работоспособности эмулятора
+                    // Additional responsiveness check
                     if (isEmulatorResponsive(deviceId)) {
-                        logger.info("Эмулятор $deviceId полностью загружен и готов к работе.")
+                        logger.info("Emulator $deviceId is fully booted and ready.")
                         return true
                     } else {
-                        logger.warn("Эмулятор $deviceId загружен, но не отвечает на команды")
+                        logger.warn("Emulator $deviceId booted but is not responding to commands")
                     }
                 } else {
-                    logger.info("Эмулятор $deviceId ещё не готов (sys.boot_completed=$bootCompleted), попытка $i/$maxAttempts")
+                    logger.info("Emulator $deviceId is not ready yet (sys.boot_completed=$bootCompleted), attempt $i/$maxAttempts")
                 }
             } catch (e: Exception) {
-                logger.warn("Ошибка при проверке загрузки эмулятора $deviceId: ${e.message}")
+                logger.warn("Error while checking boot status of emulator $deviceId: ${e.message}")
             }
 
-            // Неблокирующее ожидание 2 секунды между проверками
+            // Non-blocking wait of 2 seconds between checks
             waitForCondition(
                 timeout = Duration.ofSeconds(2),
                 pollInterval = Duration.ofMillis(200)
             ) { false }
         }
 
-        logger.error("Эмулятор $deviceId так и не загрузился за отведенное время ($EMULATOR_BOOT_TIMEOUT_SECONDS секунд)")
+        logger.error("Emulator $deviceId did not boot within the allotted time ($EMULATOR_BOOT_TIMEOUT_SECONDS seconds)")
         return false
     }
 
     /**
-     * Проверяет, отвечает ли эмулятор на команды.
+     * Checks whether the emulator responds to commands.
      *
-     * @param deviceId ID эмулятора для проверки.
-     * @return `true`, если эмулятор отвечает на команды, иначе `false`.
+     * @param deviceId ID of the emulator to check.
+     * @return `true` if the emulator responds to commands, otherwise `false`.
      */
     private fun isEmulatorResponsive(deviceId: String): Boolean {
         try {
@@ -276,73 +276,73 @@ object EmulatorManager {
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при проверке работоспособности эмулятора $deviceId")
+                logger.warn("Timeout while checking responsiveness of emulator $deviceId")
                 return false
             }
             val output = result.stdout
             return output.contains("package:") && result.exitCode == 0
         } catch (e: Exception) {
-            logger.warn("Ошибка при проверке работоспособности эмулятора $deviceId: ${e.message}")
+            logger.warn("Error while checking responsiveness of emulator $deviceId: ${e.message}")
             return false
         }
     }
 
     /**
-     * Запускает эмулятор Android.
+     * Starts the Android emulator.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Неизвестное/пустое имя устройства
-     * - Уже запущен эмулятор, но он неработоспособен
-     * - Невозможно получить ID устройства
-     * - Ошибка запуска процесса эмулятора
-     * - Эмулятор не стартует за таймаут
-     * - Отсутствие или неправильная версия внешних утилит
-     * - Локализация/кодировка вывода
-     * - Исключения времени выполнения
-     * - Ошибки выполнения команд/зависания
+     * Handles the following edge cases:
+     * - Unknown/empty device name
+     * - Emulator already running but not responsive
+     * - Unable to obtain device ID
+     * - Error starting the emulator process
+     * - Emulator does not start within timeout
+     * - Missing or incorrect versions of external utilities
+     * - Output localization/encoding
+     * - Runtime exceptions
+     * - Command execution errors/hangs
      *
-     * @return `true`, если запуск успешен, иначе `false`.
+     * @return `true` if the start is successful, otherwise `false`.
      */
     private fun startAndroidEmulator(): Boolean {
         try {
-            // Проверяем наличие необходимых утилит
+            // Check required utilities
             if (!checkRequiredTools(listOf("adb", "emulator"))) {
-                logger.error("Отсутствуют необходимые утилиты для запуска Android эмулятора")
+                logger.error("Required utilities for starting Android emulator are missing")
                 return false
             }
 
-            // Получаем имя устройства
+            // Get device name
             val deviceName = AppConfig.getAndroidDeviceName()
             if (deviceName.isBlank()) {
-                logger.error("Не указано имя устройства Android для запуска")
+                logger.error("Android device name for start is not specified")
                 return false
             }
 
-            logger.info("Запуск Android эмулятора: $deviceName")
+            logger.info("Starting Android emulator: $deviceName")
 
-            // Проверяем, существует ли указанный эмулятор
+            // Verify the emulator exists
             if (!checkEmulatorExists(deviceName)) {
-                logger.error("Эмулятор с именем '$deviceName' не найден в системе")
+                logger.error("Emulator named '$deviceName' not found on the system")
                 return false
             }
 
-            // Проверяем, не запущен ли уже эмулятор
+            // Check if emulator already running
             val emulatorId = getEmulatorId()
             if (emulatorId != null) {
-                logger.info("Эмулятор Android уже запущен с ID: $emulatorId")
+                logger.info("Android emulator already running with ID: $emulatorId")
 
-                // Проверяем, работоспособен ли эмулятор
+                // Check responsiveness
                 if (isEmulatorResponsive(emulatorId)) {
-                    logger.info("Эмулятор Android с ID: $emulatorId работоспособен")
+                    logger.info("Android emulator with ID: $emulatorId is responsive")
                     return true
                 } else {
-                    logger.warn("Эмулятор Android с ID: $emulatorId не отвечает, пробуем перезапустить")
-                    // Принудительно останавливаем неработоспособный эмулятор
+                    logger.warn("Android emulator with ID: $emulatorId is not responding, trying to restart")
+                    // Force stop the non-responsive emulator
                     forceStopAndroidEmulator(emulatorId)
                 }
             }
 
-            // Запускаем эмулятор с дополнительными параметрами для стабильности
+            // Start the emulator with extra stability flags
             val commandList = mutableListOf(
                 "emulator",
                 "-avd",
@@ -353,21 +353,21 @@ object EmulatorManager {
                 "-no-audio"
             )
 
-            // Добавляем параметр "-no-window" только если включен headless режим
+            // Add "-no-window" only if headless mode is enabled
             if (AppConfig.isAndroidHeadlessMode()) {
-                commandList.add("-no-window")  // Запуск без окна для стабильности в CI/CD
+                commandList.add("-no-window")  // Headless start for stability in CI/CD
             }
 
             val command = commandList
 
-            logger.info("Запуск команды: ${command.joinToString(" ")}")
+            logger.info("Running command: ${command.joinToString(" ")}")
 
-            // Запускаем эмулятор в отдельном процессе, чтобы не блокировать выполнение тестов
+            // Start the emulator in a separate process so as not to block test execution
             val process = ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start()
 
-            // Создаем поток для чтения вывода процесса, чтобы избежать блокировки буфера
+            // Create a thread to read process output to avoid buffer blocking
             Thread {
                 try {
                     process.inputStream.bufferedReader(StandardCharsets.UTF_8).use { reader ->
@@ -377,28 +377,28 @@ object EmulatorManager {
                         }
                     }
                 } catch (e: Exception) {
-                    logger.warn("Ошибка при чтении вывода эмулятора: ${e.message}")
+                    logger.warn("Error while reading emulator output: ${e.message}")
                 }
             }.start()
 
-            // Ждем, пока эмулятор запустится и получит ID, с таймаутом
-            val maxAttempts = EMULATOR_STARTUP_TIMEOUT_SECONDS / 2 // Проверка каждые 2 секунды
+            // Wait for the emulator to start and get an ID, with timeout
+            val maxAttempts = EMULATOR_STARTUP_TIMEOUT_SECONDS / 2 // Check every 2 seconds
             var newEmulatorId: String? = null
 
             for (i in 1..maxAttempts) {
-                // Проверяем, не завершился ли процесс с ошибкой
+                // Check if process exited with an error
                 if (!process.isAlive && process.exitValue() != 0) {
-                    logger.error("Процесс эмулятора завершился с ошибкой, код: ${process.exitValue()}")
+                    logger.error("Emulator process exited with error, code: ${process.exitValue()}")
                     return false
                 }
 
                 newEmulatorId = getEmulatorId()
                 if (newEmulatorId != null) {
-                    logger.info("Эмулятор Android запущен с ID: $newEmulatorId после $i попыток")
+                    logger.info("Android emulator started with ID: $newEmulatorId after $i attempts")
                     break
                 } else {
-                    logger.info("Ожидание запуска эмулятора Android, попытка $i/$maxAttempts")
-                    // Неблокирующее ожидание 2 секунды между проверками
+                    logger.info("Waiting for Android emulator to start, attempt $i/$maxAttempts")
+                    // Non-blocking wait of 2 seconds between checks
                     waitForCondition(
                         timeout = Duration.ofSeconds(2),
                         pollInterval = Duration.ofMillis(200)
@@ -407,46 +407,46 @@ object EmulatorManager {
             }
 
             if (newEmulatorId != null) {
-                logger.info("Эмулятор Android запущен с ID: $newEmulatorId")
-                // Ждем полной загрузки эмулятора
+                logger.info("Android emulator started with ID: $newEmulatorId")
+                // Wait for full boot
                 val bootSuccess = waitForEmulatorBoot(newEmulatorId)
 
                 if (!bootSuccess) {
-                    // Если эмулятор не загрузился полностью, пробуем его остановить
-                    logger.warn("Эмулятор не загрузился полностью, пробуем остановить")
+                    // If emulator did not fully boot, try to stop it
+                    logger.warn("Emulator did not fully boot, attempting to stop it")
                     forceStopAndroidEmulator(newEmulatorId)
                     return false
                 }
 
-                // Конфигурация сети: включаем Wi‑Fi и отключаем мобильные данные, затем проверяем состояние
+                // Network configuration: enable Wi-Fi and disable mobile data, then verify status
                 val networkConfigured = configureAndroidNetwork(newEmulatorId)
                 if (!networkConfigured) {
-                    logger.error("Не удалось сконфигурировать сеть (Wi‑Fi ON, Data OFF) на эмуляторе $newEmulatorId")
-                    // Можно попытаться мягко перезапустить сеть/эмулятор, но по требованиям — вернуть неуспех
+                    logger.error("Failed to configure network (Wi-Fi ON, Data OFF) on emulator $newEmulatorId")
+                    // We could try to gently restart the network/emulator, but per requirements — return failure
                     return false
                 }
 
                 return true
             }
 
-            logger.error("Не удалось запустить эмулятор Android за отведенное время ($EMULATOR_STARTUP_TIMEOUT_SECONDS секунд)")
-            // Убиваем процесс эмулятора, если он все еще работает
+            logger.error("Failed to start Android emulator within the allotted time ($EMULATOR_STARTUP_TIMEOUT_SECONDS seconds)")
+            // Kill emulator process if still running
             if (process.isAlive) {
                 process.destroyForcibly()
             }
             return false
 
         } catch (e: Exception) {
-            logger.error("Ошибка при запуске эмулятора Android: ${e.message}", e)
+            logger.error("Error while starting Android emulator: ${e.message}", e)
             return false
         }
     }
 
     /**
-     * Проверяет, существует ли эмулятор с указанным именем.
+     * Checks whether an emulator with the given name exists.
      *
-     * @param deviceName Имя эмулятора для проверки.
-     * @return `true`, если эмулятор существует, иначе `false`.
+     * @param deviceName Emulator name to check.
+     * @return `true` if the emulator exists, otherwise `false`.
      */
     private fun checkEmulatorExists(deviceName: String): Boolean {
         try {
@@ -455,21 +455,21 @@ object EmulatorManager {
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при получении списка эмуляторов")
+                logger.warn("Timeout while retrieving emulator list")
                 return false
             }
             val output = result.stdout
             return output.lines().any { it.trim() == deviceName }
         } catch (e: Exception) {
-            logger.warn("Ошибка при проверке существования эмулятора: ${e.message}")
+            logger.warn("Error while checking emulator existence: ${e.message}")
             return false
         }
     }
 
     /**
-     * Получает ID запущенного эмулятора Android.
+     * Gets the ID of a running Android emulator.
      *
-     * @return ID эмулятора или `null`, если эмулятор не запущен.
+     * @return Emulator ID or `null` if no emulator is running.
      */
     fun getEmulatorId(): String? {
         try {
@@ -478,55 +478,55 @@ object EmulatorManager {
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при получении списка устройств")
+                logger.warn("Timeout while retrieving device list")
                 return null
             }
             val output = result.stdout
-            // Ищем строку, содержащую "emulator-" и "device"
+            // Look for a line containing both "emulator-" and "device"
             return output.lines()
                 .filter { it.contains("emulator-") && it.contains("device") }
                 .map { it.split("\\s+".toRegex()).first() }
                 .firstOrNull()
         } catch (e: Exception) {
-            logger.warn("Ошибка при получении ID эмулятора: ${e.message}")
+            logger.warn("Error while obtaining emulator ID: ${e.message}")
             return null
         }
     }
 
     /**
-     * Принудительно останавливает эмулятор Android.
+     * Force stops the Android emulator.
      *
-     * @param emulatorId ID эмулятора для остановки.
+     * @param emulatorId Emulator ID to stop.
      */
     private fun forceStopAndroidEmulator(emulatorId: String) {
         try {
-            // Сначала пробуем остановить через adb emu kill
+            // First try to stop via adb emu kill
             val result1 = TerminalUtils.runCommand(
                 command = listOf("adb", "-s", emulatorId, "emu", "kill"),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result1.timedOut) {
-                logger.warn("Таймаут при остановке эмулятора через adb emu kill")
+                logger.warn("Timeout while stopping emulator via adb emu kill")
             }
 
-            // Подождем до 2 секунд, давая эмулятору шанс остановиться без Thread.sleep
+            // Wait up to 2 seconds, giving the emulator a chance to stop without Thread.sleep
             waitForCondition(
                 timeout = Duration.ofSeconds(2),
                 pollInterval = Duration.ofMillis(200)
             ) { getEmulatorId() == null }
 
-            // Проверяем, остановился ли эмулятор
+            // Check if emulator has stopped
             if (getEmulatorId() != null) {
-                logger.warn("Эмулятор не остановился через adb emu kill, пробуем через killall")
+                logger.warn("Emulator did not stop via adb emu kill, trying killall")
 
-                // Если не остановился, пробуем через killall (для Linux/Mac)
+                // If not stopped, try killall (Linux/Mac)
                 if (!System.getProperty("os.name").lowercase().contains("windows")) {
                     TerminalUtils.runCommand(
                         command = listOf("killall", "-9", "qemu-system-x86_64"),
                         timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
                     )
                 } else {
-                    // Для Windows используем taskkill
+                    // For Windows use taskkill
                     TerminalUtils.runCommand(
                         command = listOf("taskkill", "/F", "/IM", "qemu-system-x86_64.exe"),
                         timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
@@ -534,51 +534,51 @@ object EmulatorManager {
                 }
             }
         } catch (e: Exception) {
-            logger.warn("Ошибка при принудительной остановке эмулятора: ${e.message}")
+            logger.warn("Error during forced stop of Android emulator: ${e.message}")
         }
     }
 
     /**
-     * Останавливает эмулятор Android.
+     * Stops the Android emulator.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Неудачная остановка устройства (и оно продолжает висеть)
-     * - Отсутствие или неправильная версия внешних утилит
-     * - Локализация/кодировка вывода
-     * - Исключения времени выполнения
-     * - Ошибки выполнения команд/зависания
+     * Handles the following edge cases:
+     * - Unsuccessful device stop (and it keeps hanging)
+     * - Missing or incorrect versions of external utilities
+     * - Output localization/encoding
+     * - Runtime exceptions
+     * - Command execution errors/hangs
      *
-     * @return `true`, если остановка успешна, иначе `false`.
+     * @return `true` if the stop is successful, otherwise `false`.
      */
     private fun stopAndroidEmulator(): Boolean {
         try {
-            // Проверяем наличие необходимых утилит
+            // Check required utilities
             if (!checkRequiredTools(listOf("adb"))) {
-                logger.error("Отсутствуют необходимые утилиты для остановки Android эмулятора")
+                logger.error("Required utilities for stopping Android emulator are missing")
                 return false
             }
 
             val emulatorId = getEmulatorId()
             if (emulatorId == null) {
-                logger.info("Эмулятор Android не запущен, остановка не требуется")
+                logger.info("Android emulator is not running, no stop required")
                 return true
             }
 
-            logger.info("Остановка эмулятора Android с ID: $emulatorId")
+            logger.info("Stopping Android emulator with ID: $emulatorId")
 
-            // Пробуем остановить эмулятор стандартным способом
+            // Try to stop the emulator in a standard way
             val result = TerminalUtils.runCommand(
                 command = listOf("adb", "-s", emulatorId, "emu", "kill"),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при остановке эмулятора Android")
+                logger.warn("Timeout while stopping Android emulator")
             }
 
-            // После команды завершения подождём, давая эмулятору шанс остановиться корректно.
-            // Используем переменную окружения ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL (секунды), если задана.
+            // After sending the stop command, wait giving the emulator a chance to stop gracefully.
+            // Use env ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL (seconds), if provided.
             val envWaitSeconds = System.getenv("ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL")?.toIntOrNull()
-            // По умолчанию эмулятор ждёт 20с сам, дадим чуть больше запаса.
+            // By default the emulator waits 20s itself, give a bit more headroom.
             val gracefulWaitSeconds = (envWaitSeconds ?: 20) + 5
 
             val stoppedGracefully = waitForCondition(
@@ -587,7 +587,7 @@ object EmulatorManager {
                 onTick = { elapsed ->
                     val elapsedSec = elapsed.seconds
                     if (elapsedSec == 0L || elapsedSec % 5L == 0L) {
-                        logger.debug("Ожидание остановки эмулятора... ${'$'}elapsedSec/${'$'}gracefulWaitSeconds s")
+                        logger.debug("Waiting for emulator to stop... ${'$'}elapsedSec/${'$'}gracefulWaitSeconds s")
                     }
                 }
             ) {
@@ -595,10 +595,10 @@ object EmulatorManager {
             }
 
             if (!stoppedGracefully && getEmulatorId() != null) {
-                logger.warn("Эмулятор Android не остановился стандартным способом за ${'$'}gracefulWaitSeconds s, применяем принудительную остановку")
+                logger.warn("Android emulator did not stop gracefully within ${'$'}gracefulWaitSeconds s, applying forced stop")
                 forceStopAndroidEmulator(emulatorId)
 
-                // Проверяем еще раз с коротким ожиданием без Thread.sleep
+                // Check again with a short wait without Thread.sleep
                 val stoppedAfterForce = waitForCondition(
                     timeout = Duration.ofSeconds(5),
                     pollInterval = Duration.ofMillis(500)
@@ -607,83 +607,83 @@ object EmulatorManager {
                 }
                 val stillRunningAfterForce = !stoppedAfterForce
                 if (stillRunningAfterForce) {
-                    logger.error("Не удалось остановить эмулятор Android даже принудительно")
+                    logger.error("Failed to stop Android emulator even forcibly")
                     return false
                 }
             }
 
-            logger.info("Эмулятор Android успешно остановлен")
+            logger.info("Android emulator stopped successfully")
             return true
         } catch (e: Exception) {
-            logger.error("Ошибка при остановке эмулятора Android: ${e.message}", e)
+            logger.error("Error while stopping Android emulator: ${e.message}", e)
             return false
         }
     }
 
     /**
-     * Запускает симулятор iOS.
+     * Starts the iOS simulator.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Неизвестное/пустое имя устройства
-     * - Уже запущен симулятор, но он неработоспособен
-     * - Невозможно получить ID устройства
-     * - Ошибка запуска процесса симулятора
-     * - Симулятор не стартует за таймаут
-     * - Ошибка парсинга JSON вывода симулятора
-     * - Отсутствие или неправильная версия внешних утилит
-     * - Локализация/кодировка вывода
-     * - Исключения времени выполнения
-     * - Ошибки выполнения команд/зависания
+     * Handles the following edge cases:
+     * - Unknown/empty device name
+     * - Simulator already running but not responsive
+     * - Unable to obtain device ID
+     * - Error starting the simulator process
+     * - Simulator does not start within timeout
+     * - Error parsing JSON output from the simulator
+     * - Missing or incorrect versions of external utilities
+     * - Output localization/encoding
+     * - Runtime exceptions
+     * - Command execution errors/hangs
      *
-     * @return `true`, если запуск успешен, иначе `false`.
+     * @return `true` if the start is successful, otherwise `false`.
      */
     private fun startIosSimulator(): Boolean {
         try {
-            // Проверяем, что мы на macOS (iOS симуляторы работают только на macOS)
+            // Ensure we are on macOS (iOS simulators work only on macOS)
             if (!System.getProperty("os.name").contains("Mac")) {
-                logger.error("iOS симуляторы поддерживаются только на macOS")
+                logger.error("iOS simulators are supported only on macOS")
                 return false
             }
 
-            // Проверяем наличие необходимых утилит
+            // Check required utilities
             if (!checkRequiredTools(listOf("xcrun"))) {
-                logger.error("Отсутствуют необходимые утилиты для запуска iOS симулятора")
+                logger.error("Required utilities for starting iOS simulator are missing")
                 return false
             }
 
-            // Получаем имя устройства
+            // Get device name
             val deviceName = AppConfig.getIosDeviceName()
             if (deviceName.isBlank()) {
-                logger.error("Не указано имя устройства iOS для запуска")
+                logger.error("iOS device name for start is not specified")
                 return false
             }
 
-            logger.info("Запуск iOS симулятора: $deviceName")
+            logger.info("Starting iOS simulator: $deviceName")
 
-            // Проверяем, не запущен ли уже симулятор
+            // Check if simulator already running
             val simulatorId = getSimulatorId(deviceName)
             if (simulatorId != null) {
-                logger.info("Симулятор iOS уже запущен с ID: $simulatorId")
+                logger.info("iOS simulator already running with ID: $simulatorId")
 
-                // Проверяем, работоспособен ли симулятор
+                // Check responsiveness
                 if (isSimulatorResponsive(simulatorId)) {
-                    logger.info("Симулятор iOS с ID: $simulatorId работоспособен")
+                    logger.info("iOS simulator with ID: $simulatorId is responsive")
                     return true
                 } else {
-                    logger.warn("Симулятор iOS с ID: $simulatorId не отвечает, пробуем перезапустить")
-                    // Принудительно останавливаем неработоспособный симулятор
+                    logger.warn("iOS simulator with ID: $simulatorId is not responding, attempting restart")
+                    // Force stop the non-responsive simulator
                     forceStopIosSimulator(simulatorId)
                 }
             }
 
-            // Получаем список всех доступных симуляторов
+            // Get list of all available simulators
             val simulatorsJson = getSimulatorsList()
             if (simulatorsJson.isBlank()) {
-                logger.error("Не удалось получить список доступных iOS симуляторов")
+                logger.error("Failed to obtain list of available iOS simulators")
                 return false
             }
 
-            // Парсим JSON с обработкой ошибок
+            // Parse JSON with error handling
             try {
                 val json = Json {
                     ignoreUnknownKeys = true
@@ -693,7 +693,7 @@ object EmulatorManager {
 
                 val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(simulatorsJson)
 
-                // Ищем симулятор с нужным именем
+                // Find simulator with the desired name
                 var foundSimulatorId: String? = null
 
                 for (runtime in simulatorsResponse.devices.values) {
@@ -705,35 +705,35 @@ object EmulatorManager {
                 }
 
                 if (foundSimulatorId == null) {
-                    logger.error("Не найден симулятор iOS с именем: $deviceName")
+                    logger.error("iOS simulator with name '$deviceName' not found")
                     return false
                 }
 
-                // Запускаем симулятор
-                logger.info("Запуск симулятора iOS с ID: $foundSimulatorId")
+                // Start the simulator
+                logger.info("Booting iOS simulator with ID: $foundSimulatorId")
 
                 val result = TerminalUtils.runCommand(
                     command = listOf("xcrun", "simctl", "boot", foundSimulatorId),
                     timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
                 )
                 if (result.timedOut) {
-                    logger.error("Таймаут при запуске симулятора iOS")
+                    logger.error("Timeout while booting iOS simulator")
                     return false
                 }
                 if (result.exitCode != 0) {
                     val error = if (result.stderr.isNotBlank()) result.stderr else result.stdout
-                    logger.error("Ошибка при запуске симулятора iOS: $error")
+                    logger.error("Error while booting iOS simulator: $error")
                     return false
                 }
 
-                // Ждем, пока симулятор полностью загрузится
-                val maxAttempts = EMULATOR_BOOT_TIMEOUT_SECONDS / 2 // Проверка каждые 2 секунды
+                // Wait until the simulator is fully booted
+                val maxAttempts = EMULATOR_BOOT_TIMEOUT_SECONDS / 2 // Check every 2 seconds
                 for (i in 1..maxAttempts) {
                     if (isSimulatorResponsive(foundSimulatorId)) {
-                        logger.info("Симулятор iOS успешно запущен и готов к работе")
+                        logger.info("iOS simulator successfully started and ready")
                         return true
                     } else {
-                        logger.info("Ожидание загрузки симулятора iOS, попытка $i/$maxAttempts")
+                        logger.info("Waiting for iOS simulator to boot, attempt $i/$maxAttempts")
                         waitForCondition(
                             timeout = Duration.ofSeconds(2),
                             pollInterval = Duration.ofMillis(200)
@@ -741,23 +741,23 @@ object EmulatorManager {
                     }
                 }
 
-                logger.error("Симулятор iOS не стал работоспособным за отведенное время")
+                logger.error("iOS simulator did not become responsive within the allotted time")
                 return false
 
             } catch (e: Exception) {
-                logger.error("Ошибка при парсинге JSON вывода симулятора: ${e.message}", e)
+                logger.error("Error while parsing simulator JSON output: ${e.message}", e)
                 return false
             }
         } catch (e: Exception) {
-            logger.error("Ошибка при запуске симулятора iOS: ${e.message}", e)
+            logger.error("Error while starting iOS simulator: ${e.message}", e)
             return false
         }
     }
 
     /**
-     * Получает список всех доступных iOS симуляторов в формате JSON.
+     * Retrieves a list of all available iOS simulators in JSON format.
      *
-     * @return JSON-строка со списком симуляторов или пустая строка в случае ошибки.
+     * @return JSON string with the list of simulators or an empty string in case of error.
      */
     private fun getSimulatorsList(): String {
         try {
@@ -766,21 +766,21 @@ object EmulatorManager {
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при получении списка iOS симуляторов")
+                logger.warn("Timeout while retrieving list of iOS simulators")
                 return ""
             }
             return result.stdout
         } catch (e: Exception) {
-            logger.warn("Ошибка при получении списка iOS симуляторов: ${e.message}")
+            logger.warn("Error while retrieving list of iOS simulators: ${e.message}")
             return ""
         }
     }
 
     /**
-     * Получает ID запущенного iOS симулятора по его имени.
+     * Gets the ID of a running iOS simulator by its name.
      *
-     * @param simulatorName Имя симулятора.
-     * @return ID симулятора или `null`, если симулятор не запущен.
+     * @param simulatorName Simulator name.
+     * @return Simulator ID or `null` if the simulator is not running.
      */
     fun getSimulatorId(simulatorName: String): String? {
         try {
@@ -797,7 +797,7 @@ object EmulatorManager {
 
             val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(simulatorsJson)
 
-            // Ищем запущенный симулятор с нужным именем
+            // Look for a running simulator with the desired name
             for (runtime in simulatorsResponse.devices.values) {
                 val simulator = runtime.find { it.name == simulatorName && it.state == "Booted" }
                 if (simulator != null) {
@@ -807,16 +807,16 @@ object EmulatorManager {
 
             return null
         } catch (e: Exception) {
-            logger.warn("Ошибка при получении ID iOS симулятора: ${e.message}")
+            logger.warn("Error while obtaining iOS simulator ID: ${e.message}")
             return null
         }
     }
 
     /**
-     * Проверяет, отвечает ли iOS симулятор на команды.
+     * Checks whether the iOS simulator responds to commands.
      *
-     * @param simulatorId ID симулятора для проверки.
-     * @return `true`, если симулятор отвечает на команды, иначе `false`.
+     * @param simulatorId Simulator ID to check.
+     * @return `true` if the simulator responds to commands, otherwise `false`.
      */
     private fun isSimulatorResponsive(simulatorId: String): Boolean {
         try {
@@ -825,7 +825,7 @@ object EmulatorManager {
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при проверке состояния симулятора iOS")
+                logger.warn("Timeout while checking iOS simulator state")
                 return false
             }
             val json = Json {
@@ -834,157 +834,157 @@ object EmulatorManager {
                 coerceInputValues = true
             }
             val simulatorsResponse = json.decodeFromString<SimulatorsResponse>(result.stdout)
-            // Считаем симулятор работоспособным, если он имеет состояние "Booted"
+            // Consider the simulator responsive if it has state "Booted"
             val isBooted = simulatorsResponse.devices.values.any { runtimeList ->
                 runtimeList.any { it.udid == simulatorId && it.state == "Booted" }
             }
             return isBooted
         } catch (e: Exception) {
-            logger.warn("Ошибка при проверке состояния симулятора iOS: ${e.message}")
+            logger.warn("Error while checking iOS simulator state: ${e.message}")
             return false
         }
     }
 
     /**
-     * Принудительно останавливает iOS симулятор.
+     * Force stops the iOS simulator.
      *
-     * @param simulatorId ID симулятора для остановки.
+     * @param simulatorId Simulator ID to stop.
      */
     private fun forceStopIosSimulator(simulatorId: String) {
         try {
-            // Сначала пробуем стандартный способ
+            // First attempt the standard way
             val result1 = TerminalUtils.runCommand(
                 command = listOf("xcrun", "simctl", "shutdown", simulatorId),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result1.timedOut) {
-                logger.warn("Таймаут при остановке симулятора iOS")
+                logger.warn("Timeout while stopping iOS simulator")
             }
 
-            // Подождем до 2 секунд без Thread.sleep, давая симулятору шанс остановиться
+            // Wait up to 2 seconds without Thread.sleep, giving the simulator a chance to stop
             waitForCondition(
                 timeout = Duration.ofSeconds(2),
                 pollInterval = Duration.ofMillis(200)
             ) { false }
 
-            // Если не помогло, пробуем остановить все симуляторы
+            // If that didn't help, try stopping all simulators
             TerminalUtils.runCommand(
                 command = listOf("xcrun", "simctl", "shutdown", "all"),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
 
-            // Если и это не помогло, пробуем через killall
+            // If still not stopped, try killall
             TerminalUtils.runCommand(
                 command = listOf("killall", "Simulator"),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
         } catch (e: Exception) {
-            logger.warn("Ошибка при принудительной остановке симулятора iOS: ${e.message}")
+            logger.warn("Error during forced stop of iOS simulator: ${e.message}")
         }
     }
 
     /**
-     * Останавливает симулятор iOS.
+     * Stops the iOS simulator.
      *
-     * Обрабатывает следующие краевые случаи:
-     * - Неудачная остановка устройства (и оно продолжает висеть)
-     * - Отсутствие или неправильная версия внешних утилит
-     * - Локализация/кодировка вывода
-     * - Исключения времени выполнения
-     * - Ошибки выполнения команд/зависания
+     * Handles the following edge cases:
+     * - Unsuccessful device stop (and it keeps hanging)
+     * - Missing or incorrect versions of external utilities
+     * - Output localization/encoding
+     * - Runtime exceptions
+     * - Command execution errors/hangs
      *
-     * @return `true`, если остановка успешна, иначе `false`.
+     * @return `true` if the stop is successful, otherwise `false`.
      */
     private fun stopIosSimulator(): Boolean {
         try {
-            // Проверяем, что мы на macOS (iOS симуляторы работают только на macOS)
+            // Ensure we are on macOS (iOS simulators work only on macOS)
             if (!System.getProperty("os.name").contains("Mac")) {
-                logger.error("iOS симуляторы поддерживаются только на macOS")
+                logger.error("iOS simulators are supported only on macOS")
                 return false
             }
 
-            // Проверяем наличие необходимых утилит
+            // Check required utilities
             if (!checkRequiredTools(listOf("xcrun"))) {
-                logger.error("Отсутствуют необходимые утилиты для остановки iOS симулятора")
+                logger.error("Required utilities for stopping iOS simulator are missing")
                 return false
             }
 
             val deviceName = AppConfig.getIosDeviceName()
             if (deviceName.isBlank()) {
-                logger.error("Не указано имя устройства iOS для остановки")
+                logger.error("iOS device name for stop is not specified")
                 return false
             }
 
             val simulatorId = getSimulatorId(deviceName)
             if (simulatorId == null) {
-                logger.info("Симулятор iOS не запущен, остановка не требуется")
+                logger.info("iOS simulator is not running, no stop required")
                 return true
             }
 
-            logger.info("Остановка симулятора iOS с ID: $simulatorId")
+            logger.info("Stopping iOS simulator with ID: $simulatorId")
 
-            // Пробуем остановить симулятор стандартным способом
+            // Try to stop the simulator in a standard way
             val result = TerminalUtils.runCommand(
                 command = listOf("xcrun", "simctl", "shutdown", simulatorId),
                 timeout = Duration.ofSeconds(COMMAND_TIMEOUT_SECONDS.toLong())
             )
             if (result.timedOut) {
-                logger.warn("Таймаут при остановке симулятора iOS")
+                logger.warn("Timeout while stopping iOS simulator")
             }
 
-            // Подождем до 2 секунд без Thread.sleep, давая симулятору шанс остановиться
+            // Wait up to 2 seconds without Thread.sleep, giving the simulator a chance to stop
             waitForCondition(
                 timeout = Duration.ofSeconds(2),
                 pollInterval = Duration.ofMillis(200)
             ) { getSimulatorId(deviceName) == null }
 
-            // Проверяем, остановился ли симулятор
+            // Check if the simulator has stopped
             val stillRunning = getSimulatorId(deviceName) != null
             if (stillRunning) {
-                logger.warn("Симулятор iOS не остановился стандартным способом, применяем принудительную остановку")
+                logger.warn("iOS simulator did not stop in a standard way, applying forced stop")
                 forceStopIosSimulator(simulatorId)
 
-                // Проверяем еще раз с ожиданием до 5 секунд без Thread.sleep
+                // Check again with a wait up to 5 seconds without Thread.sleep
                 val stoppedAfterForce = waitForCondition(
                     timeout = Duration.ofSeconds(5),
                     pollInterval = Duration.ofMillis(200)
                 ) { getSimulatorId(deviceName) == null }
                 val stillRunningAfterForce = !stoppedAfterForce
                 if (stillRunningAfterForce) {
-                    logger.error("Не удалось остановить симулятор iOS даже принудительно")
+                    logger.error("Failed to stop iOS simulator even forcibly")
                     return false
                 }
             }
 
-            logger.info("Симулятор iOS успешно остановлен")
+            logger.info("iOS simulator stopped successfully")
             return true
         } catch (e: Exception) {
-            logger.error("Ошибка при остановке симулятора iOS: ${e.message}", e)
+            logger.error("Error while stopping iOS simulator: ${e.message}", e)
             return false
         }
     }
 
     /**
-     * Публичный метод для форсирования использования Wi‑Fi на Android‑эмуляторе перед тестами.
-     * Возвращает true, если удалось включить Wi‑Fi и отключить мобильные данные.
+     * Public method to enforce Wi-Fi usage on the Android emulator before tests.
+     * Returns true if Wi-Fi could be enabled and mobile data disabled.
      */
     fun ensureAndroidWifiConnectivity(): Boolean {
         return try {
             if (AppConfig.getPlatform() != Platform.ANDROID) return true
             val emulatorId = getEmulatorId() ?: run {
-                logger.warn("Не найден запущенный Android эмулятор для настройки сети")
+                logger.warn("No running Android emulator found for network configuration")
                 return false
             }
             configureAndroidNetwork(emulatorId)
         } catch (t: Throwable) {
-            logger.error("Ошибка при обеспечении Wi‑Fi подключения на эмуляторе: ${t.message}", t)
+            logger.error("Error ensuring Wi-Fi connectivity on emulator: ${t.message}", t)
             false
         }
     }
 
     /**
-     * Конфигурирует сеть на Android‑эмуляторе: включает Wi‑Fi и отключает мобильные данные,
-     * затем проверяет состояние с повторами в течение ограниченного времени.
+     * Configures network on the Android emulator: enables Wi-Fi and disables mobile data,
+     * then verifies the state with retries within a limited time.
      */
     private fun configureAndroidNetwork(deviceId: String): Boolean {
         if (deviceId.isBlank()) return false
@@ -996,11 +996,11 @@ object EmulatorManager {
             )
 
         try {
-            // Команды на включение Wi‑Fi и отключение мобильных данных
+            // Commands to enable Wi-Fi and disable mobile data
             runAdb("svc", "wifi", "enable")
             runAdb("svc", "data", "disable")
 
-            // Дополнительная попытка выключить мобильные данные через settings для старых API
+            // Additional attempt to disable mobile data via settings for older APIs
             runAdb("settings", "put", "global", "mobile_data", "0")
 
             val timeout = Duration.ofSeconds(20)
@@ -1026,17 +1026,17 @@ object EmulatorManager {
                 val dataDisabled = try {
                     val res3 = runAdb("settings", "get", "global", "mobile_data")
                     res3.stdout.trim() == "0"
-                } catch (_: Exception) { true /* некоторые API не отдают значение, считаем ок если svc выполнилась */ }
+                } catch (_: Exception) { true /* some APIs don't return a value; consider ok if svc executed */ }
 
                 (wifiEnabled || wifiCmdOk) && dataDisabled
             }
 
             if (!ok) {
-                logger.warn("Не удалось подтвердить состояние сети: Wi‑Fi ON и Data OFF в отведённое время")
+                logger.warn("Failed to confirm network state: Wi-Fi ON and Data OFF within the allotted time")
             }
             return ok
         } catch (t: Throwable) {
-            logger.error("Ошибка при конфигурации сети Android: ${t.message}", t)
+            logger.error("Error during Android network configuration: ${t.message}", t)
             return false
         }
     }

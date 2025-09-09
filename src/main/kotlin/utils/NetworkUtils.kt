@@ -1,5 +1,6 @@
 package utils
 
+import controller.mobile.interaction.ScrollDirection
 import java.io.IOException
 import java.net.NetworkInterface
 import java.net.ServerSocket
@@ -8,14 +9,14 @@ import java.net.InetAddress
 import java.util.Enumeration
 
 /**
- * Утилитарный объект для работы с сетевыми интерфейсами и портами.
+ * Utility object for working with network interfaces and ports.
  *
- * Предоставляет функции для получения локального IP-адреса устройства,
- * определения активного сетевого интерфейса и поиска свободного TCP-порта.
+ * Provides functions for obtaining the local IP address of the machine,
+ * determining the active network interface, and finding a free TCP port.
  */
 object NetworkUtils {
 
-    // Тестовые провайдеры (инжектируются в unit-тестах)
+    // Test providers (injected in unit tests)
     internal data class NetworkInfo(
         val isLoopback: Boolean,
         val isUp: Boolean,
@@ -26,7 +27,7 @@ object NetworkUtils {
 
     internal var networkInfoProvider: (() -> List<NetworkInfo>)? = null
 
-    // Базовые провайдеры (используются для сборки NetworkInfo в проде)
+    // Base providers (used for building NetworkInfo in production)
     internal var networkInterfacesProvider: () -> Enumeration<NetworkInterface> = {
         NetworkInterface.getNetworkInterfaces()
     }
@@ -36,13 +37,13 @@ object NetworkUtils {
     }
 
     /**
-     * Получает локальный IP-адрес машины.
+     * Gets the local IP address of the machine.
      *
-     * Перебирает все сетевые интерфейсы и выбирает первый доступный site-local IP-адрес
-     * (обычно это адрес из диапазона 192.168.x.x или 10.x.x.x).
+     * Iterates over all network interfaces and selects the first available site-local IP address
+     * (usually an address from the range 192.168.x.x or 10.x.x.x).
      *
-     * @throws SocketException В случае ошибок работы с сетевыми интерфейсами.
-     * @return Строка с локальным IP-адресом или `null`, если не удалось найти.
+     * @throws SocketException In case of errors working with network interfaces.
+     * @return A string with the local IP address or `null` if none could be found.
      */
     @Throws(SocketException::class)
     fun getLocalAddress(): String? {
@@ -72,18 +73,18 @@ object NetworkUtils {
             }
         }
 
-        // Возвращаем null, если нет подходящего интерфейса
+        // Return null if no suitable interface is found
         return null
     }
 
     /**
-     * Определяет активный физический сетевой интерфейс.
+     * Determines the active physical network interface.
      *
-     * Ищет интерфейсы с именами, начинающимися на "en" (Ethernet) или "utun" (VPN),
-     * и которые находятся в активном состоянии.
+     * Looks for interfaces whose names start with "en" (Ethernet) or "utun" (VPN),
+     * and which are in an active state.
      *
-     * @throws IOException Если не найден ни один подходящий сетевой интерфейс.
-     * @return Название сетевого интерфейса (например, "Wi-Fi").
+     * @throws IOException If no suitable active network interface is found.
+     * @return The name of the network interface (e.g., "Wi-Fi").
      */
     @Throws(SocketException::class)
     fun getActiveNetworkInterface(): String {
@@ -94,7 +95,7 @@ object NetworkUtils {
                     return "Wi-Fi"
                 }
             }
-            throw IOException("Активный физический сетевой интерфейс не найден")
+            throw IOException("Active physical network interface not found")
         }
 
         val interfaces: Enumeration<NetworkInterface> = networkInterfacesProvider()
@@ -102,25 +103,25 @@ object NetworkUtils {
         while (interfaces.hasMoreElements()) {
             val iface = interfaces.nextElement()
 
-            // Фильтруем интерфейсы, имя которых начинается с "en" (например, en0, en1), и которые не являются loopback или виртуальными
+            // Filter interfaces whose name starts with "en" (e.g., en0, en1) and which are not loopback or virtual
             if (!iface.isLoopback && iface.isUp && !iface.isVirtual &&
                 (iface.displayName.startsWith("en") || iface.displayName.startsWith("utun"))) {
 
-                // Если интерфейс начинается с "en" или "utun", возвращаем "Wi-Fi"
+                // If the interface starts with "en" or "utun", return "Wi-Fi"
                 return "Wi-Fi"
             }
         }
 
-        throw IOException("Активный физический сетевой интерфейс не найден")
+        throw IOException("Active physical network interface not found")
     }
 
     /**
-     * Ищет свободный локальный TCP-порт.
+     * Finds a free local TCP port.
      *
-     * Использует механизм ServerSocket с портом 0 для автоматического выбора доступного порта системой.
+     * Uses the ServerSocket mechanism with port 0 for automatic system selection of an available port.
      *
-     * @param defaultPort Порт по умолчанию, который будет возвращён в случае ошибки поиска.
-     * @return Свободный порт или порт по умолчанию при возникновении ошибки.
+     * @param defaultPort The default port that will be returned if port lookup fails.
+     * @return A free port or the default port if an error occurs.
      */
     internal var serverSocketFactory: (Int) -> ServerSocket = { p -> ServerSocket(p) }
 

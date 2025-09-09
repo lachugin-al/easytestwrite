@@ -4,75 +4,75 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
- * Хранилище событий, зафиксированных в процессе тестирования.
+ * Storage for events recorded during testing.
  *
- * Служит для централизованного сохранения всех полученных [Event],
- * а также для управления их состоянием (обработано/не обработано).
+ * Provides centralized saving of all received [Event],
+ * as well as management of their state (processed/unprocessed).
  *
- * Используется для поиска событий по различным критериям в рамках тестовых проверок.
+ * Used for searching events by various criteria within test checks.
  */
 object EventStorage {
     private val logger: Logger = LoggerFactory.getLogger(EventStorage::class.java)
 
-    /** Список всех зафиксированных событий. */
+    /** List of all recorded events. */
     private val events = mutableListOf<Event>()
 
-    /** Набор номеров событий, которые уже были обработаны в проверках. */
+    /** Set of event numbers that have already been processed. */
     private val matchedEvents = mutableSetOf<Int>()
 
     /**
-     * Добавляет список новых событий в хранилище.
+     * Adds a list of new events to the storage.
      *
-     * Перед добавлением выполняется проверка на уникальность номера события ([event_num]).
-     * Повторяющиеся события игнорируются.
+     * Before adding, checks uniqueness of the event number ([event_num]).
+     * Duplicate events are ignored.
      *
-     * @param newEvents Список новых событий для добавления.
+     * @param newEvents List of new events to add.
      */
     fun addEvents(newEvents: List<Event>) {
         newEvents.forEach { event ->
             if (!eventExists(event.event_num)) {
                 events.add(event)
-                logger.info("Сохранено событие: ${event.name}, Номер: ${event.event_num}, Время: ${event.event_time}, Данные: ${event.data}")
+                logger.info("Saved event: ${event.name}, Number: ${event.event_num}, Time: ${event.event_time}, Data: ${event.data}")
             }
         }
     }
 
     /**
-     * Проверяет наличие события в хранилище по его номеру.
+     * Checks whether an event exists in the storage by its number.
      *
-     * @param eventNumber Номер события.
-     * @return `true`, если событие уже существует, иначе `false`.
+     * @param eventNumber Event number.
+     * @return `true` if the event already exists, otherwise `false`.
      */
     private fun eventExists(eventNumber: Int): Boolean {
         return events.any { it.event_num == eventNumber }
     }
 
     /**
-     * Отмечает событие как обработанное (matched) по его номеру.
+     * Marks an event as processed (matched) by its number.
      *
-     * @param eventNum Номер события для пометки.
+     * @param eventNum Event number to mark.
      */
     fun markEventAsMatched(eventNum: Int) {
         matchedEvents.add(eventNum)
     }
 
     /**
-     * Проверяет, было ли событие уже обработано.
+     * Checks whether an event has already been processed.
      *
-     * @param eventNum Номер события.
-     * @return `true`, если событие уже отмечено как обработанное, иначе `false`.
+     * @param eventNum Event number.
+     * @return `true` if the event is already marked as processed, otherwise `false`.
      */
     fun isEventAlreadyMatched(eventNum: Int): Boolean {
         return matchedEvents.contains(eventNum)
     }
 
     /**
-     * Получает список событий, начиная с указанного индекса.
+     * Gets a list of events starting from the specified index.
      *
-     * Исключаются уже обработанные события.
+     * Already processed events are excluded.
      *
-     * @param index Индекс, начиная с которого нужно получить события.
-     * @return Список новых событий или пустой список, если индекс за пределами текущего размера хранилища.
+     * @param index The index from which to get events.
+     * @return List of new events, or an empty list if the index is outside the storage size.
      */
     fun getIndexEvents(index: Int): List<Event> {
         return if (index < events.size) {
@@ -85,25 +85,25 @@ object EventStorage {
     }
 
     /**
-     * Возвращает все зафиксированные события.
+     * Returns all recorded events.
      *
-     * @return Копия списка всех событий.
+     * @return Copy of the list of all events.
      */
     fun getEvents(): List<Event> {
         return events.toList()
     }
 
     /**
-     * Возвращает последнее добавленное событие.
+     * Returns the last added event.
      *
-     * @return Последнее событие или `null`, если хранилище пусто.
+     * @return The last event, or `null` if the storage is empty.
      */
     fun getLastEvent(): Event? {
         return events.lastOrNull()
     }
 
     /**
-     * Очищает хранилище событий и сбрасывает список обработанных событий.
+     * Clears the event storage and resets the list of processed events.
      */
     fun clear() {
         events.clear()

@@ -12,17 +12,19 @@ import utils.DEFAULT_TIMEOUT_EXPECTATION
 interface UiVisibilityChecks : UiElementFinding {
 
     /**
-     * Проверить виден ли [element] на экране
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Check if the [element] is visible on the screen.
      *
-     * @exception java.util.NoSuchElementException элемент не найден
+     * @param element the target element;
+     * @param elementNumber the index of the found element starting from 1;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no DOM changes)
+     *        before starting the element search;
+     * @param timeoutExpectation number of seconds to wait for the element to appear;
+     * @param pollingInterval frequency of element polling in milliseconds;
+     * @param scrollCount number of scroll attempts if the element is not found on the current screen;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0], with 1.0 scrolling a full screen;
+     * @param scrollDirection scroll direction;
+     *
+     * @exception java.util.NoSuchElementException if the element is not found
      */
     fun ExpectationContext.checkVisible(
         element: PageElement?,
@@ -47,25 +49,27 @@ interface UiVisibilityChecks : UiElementFinding {
     }
 
     /**
-     * Проверить, виден ли на экране элемент, содержащий указанный текст.
+     * Check if an element containing the specified text is visible on the screen.
      *
-     * Метод построит локатор по стратегии `PageElement.Contains` на всех платформах (Android, iOS, Web)
-     * и выполнит поиск элемента с возможностью скроллирования. Если элемент найден, будет проверена его видимость.
+     * The method builds a locator using the `PageElement.Contains` strategy across all platforms
+     * (Android, iOS, Web) and performs element search with scrolling support.
+     * If the element is found, its visibility will be checked.
      *
-     * Метод полезен для DSL, когда известна только часть текста (например, кнопки, лейбла и т.п.),
-     * а точный локатор не задан или изменяется динамически.
+     * Useful for DSL when only part of the text is known (e.g., a button, label, etc.),
+     * but the exact locator is not specified or changes dynamically.
      *
-     * @param text текст, который точно соответствует в целевом элементе;
-     * @param containsText текст, который должен содержаться в элементе;
-     * @param elementNumber порядковый номер совпавшего элемента (начиная с 1);
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation максимальное время ожидания элемента;
-     * @param pollingInterval интервал между попытками;
-     * @param scrollCount количество скроллов при отсутствии элемента;
-     * @param scrollCapacity доля экрана, на которую происходит один скролл [0.0 - 1.0];
-     * @param scrollDirection направление скроллирования;
+     * @param text the exact text to match in the target element;
+     * @param containsText the substring that must be contained in the element;
+     * @param elementNumber the index of the matched element starting from 1;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no DOM changes)
+     *        before starting the element search;
+     * @param timeoutExpectation maximum wait time for the element;
+     * @param pollingInterval interval between element search attempts;
+     * @param scrollCount number of scroll attempts if the element is not found;
+     * @param scrollCapacity fraction of the screen to scroll per action [0.0 - 1.0];
+     * @param scrollDirection scroll direction;
      *
-     * @throws java.util.NoSuchElementException если элемент не найден или не отображается.
+     * @throws java.util.NoSuchElementException if the element is not found or not visible.
      */
     fun ExpectationContext.checkVisible(
         text: String? = null,
@@ -79,10 +83,10 @@ interface UiVisibilityChecks : UiElementFinding {
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ) {
         require(!(text == null && containsText == null)) {
-            "Необходимо указать либо 'text', либо 'contains'"
+            "Either 'text' or 'contains' must be specified"
         }
         require(!(text != null && containsText != null)) {
-            "Нельзя одновременно использовать 'text' и 'contains'"
+            "Cannot use both 'text' and 'contains' simultaneously"
         }
         val element = when {
             text != null -> PageElement(
@@ -95,7 +99,7 @@ interface UiVisibilityChecks : UiElementFinding {
                 ios = PageElement.Contains(containsText),
             )
 
-            else -> error("Указан и не text и не containsText")
+            else -> error("Neither text nor containsText specified")
         }
 
         waitForElements(

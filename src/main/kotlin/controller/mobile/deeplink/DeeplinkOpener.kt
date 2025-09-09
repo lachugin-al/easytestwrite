@@ -15,22 +15,22 @@ import java.nio.charset.StandardCharsets
 interface DeeplinkOpener : AppContext, UiElementFinding {
 
     /**
-     * Открыть диплинк на мобильном устройстве в зависимости от платформы.
+     * Open a deeplink on the mobile device depending on the platform.
      *
-     * @param deeplink Строка диплинка, который необходимо открыть.
+     * @param deeplink The deeplink string to be opened.
      *
-     * Для Android:
-     *  - Используется Mobile Command `mobile:deepLink` через Appium.
+     * For Android:
+     *  - Uses the Mobile Command `mobile:deepLink` via Appium.
      *
-     * Для iOS:
-     *  - Открытие диплинка происходит через симулятор с помощью `xcrun simctl openurl`,
-     *  - Вспомогательная страница запускается через локальный web-сервер.
+     * For iOS:
+     *  - Deeplink is opened via simulator using `xcrun simctl openurl`,
+     *  - The helper page is served through a local web server.
      *
-     * @throws IllegalArgumentException если платформа не поддерживается.
+     * @throws IllegalArgumentException if the platform is not supported.
      */
     fun StepContext.openDeeplink(deeplink: String) {
         when (AppConfig.getPlatform()) {
-            // Для Android вызываем команду мобильного диплинка через Appium
+            // For Android: call the mobile deeplink command via Appium
             Platform.ANDROID -> driver.executeScript(
                 "mobile:deepLink",
                 mapOf(
@@ -39,7 +39,7 @@ interface DeeplinkOpener : AppContext, UiElementFinding {
                 )
             )
 
-            // Для iOS: сначала пробуем стандартный способ через Appium, затем (при ошибке или отсутствии bundleId) эмулируем через симулятор
+            // For iOS: first try the standard Appium approach, then (if it fails or bundleId is missing) fall back to simulator
             Platform.IOS -> {
                 val bundleId = AppConfig.getBundleId().trim()
                 if (bundleId.isNotEmpty()) {
@@ -66,10 +66,10 @@ interface DeeplinkOpener : AppContext, UiElementFinding {
                     app.webServer.getHostingUrl() + "src/main/resources/deeplink.html?url=" + encodedUrl
                 )
 
-                // Выполняем команду открытия URL через симулятор
-                runCommand(listCommand, "Нет возможность открыть deeplink")
+                // Execute the open URL command through the simulator
+                runCommand(listCommand, "Unable to open deeplink")
 
-                // Ждём появления элемента "deeplink" на экране симулятора и нажимаем по нему
+                // Wait for the "deeplink" element to appear on the simulator screen and click it
                 (this@DeeplinkOpener as UiElementFinding).waitForElement(
                     PageElement(
                         android = null,
@@ -78,7 +78,7 @@ interface DeeplinkOpener : AppContext, UiElementFinding {
                 ).click()
             }
 
-            else -> throw IllegalArgumentException("Неподдерживаемая платформа")
+            else -> throw IllegalArgumentException("Unsupported platform")
         }
     }
 }

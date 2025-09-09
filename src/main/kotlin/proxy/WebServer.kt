@@ -23,15 +23,14 @@ import org.slf4j.LoggerFactory
 import utils.NetworkUtils
 import java.time.Instant
 
-
 /**
- * Локальный HTTP-сервер для тестовой инфраструктуры.
+ * Local HTTP server for the test infrastructure.
  *
- * Выполняет функции:
- * - Хостинга локальных файлов (/file/)
- * - Приёма событий от клиента (/m/batch) и их сохранения в [EventStorage]
+ * Provides functionality for:
+ * - Hosting local files (/file/)
+ * - Receiving client events (/m/batch) and saving them in [EventStorage]
  *
- * Является частью системы тестирования мобильных и web-приложений.
+ * It is part of the mobile and web application testing system.
  */
 class WebServer : AutoCloseable {
     private val logger: Logger = LoggerFactory.getLogger(WebServer::class.java)
@@ -41,20 +40,20 @@ class WebServer : AutoCloseable {
     private var paused: Boolean = false
 
     init {
-        // Регистрируем shutdown hook для корректного завершения
-        Runtime.getRuntime().addShutdownHook(Thread { 
+        // Register a shutdown hook for graceful termination
+        Runtime.getRuntime().addShutdownHook(Thread {
             try {
                 close()
             } catch (e: Exception) {
-                logger.error("Ошибка при закрытии WebServer в shutdown hook: ${e.message}", e)
+                logger.error("Error while closing WebServer in shutdown hook: ${e.message}", e)
             }
         })
     }
 
     /**
-     * Запускает веб-сервер.
+     * Starts the web server.
      *
-     * Сервер стартует на локальном IP-адресе и динамически выбранном свободном порту.
+     * The server starts on the local IP address and a dynamically selected free port.
      */
     fun start() {
         val host = NetworkUtils.getLocalAddress()
@@ -62,10 +61,10 @@ class WebServer : AutoCloseable {
         try {
             webServer = HttpServer.create(InetSocketAddress(host, port), 0)
         } catch (e: IOException) {
-            throw RuntimeException("Не удалось инициализировать веб-сервер", e)
+            throw RuntimeException("Failed to initialize web server", e)
         }
 
-        // Назначение контекста соответствующим обработчикам
+        // Register contexts with their respective handlers
         webServer?.apply {
             createContext("/file/", FileHttpHandler())
             createContext("/m/batch", BatchHttpHandler())
@@ -74,31 +73,31 @@ class WebServer : AutoCloseable {
         }
 
         serverUrl = "http://$host:${webServer?.address?.port}"
-        logger.info("Веб-сервер запущен на $serverUrl")
+        logger.info("Web server started at $serverUrl")
     }
 
     /**
-     * Возвращает URL веб-сервера.
+     * Returns the web server URL.
      */
     fun getServerUrl(): String? { return serverUrl }
 
     /**
-     * Возвращает URL для загрузки файлов через сервер.
+     * Returns the base URL for file hosting through the server.
      */
     fun getHostingUrl(): String? { return "$serverUrl/file/" }
 
     /**
-     * Останавливает веб-сервер.
-     * 
-     * Метод безопасен для многократного вызова и корректно обрабатывает случаи,
-     * когда сервер уже остановлен или не был инициализирован.
+     * Stops the web server.
+     *
+     * This method is safe for repeated calls and correctly handles cases
+     * where the server was already stopped or not initialized.
      */
     override fun close() {
         try {
             webServer?.stop(0)
-            logger.info("Веб-сервер остановлен на $serverUrl")
+            logger.info("Web server stopped at $serverUrl")
         } catch (e: Exception) {
-            logger.error("Ошибка при остановке веб-сервера: ${e.message}", e)
+            logger.error("Error while stopping web server: ${e.message}", e)
         } finally {
             webServer = null
             serverUrl = null
@@ -106,15 +105,15 @@ class WebServer : AutoCloseable {
     }
 
     /**
-     * Обработчик HTTP-запросов для получения файлов (/file/).
+     * HTTP handler for serving files (/file/).
      */
     private inner class FileHttpHandler : HttpHandler {
         override fun handle(exchange: HttpExchange) {
-            // Уступить выполнение потока, если сервер приостановлен
+            // Yield thread execution if the server is paused
             while (paused) { Thread.yield() }
 
             val path = exchange.requestURI.path.replaceFirst(exchange.httpContext.path, "")
-            logger.info("Отправка файла клиенту: $path")
+            logger.info("Sending file to client: $path")
             val file = File(path)
 
             exchange.sendResponseHeaders(200, file.length())
@@ -123,9 +122,9 @@ class WebServer : AutoCloseable {
     }
 
     /**
-     * Обработчик HTTP-запросов для приёма событий (/m/batch).
+     * HTTP handler for receiving events (/m/batch).
      *
-     * Сохраняет каждое событие в локальное хранилище [EventStorage].
+     * Saves each event to the local storage [EventStorage].
      */
     private inner class BatchHttpHandler : HttpHandler {
         private val json = Json { ignoreUnknownKeys = true }
@@ -138,17 +137,17 @@ class WebServer : AutoCloseable {
             val metaData = root["meta"] ?: JsonNull
             val eventsData = root["events"]?.jsonArray ?: JsonArray(emptyList())
 
-            // Базовый номер для новых событий
+            // Base number for new events
             val baseNum = EventStorage.getLastEvent()?.event_num ?: 0
 
-            // Собираем список событий
+            // Build list of events
             val parsedEvent = eventsData.mapIndexed { idx, evJson ->
                 val evObj = evJson.jsonObject
                 val evTime = evObj["event_time"]?.jsonPrimitive?.content ?: Instant.now().toString()
                 val evNum  = evObj["event_num"]?.jsonPrimitive?.intOrNull ?: (baseNum + idx + 1)
                 val evName = evObj["name"]?.jsonPrimitive?.content ?: "UNKNOWN"
 
-                // Собираем единый JSON для каждого отдельного события
+                // Construct a single JSON record for each event
                 val singleRecord = buildJsonObject {
                     put("meta", metaData)
                     put("event", evJson)

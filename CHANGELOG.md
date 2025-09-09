@@ -1,229 +1,78 @@
-# Список изменений
+# Changelog
 
-Все значимые изменения в этом проекте будут документированы в этом файле.
+All notable changes to this project will be documented in this file.
 
-## [0.0.47] - 2025-07-25
-### Добавлено
-- Добавление новой документации по использованию аннотации Suite и AllureExtension для улучшения организации тестов в отчетах Allure
-- Расширение документации по параметризованному тестированию с примерами использования различных источников данных
-- Улучшение документации по работе с событиями и аналитикой, включая примеры использования шаблонов для сопоставления значений
-- Включены ранее закомментированные тесты в SkipAnnotationTest
-- Добавлен GitHub Actions workflow для автоматизации модульных тестов
-- 
-### Улучшено
-- Обновление структуры документации для более логичной организации и улучшения навигации
-- Добавление дополнительных примеров использования основных функций фреймворка
-
-## [0.0.46] - 2025-07-24
-### Добавлено
-- Интегрирован и затем отключен плагин статического анализа кода Detekt в скрипт сборки
-- Добавлены файлы конфигурации и базовой линии для обеспечения качества кода в проекте
-
-### Улучшено
-- Расширена документация в README.md с подробным руководством по использованию фреймворка
-- Добавлено полное оглавление для улучшения навигации
-- Добавлены новые примеры обработки событий
-- Улучшена структура документации для повышения ясности
-
-## [0.0.45] - 2025-07-23
-### Улучшено
-- Переименован параметр timeoutExpectation в timeoutEventExpectation для более ясного именования параметров в MobileTest
-
-## [0.0.44] - 2025-07-23
-### Добавлено
-- Добавлен параметр timeoutEventExpectation в MobileTest для повышения гибкости обработки событий
-
-## [0.0.43] - 2025-07-22
-### Улучшено
-- Упрощена логика сопоставления событий в MobileTest
-- Оптимизирована обработка исключений
-
-## [0.0.42] - 2025-07-16
-### Улучшено
-- Улучшена инициализация MobileTest с отложенной привязкой для app и context
-- Добавлены надежные проверки запуска эмулятора
-- Расширено логирование для повышения надежности и ясности тестов
-
-## [0.0.41] - 2025-07-16
-### Улучшено
-- Изменены значения по умолчанию для версии Android и имени устройства в AppConfig
-
-## [0.0.40] - 2025-07-10
-### Добавлено
-- Расширен MobileTest с поддержкой шаблонов для сопоставления значений JSON, включая шаблоны "~value" для частичного совпадения
-- Обновлена логика matchJsonElement
-- Обновление README.md: добавлена документация для сопоставления шаблонов JSON в проверке eventData, предоставлены примеры и улучшена структура для большей ясности
-- Обновление README.md: расширение документации для включения интеграции веб-тестирования с Playwright, улучшение инструкций по конфигурации и улучшение структуры для повышения ясности и удобства использования (2025-07-07)
-- Обновление файла config.properties: улучшение описаний, повышение ясности с использованием согласованной терминологии и обновление значений по умолчанию для лучшей удобства использования и читаемости (2025-07-05)
-- Обновление параметров конфигурации в README и файле конфигурации, расширение документации с подробными описаниями свойств и уточнение значений по умолчанию для улучшения ясности и удобства использования (2025-07-05)
-
-## [0.0.39] - 2025-07-04
-### Добавлено
-- Аннотация Suite и AllureExtension для улучшения отчетности Allure с пользовательскими метками набора тестов
-
-## [0.0.38] - 2025-07-01
-### Улучшено
-- MobileTest путем внедрения логики стабилизации пользовательского интерфейса с использованием WebDriverWait
-- Улучшено поведение timeoutBeforeExpectation для большей точности
-- Обновлены комментарии для ясности и согласованности
-
-## [0.0.37] - 2025-07-01
-### Улучшено
-- Логика повторных попыток и прокрутки MobileTest для сопоставления событий
-- Улучшена обработка ошибок с подробным логированием
-- Улучшен процесс выбора элементов
-
-## [0.0.36] - 2025-06-30
-### Добавлено
-- Улучшено сообщение об ошибке в MobileTest для предоставления более четких деталей о последнем исключении и используемых локаторах при сбоях
-- Поддержка нескольких локаторов в PageElement для повышения гибкости на разных платформах
-- Обновлена логика прокрутки и сопоставления элементов в MobileTest
-- Улучшена обработка списков локаторов
-
-## [0.0.35] - 2025-06-29
-### Улучшено
-- Упрощена обработка событий MobileTest за счет сокращения ненужных попыток прокрутки
-- Оптимизирована обработка тайм-аутов
-- Улучшена логика сопоставления событий для повышения эффективности
-
-## [0.0.34] - 2025-06-25
-### Добавлено
-- Настраиваемый автозапуск и автоматическое выключение эмулятора в AppConfig
-- Обновлена логика жизненного цикла MobileTest
-- Расширены свойства конфигурации
-
-## [0.0.33] - 2025-06-24
-### Улучшено
-- Обработка завершения работы WebServer с логированием ошибок
-- Обеспечена безопасная очистка ресурсов
-- Унифицирована платформенно-независимая логика закрытия
-
-## [0.0.32] - 2025-06-24
-### Добавлено
-- Реализована логика повторных попыток для загрузки эмулятора Android в EmulatorManager для повышения надежности при запуске
-
-## [0.0.31] - 2025-06-24
-### Улучшено
-- Увеличено время ожидания загрузки эмулятора в EmulatorManager для повышения стабильности при запуске
-
-## [0.0.30] - 2025-06-24
-### Добавлено
-- Улучшен EmulatorManager с логикой ожидания загрузки эмулятора Android
-- Добавлена утилита runCommand в TerminalUtils
-
-## [0.0.29] - 2025-06-23
-### Добавлено
-- EmulatorManager для управления эмуляторами Android и iOS
-- Интегрировано управление жизненным циклом в MobileTest
-
-## [0.0.28] - 2025-06-23
-### Добавлено
-- Закрытие приложения при пропуске теста в SkipConditionExtension
-- Открыт метод closeApp в MobileTest
-- Улучшена аннотация Skip с поддержкой причины
-- Улучшена локализованная отчетность тестов
-
-## [0.0.27] - 2025-06-23
-### Добавлено
-- SkipConditionExtension для условного пропуска тестов на основе платформы
-
-## [0.0.26] - 2025-06-19
-### Добавлено
-- Параметр EventPosition для метода click
-
-## [0.0.25] - 2025-06-03/04
-### Добавлено
-- Поддержка прокси
-- Рефакторинг прокси
-
-## [0.0.24] - 2025-05-28
-### Добавлено
-- AnrWatcher
-
-## [0.0.23] - 2025-05-25
-### Добавлено
-- Проверка ожидания события тайм-аута по умолчанию
-
-## [0.0.22] - 2025-05-17
-### Добавлено
-- Раздельная запись видео для Android/iOS
-
-## [0.0.21] - 2025-05-16
-### Добавлено
-- Поддержка параметризованных тестов
-
-## [0.0.20] - 2025-05-15/16
-### Добавлено
-- Функциональность записи видео
-
-## [0.0.19] - 2025-05-14
-### Изменено
-- Стратегия поиска карточки событий для iOS
-
-## [0.0.18] - 2025-05-13
-### Добавлено
-- Очистка логов и хранилища событий перед каждым тестом
-
-## [0.0.17] - 2025-05-12
-### Добавлено
-- Консольный лог в отчет
-
-## [0.0.16] - 2025-05-10
-### Добавлено
-- Стратегия поиска нативных локаторов
-
-## [0.0.15] - 2025-05-10
-### Добавлено
-- Отключение скриншота контекста ожидания
-
-## [0.0.14] - 2025-05-09
-### Добавлено
-- Повторные попытки для неудачных тестов
-
-## [0.0.13] - 2025-05-09
-### Добавлено
-- Множественные опциональные шаги
-
-## [0.0.12] - 2025-05-07
-### Обновлено
-- Гибкий клик по локатору
-
-## [0.0.11] - 2025-05-07
-### Добавлено
-- Гибкий клик по локатору
-
-## [0.0.10] - 2025-05-06
-### Добавлено
-- Содержит значение метки имени
-
-## [0.0.9] - 2025-05-06
-### Добавлено
-- Нативные действия
-
-## [0.0.8] - 2025-05-05
-### Добавлено
-- Нативные автоматические действия с оповещениями iOS
-
-## [0.0.7] - 2025-05-04
-### Добавлено
-- Функциональность скриншотов
+## [0.0.1] - 2025-07-25
+### Added
+- Initial project setup with package refactoring and configuration
+- PageElement improvements and README information
+- BundleId support
+- Screenshot functionality
 - AlertHandler
+- Native iOS automatic alert actions
+- Native actions
+- Flexible locator click functionality
+- Multiple optional steps
+- Retry logic for failed tests
+- Context screenshot disabling
+- Native locator strategy
+- Console logs in test report
+- Event storage and log clearing before each test
+- Strategy update for iOS event card lookup
+- Video recording functionality
+- Parameterized test support
+- Separate video recording for Android and iOS
+- Timeout expectation check for events
+- AnrWatcher utility
+- Proxy support and refactoring
+- EventPosition parameter for `click`
+- SkipConditionExtension for conditional test skipping based on platform
+- Closing the app when skipping tests
+- Improved Skip annotation with reason support
+- Localized test reporting
+- EmulatorManager for managing Android and iOS emulators
+- Integrated lifecycle management in MobileTest
+- Retry logic for Android emulator startup
+- Configurable auto-start and shutdown of emulator in AppConfig
+- Extended MobileTest lifecycle logic
+- New configuration properties
+- Improved MobileTest with JSON value matching templates (wildcards, partials)
+- Updated `matchJsonElement` logic
+- README update with JSON pattern matching docs and Playwright integration
+- Extended documentation on parameterized testing with examples
+- Improved event/analytics docs with matching examples
+- GitHub Actions workflow for automated unit tests
+- Documentation for Suite annotation and AllureExtension
+- Documentation on working with events and analytics including templates
+- Expanded README with full table of contents and navigation
 
-## [0.0.6] - 2025-05-02
-### Добавлено
-- Поддержка BundleId
+### Improved
+- PageElement enhancements
+- Flexible click handling
+- Multiple optional steps DSL
+- Retry strategy for failing tests
+- SkipConditionExtension logic with app closing
+- MobileTest lifecycle with delayed binding for `app` and `context`
+- Emulator startup checks and reliability
+- Logging clarity and error details
+- Event matching simplification in MobileTest
+- Exception handling optimization
+- Android version and device name defaults in AppConfig
+- MobileTest stability improvements with UI stabilization waits
+- Timeout behavior tuning (`timeoutBeforeExpectation`, `timeoutEventExpectation`)
+- Scroll/retry logic for event matching
+- Improved error reporting with locator details
+- Simplified event handling to reduce unnecessary scrolls
+- Optimized timeout processing
+- Improved test navigation in documentation
+- Documentation structure and organization
+- Additional framework usage examples
+- README with detailed usage guide
+- Full table of contents for navigation
 
-## [0.0.5] - 2025-05-02
-### Добавлено
-- Поддержка BundleId
+### Changed
+- Renamed parameter `timeoutExpectation` → `timeoutEventExpectation` in MobileTest
 
-## [0.0.4] - 2025-05-01
-### Улучшено
-- Улучшения PageElement
-- Добавлена информация в README
-
-## [Начальный релиз] - 2025-04-30
-### Добавлено
-- Начальная настройка проекта
-- Рефакторинг пакетов
-- Настройка конфигурации
+### Fixed
+- Improved WebServer shutdown handling and resource cleanup
+- Stable termination of locally started processes

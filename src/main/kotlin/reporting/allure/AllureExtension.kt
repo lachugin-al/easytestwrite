@@ -6,38 +6,38 @@ import org.junit.jupiter.api.extension.*
 import java.util.Optional
 
 /**
- * Расширение JUnit, которое обрабатывает аннотацию [Suite].
+ * JUnit extension that processes the [Suite] annotation.
  *
- * Это расширение изменяет метку "suite" в отчетах Allure, заменяя стандартное значение
- * (полное имя класса с пакетом) на значение, указанное в аннотации [Suite].
+ * This extension modifies the "suite" label in Allure reports, replacing the default value
+ * (the full class name with package) with the value specified in the [Suite] annotation.
  *
- * Для использования необходимо:
- * 1. Добавить аннотацию [Suite] к тестовому классу с нужным именем Suite
- * 2. Добавить аннотацию [@ExtendWith(SuiteExtension::class)] к тестовому классу
+ * Usage:
+ * 1. Add the [Suite] annotation to the test class with the desired Suite name.
+ * 2. Add the annotation [@ExtendWith(SuiteExtension::class)] to the test class.
  */
 class AllureExtension : BeforeEachCallback {
     /**
-     * Метод, вызываемый перед каждым тестом.
+     * Method called before each test.
      *
-     * @param context Контекст выполнения теста, содержащий информацию о тестовом классе и методе.
+     * @param context Test execution context containing information about the test class and method.
      */
     override fun beforeEach(context: ExtensionContext) {
-        // Получаем значение аннотации Suite из тестового класса
+        // Get the Suite annotation value from the test class
         val suite = context.testClass
             .flatMap { klass -> Optional.ofNullable(klass.getAnnotation(Suite::class.java)).map { it.value } }
 
-        // Если аннотация Suite присутствует, обновляем метку "suite" в Allure
+        // If the Suite annotation is present, update the "suite" label in Allure
         suite.ifPresent { value ->
             Allure.getLifecycle().updateTestCase {
-                // Удаляем существующую метку "suite"
+                // Remove existing "suite" label
                 it.labels.removeIf { label -> label.name == "suite" }
 
-                // Создаем новую метку "suite" с значением из аннотации
+                // Create a new "suite" label with the value from the annotation
                 val label = Label()
                 label.name = "suite"
                 label.value = value
 
-                // Добавляем новую метку в тестовый кейс
+                // Add the new label to the test case
                 it.labels.add(label)
             }
         }

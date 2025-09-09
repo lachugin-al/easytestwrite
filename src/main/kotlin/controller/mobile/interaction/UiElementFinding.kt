@@ -23,16 +23,16 @@ interface UiElementFinding : AppContext {
     )
 
     /**
-     * Найти элемент на экране по его [element]
-     * @param element элемент;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Find an element on the screen by its [element].
+     * @param element the element;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no changes in page source) before starting the search;
+     * @param timeoutExpectation number of seconds during which the element is searched for;
+     * @param pollingInterval polling frequency in milliseconds;
+     * @param scrollCount number of scroll attempts toward the element if it is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
+     * @param scrollDirection scroll direction of the screen;
      *
-     * @exception java.util.NoSuchElementException элемент не найден
+     * @exception java.util.NoSuchElementException element not found
      *
      * @return MobileElement
      */
@@ -45,11 +45,11 @@ interface UiElementFinding : AppContext {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ): MobileElement {
-        // Если timeoutBeforeExpectation > 0, ожидаем, пока страница не будет в стабильном состоянии
+        // If timeoutBeforeExpectation > 0, wait until the page becomes stable
         if (timeoutBeforeExpectation > 0) {
             val beforeWait = WebDriverWait(driver, timeoutBeforeExpectation, pollingInterval)
             try {
-                // Ожидаем, пока UI приложения станет стабильным, проверяя, перестал ли меняться исходный код страницы
+                // Wait until the app UI becomes stable by checking whether the page source stops changing
                 var previousPageSource = driver.pageSource
                 beforeWait.until { d ->
                     try {
@@ -57,19 +57,19 @@ interface UiElementFinding : AppContext {
                         val isStable = currentPageSource == previousPageSource
                         previousPageSource = currentPageSource
 
-                        // Если исходный код страницы не изменился, считаем UI стабильным
-                        // Но продолжаем проверку до истечения таймаута, чтобы убедиться, что он действительно стабилен
+                        // If the page source has not changed, consider the UI stable
+                        // But continue checking until the timeout to ensure it truly stabilizes
                         isStable
                     } catch (e: Exception) {
-                        // Если возникла ошибка при получении исходного кода страницы, предполагаем, что UI стабилен
-                        logger.debug("Ошибка при проверке стабильности страницы: ${e.message}")
+                        // If an error occurs while retrieving the page source, assume the UI is stable
+                        logger.debug("Error while checking page stability: ${e.message}")
                         true
                     }
                 }
-                logger.debug("UI выглядит стабильным после ожидания")
+                logger.debug("UI appears stable after waiting")
             } catch (e: Exception) {
-                // Если ожидание не удалось, логируем ошибку, но продолжаем поиск элемента
-                logger.warn("Ошибка при ожидании стабильности UI: ${e.message}")
+                // If the wait fails, log the error but continue searching for the element
+                logger.warn("Error while waiting for UI stability: ${e.message}")
             }
         }
 
@@ -80,7 +80,7 @@ interface UiElementFinding : AppContext {
             try {
                 return wait.until(ExpectedConditions.visibilityOfElementLocated(pageElement as By)) as MobileElement
             } catch (e: Exception) {
-                // Если элемент не найден и передано scrollCount > 0
+                // If the element is not found and scrollCount > 0 was provided
                 if (scrollCount > 0 && currentScroll < scrollCount) {
                     performScroll(
                         scrollCount = 1,
@@ -89,24 +89,24 @@ interface UiElementFinding : AppContext {
                     )
                     currentScroll++
                 } else {
-                    throw NoSuchElementException("Элемент '$pageElement' не найден за '$timeoutExpectation' секунд после '$currentScroll' скроллирований")
+                    throw NoSuchElementException("Element '$pageElement' was not found within '$timeoutExpectation' seconds after '$currentScroll' scrolls")
                 }
             }
         }
     }
 
     /**
-     * Найти все элементы на экране по его [element] вернуть конкретный из списка по его номеру
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Find all elements on the screen by its [element] and return a specific one by its index.
+     * @param element the element;
+     * @param elementNumber index of the found element starting from 1;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no changes in page source) before starting the search;
+     * @param timeoutExpectation number of seconds during which the elements are searched for;
+     * @param pollingInterval polling frequency in milliseconds;
+     * @param scrollCount number of scroll attempts toward the element if it is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
+     * @param scrollDirection scroll direction of the screen;
      *
-     * @exception java.util.NoSuchElementException элемент не найден
+     * @exception java.util.NoSuchElementException elements not found
      *
      * @return MobileElement
      */
@@ -120,11 +120,11 @@ interface UiElementFinding : AppContext {
         scrollCapacity: Double = DEFAULT_SCROLL_CAPACITY,
         scrollDirection: ScrollDirection = DEFAULT_SCROLL_DIRECTION
     ): MobileElement {
-        // Если timeoutBeforeExpectation > 0, ожидаем, пока страница не будет в стабильном состоянии
+        // If timeoutBeforeExpectation > 0, wait until the page becomes stable
         if (timeoutBeforeExpectation > 0) {
             val beforeWait = WebDriverWait(driver, timeoutBeforeExpectation, pollingInterval)
             try {
-                // Ожидаем, пока UI приложения станет стабильным, проверяя, перестал ли меняться исходный код страницы
+                // Wait until the app UI becomes stable by checking whether the page source stops changing
                 var previousPageSource = driver.pageSource
                 beforeWait.until { d ->
                     try {
@@ -132,19 +132,19 @@ interface UiElementFinding : AppContext {
                         val isStable = currentPageSource == previousPageSource
                         previousPageSource = currentPageSource
 
-                        // Если исходный код страницы не изменился, считаем UI стабильным
-                        // Но продолжаем проверку до истечения таймаута, чтобы убедиться, что он действительно стабилен
+                        // If the page source has not changed, consider the UI stable
+                        // But continue checking until the timeout to ensure it truly stabilizes
                         isStable
                     } catch (e: Exception) {
-                        // Если возникла ошибка при получении исходного кода страницы, предполагаем, что UI стабилен
-                        logger.debug("Ошибка при проверке стабильности страницы: ${e.message}")
+                        // If an error occurs while retrieving the page source, assume the UI is stable
+                        logger.debug("Error while checking page stability: ${e.message}")
                         true
                     }
                 }
-                logger.debug("UI выглядит стабильным после ожидания")
+                logger.debug("UI appears stable after waiting")
             } catch (e: Exception) {
-                // Если ожидание не удалось, логируем ошибку, но продолжаем поиск элемента
-                logger.warn("Ошибка при ожидании стабильности UI: ${e.message}")
+                // If the wait fails, log the error but continue searching for the element
+                logger.warn("Error while waiting for UI stability: ${e.message}")
             }
         }
 
@@ -152,13 +152,13 @@ interface UiElementFinding : AppContext {
         var currentScroll = 0
 
         while (true) {
-            // Получаем все локаторы для текущей платформы
+            // Get all locators for the current platform
             val locators = element?.getAll() ?: listOf(element?.get())
             var lastException: Exception? = null
             val attemptedLocators = mutableListOf<Any>()
             val failedLocators = mutableListOf<Any>()
 
-            // Перебираем все локаторы
+            // Iterate over all locators
             for (locator in locators.filterNotNull()) {
                 try {
                     val pageElement = locator
@@ -168,26 +168,26 @@ interface UiElementFinding : AppContext {
 
                     val safeIndex = elementNumber ?: 1
                     if (safeIndex < 1 || safeIndex > elements.size) {
-                        throw IndexOutOfBoundsException("Элемент $elementNumber вне допустимого диапазона")
+                        throw IndexOutOfBoundsException("Element $elementNumber is out of allowed range")
                     }
 
-                    // Логируем информацию о неудачных попытках, даже если текущий локатор успешен
+                    // Log info about failed attempts even if the current locator succeeded
                     if (failedLocators.isNotEmpty()) {
-                        logger.info("Следующие локаторы ${failedLocators.joinToString(", ")} из списка ${attemptedLocators} были не найдены.")
+                        logger.info("The following locators ${failedLocators.joinToString(", ")} from ${attemptedLocators} were not found.")
                     }
 
                     return elements[safeIndex - 1]
                 } catch (e: Exception) {
-                    // Сохраняем последнее исключение
+                    // Save the last exception
                     lastException = e
-                    // Добавляем локатор в список неудачных
+                    // Add the locator to the failed list
                     failedLocators.add(locator)
-                    // Продолжаем перебор локаторов
+                    // Continue iterating over locators
                     continue
                 }
             }
 
-            // Если ни один локатор не сработал и передано scrollCount > 0
+            // If no locator worked and scrollCount > 0 was provided
             if (scrollCount > 0 && currentScroll < scrollCount) {
                 performScroll(
                     scrollCount = 1,
@@ -196,19 +196,19 @@ interface UiElementFinding : AppContext {
                 )
                 currentScroll++
             } else {
-                // Используем информацию о последнем исключении и используемых локаторах для более детального сообщения об ошибке
+                // Use info about the last exception and used locators for a more detailed error message
                 val locatorsInfo = if (failedLocators.isNotEmpty()) {
-                    "Следующие локаторы ${failedLocators.joinToString(", ")} из списка ${attemptedLocators} были не найдены."
+                    "The following locators ${failedLocators.joinToString(", ")} from ${attemptedLocators} were not found."
                 } else if (attemptedLocators.isNotEmpty()) {
-                    "Попытались найти следующие элементы: ${attemptedLocators.joinToString(", ")}"
+                    "Attempted to find the following elements: ${attemptedLocators.joinToString(", ")}"
                 } else {
-                    "Не было найдено ни одного элемента"
+                    "No elements were found"
                 }
 
                 val errorMessage = if (lastException != null) {
-                    "Элементы не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований. $locatorsInfo. Причина: ${lastException.message}"
+                    "Elements were not found within '$timeoutExpectation' seconds after '$currentScroll' scrolls. $locatorsInfo. Cause: ${lastException.message}"
                 } else {
-                    "Элементы не найдены за '$timeoutExpectation' секунд после '$currentScroll' скроллирований. $locatorsInfo"
+                    "Elements were not found within '$timeoutExpectation' seconds after '$currentScroll' scrolls. $locatorsInfo"
                 }
                 throw NoSuchElementException(errorMessage)
             }
@@ -216,17 +216,17 @@ interface UiElementFinding : AppContext {
     }
 
     /**
-     * Найти элемент на экране по его [element] либо вернуть null
-     * @param element элемент;
-     * @param elementNumber номер найденного элемента начиная с 1;
-     * @param timeoutBeforeExpectation количество секунд, в течение которых ожидается стабилизация UI (отсутствие изменений в исходном коде страницы) перед началом поиска элемента;
-     * @param timeoutExpectation количество секунд в течение которого производится поиск элемента;
-     * @param pollingInterval частота опроса элемента в миллисекундах;
-     * @param scrollCount количество скроллирований до элемента, если элемент не найден на текущей странице;
-     * @param scrollCapacity модификатор высота скролла [0.0 - 1.0], при 1.0 проскроллирует экран на 1 страницу;
-     * @param scrollDirection направление скроллирования экрана;
+     * Find an element on the screen by its [element] or return null.
+     * @param element the element;
+     * @param elementNumber index of the found element starting from 1;
+     * @param timeoutBeforeExpectation number of seconds to wait for UI stabilization (no changes in page source) before starting the search;
+     * @param timeoutExpectation number of seconds during which the element is searched for;
+     * @param pollingInterval polling frequency in milliseconds;
+     * @param scrollCount number of scroll attempts toward the element if it is not found on the current page;
+     * @param scrollCapacity scroll height modifier [0.0 - 1.0]; 1.0 scrolls exactly one screen;
+     * @param scrollDirection scroll direction of the screen;
      *
-     * @exception java.util.NoSuchElementException элемент не найден
+     * @exception java.util.NoSuchElementException element not found
      *
      * @return MobileElement or null
      */
@@ -255,5 +255,4 @@ interface UiElementFinding : AppContext {
             null
         }
     }
-
 }

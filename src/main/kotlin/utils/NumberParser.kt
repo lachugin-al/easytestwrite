@@ -1,47 +1,47 @@
 package utils
 
 /**
- * Универсальный парсер чисел из «грязного» текста (цены/суммы).
+ * Universal number parser from "dirty" text (prices/amounts).
  * ----------------------------------------------------------------------------
- * RU:
- * Извлекает первое числовое значение из произвольной строки и приводит его к Double.
- * Подходит для цен/сумм, в которых могут встречаться неразрывные и тонкие пробелы,
- * валютные символы, апострофы, смешанные разделители тысяч и десятичные разделители.
+ * EN:
+ * Extracts the first numeric value from an arbitrary string and converts it to Double.
+ * Useful for prices/amounts that may include non-breaking or thin spaces,
+ * currency symbols, apostrophes, mixed thousand separators, and decimal separators.
  *
- * Что делает:
- *  - Нормализует «спец-пробелы» (NBSP, thin space и т. п.) в обычный пробел
- *  - Выделяет первый числовой токен, отбрасывая валютные/текстовые «хвосты»
- *  - Эвристически определяет десятичный разделитель (запятая или точка)
- *  - Удаляет разделители тысяч (пробелы, апострофы, лишние точки/запятые)
+ * What it does:
+ *  - Normalizes "special spaces" (NBSP, thin space, etc.) into a regular space
+ *  - Extracts the first numeric token, discarding currency/text tails
+ *  - Heuristically determines the decimal separator (comma or dot)
+ *  - Removes thousand separators (spaces, apostrophes, extra dots/commas)
  *
- * Эвристика разделителей:
- *  - Если присутствуют и запятая, и точка — десятичным считается тот, что стоит правее.
- *    Второй трактуется как разделитель тысяч и удаляется.
- *  - Если присутствует только один из {',' '.'}, то:
- *      * если последний «кусок» после разделителя имеет длину 3 и есть другие группы из 3,
- *        разделитель, вероятно, тысячный → удаляется;
- *      * иначе — считается десятичным.
+ * Separator heuristics:
+ *  - If both a comma and a dot are present — the rightmost one is considered decimal.
+ *    The other is treated as a thousand separator and removed.
+ *  - If only one of {',' '.'} is present:
+ *      * if the last "chunk" after the separator has length 3 and there are other groups of 3,
+ *        the separator is likely a thousand separator → removed;
+ *      * otherwise — considered decimal.
  *
- * Примеры:
+ * Examples:
  *  - "€1 234,56"        → 1234.56
  *  - "USD 12,345.70"    → 12345.70
  *  - "1.234,56 ₽"       → 1234.56
  *  - "- 3’141’592,65"   → -3141592.65
  *  - "≈2.000"           → 2000.0
- *  - "2,000"            → 2000.0   (трактуется как разделитель тысяч)
+ *  - "2,000"            → 2000.0   (interpreted as thousand separator)
  *  - "0,99 kg"          → 0.99
  *  - "abc"              → null
  *
- * Ограничения:
- *  - Разбирается только первое числовое вхождение.
- *  - Научная нотация (например, "1e3") не поддерживается.
- *  - Экзотические группировки, отличные от пробела/апострофа/точки/запятой, не учитываются.
- *  - Локальные правила форматирования могут отличаться от применённой эвристики.
+ * Limitations:
+ *  - Only the first numeric occurrence is parsed.
+ *  - Scientific notation (e.g., "1e3") is not supported.
+ *  - Exotic groupings other than space/apostrophe/dot/comma are not considered.
+ *  - Local formatting rules may differ from the applied heuristics.
  *
- * Сложность:
- *  - Временная — O(n) по длине входной строки; дополнительная память — O(n).
+ * Complexity:
+ *  - Time — O(n) in length of the input string; additional memory — O(n).
  *
- * Пример использования (вывод в консоль — на английском):
+ * Example usage (console output in English):
  * ```
  * fun main() {
  *     val samples = listOf("€1 234,56", "USD 12,345.70", "abc")
@@ -56,61 +56,61 @@ package utils
  * ```
  */
 object NumberParser {
-    // Специальные пробелы, которые приводим к обычному пробелу
+    // Special spaces normalized into a regular space
     private val spaceChars = "\u00A0\u202F\u2009\u2007\u2060\u2002\u2003\u2004\u2005\u2006\u2008\u3000"
 
     /**
-     * RU: Парсит Double из любой строки, содержащей число. Возвращает null, если число
-     * не найдено или распознать не удалось.
+     * Parses a Double from any string containing a number.
+     * Returns null if no number is found or parsing fails.
      *
-     * @param text Входная строка (может быть null)
-     * @return Распознанное значение Double или null
+     * @param text Input string (may be null)
+     * @return Parsed Double value or null
      */
     fun parseNumber(text: String?): Double? {
         if (text == null) return null
         if (text.isBlank()) return null
 
-        // Нормализуем юникод-пробелы в обычный пробел
+        // Normalize Unicode spaces into regular space
         val normalized = text.map { ch -> if (spaceChars.contains(ch)) ' ' else ch }.joinToString("")
 
-        // Находим первый числовой токен с возможными разделителями тысяч/десятичными
+        // Find the first numeric token with possible thousand/decimal separators
         val regex = Regex("[-+]?\\d[\\d\\s'.,]*")
         val match = regex.find(normalized) ?: return null
         var token = match.value.trim()
         if (token.isEmpty()) return null
 
-        // Удаляем ведущий плюс
+        // Remove leading plus
         token = token.removePrefix("+")
 
-        // Схлопываем множественные пробелы
+        // Collapse multiple spaces
         token = token.replace(Regex("\\s+"), " ")
 
-        // Эвристически определяем десятичный разделитель и парсим
+        // Heuristically determine decimal separator and parse
         return parseTokenToDouble(token)
     }
 
     /**
-     * RU: Преобразует выделенный числовой токен в Double, применяя эвристику выбора
-     * десятичного разделителя и удаляя разделители тысяч.
+     * Converts the extracted numeric token to Double, applying heuristics
+     * for decimal separator selection and removing thousand separators.
      *
-     * Детали:
-     *  - Если есть и ',' и '.', десятичным считается последний встреченный символ.
-     *  - Если есть только один из них, анализируются группы между разделителями:
-     *      * если «средние» группы имеют длину 3 и последний фрагмент длиной 3 — считаем это
-     *        группировкой тысяч;
-     *      * иначе — рассматриваем разделитель как десятичный.
+     * Details:
+     *  - If both ',' and '.' exist, the rightmost one is considered decimal.
+     *  - If only one exists, groups between separators are analyzed:
+     *      * if "middle" groups have length 3 and the last fragment is also 3 digits —
+     *        treat it as thousands grouping;
+     *      * otherwise — treat it as decimal separator.
      */
     private fun parseTokenToDouble(raw: String): Double? {
         var token = raw
         val hasComma = token.contains(',')
         val hasDot = token.contains('.')
 
-        // Сначала удаляем пробелы и апострофы как потенциальные разделители тысяч
+        // Remove spaces and apostrophes as potential thousand separators
         token = token.replace(" ", "").replace("'", "")
 
         var decimalSep: Char? = null
         if (hasComma && hasDot) {
-            // Оба присутствуют: правый — десятичный, другой — тысячный
+            // Both present: the rightmost is decimal, the other is thousands
             val lastComma = token.lastIndexOf(',')
             val lastDot = token.lastIndexOf('.')
             decimalSep = if (lastComma > lastDot) ',' else '.'
@@ -121,27 +121,27 @@ object NumberParser {
                 decimalSep = null
             } else {
                 val lastPart = parts.last()
-                // Если есть >1 разделителя и все средние группы длиной 3 — вероятно, это тысячи
+                // If >1 separators and all middle groups are length 3 → likely thousands
                 val middleGroups = parts.drop(1).dropLast(1)
                 val allMiddleAre3 = middleGroups.isNotEmpty() && middleGroups.all { it.length == 3 }
                 decimalSep = when {
-                    // Предпочитаем трактовку «тысячи», когда последний фрагмент длиной 3
-                    // и есть иные группы/средние группы по 3 символа
+                    // Prefer thousands interpretation when last fragment length is 3
+                    // and there are other groups/middle groups of 3 digits
                     lastPart.length == 3 && (parts.size > 2 || allMiddleAre3) -> null
-                    // иначе — это десятичный разделитель
+                    // otherwise — decimal
                     else -> sep
                 }
             }
         }
 
-        // Удаляем все не-десятичные разделители (точки/запятые, использованные как тысячи)
+        // Remove all non-decimal separators (dots/commas used as thousands)
         token = when (decimalSep) {
             ',' -> token.replace(".", "")
             '.' -> token.replace(",", "")
             else -> token.replace(",", "").replace(".", "")
         }
 
-        // Если десятичный разделитель определён, сохраняем только последний и заменяем на точку
+        // If decimal separator determined, keep only the last and replace with dot
         if (decimalSep != null) {
             val sep = decimalSep!!
             val lastIndex = token.lastIndexOf(sep)
@@ -150,12 +150,12 @@ object NumberParser {
                 val after = token.substring(lastIndex + 1)
                 token = before + '.' + after
             } else {
-                // Запасной путь (если вдруг разделитель не найден)
+                // Fallback (if separator not found)
                 token = token.replace(sep, '.')
             }
         }
 
-        // Ожидаемый итог: -?\\d+(\\.\\d+)?
+        // Expected result: -?\d+(\.\d+)?
         return token.toDoubleOrNull()
     }
 }

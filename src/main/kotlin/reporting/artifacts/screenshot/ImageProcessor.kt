@@ -18,13 +18,13 @@ object ImageProcessor {
     enum class Format { JPEG, PNG }
 
     /**
-     * Масштабирует изображение и перекодирует его в указанный формат.
+     * Scales the image and re-encodes it into the specified format.
      *
-     * @param bytes   исходные байты (обычно PNG из Appium)
-     * @param scale   0.1..1.0 (уменьшение разрешения)
-     * @param quality 1..100 (для JPEG реально влияет на размер; для PNG — скорее подсказка)
-     * @param format  целевой формат (по умолчанию JPEG)
-     * @param background Цвет подложки для JPEG (альфа не поддерживается)
+     * @param bytes   source bytes (usually PNG from Appium)
+     * @param scale   0.1..1.0 (resolution reduction)
+     * @param quality 1..100 (for JPEG this significantly affects size; for PNG — more of a hint)
+     * @param format  target format (default: JPEG)
+     * @param background Background color for JPEG (alpha is not supported)
      */
     @JvmStatic
     fun processImage(
@@ -104,7 +104,7 @@ object ImageProcessor {
 
     private fun writePng(img: BufferedImage, @Suppress("UNUSED_PARAMETER") quality: Int): ByteArray {
         val writer: ImageWriter = ImageIO.getImageWritersByFormatName("png").next()
-        val param: ImageWriteParam = writer.defaultWriteParam // можно оставить по умолчанию
+        val param: ImageWriteParam = writer.defaultWriteParam // can be left as default
 
         return ByteArrayOutputStream().use { baos ->
             ImageIO.createImageOutputStream(baos).use { ios: ImageOutputStream ->
