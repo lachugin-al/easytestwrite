@@ -1,4 +1,4 @@
-# EasyTestWrite
+# EasyTestWrite – a framework for mobile application testing
 
 [![version](https://img.shields.io/badge/version-0.0.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
