@@ -2,7 +2,7 @@
 
 Фреймворк для автоматизации тестирования мобильных приложений
 
-![Version](https://img.shields.io/badge/version-0.0.45-blue.svg)
+![Version](https://img.shields.io/badge/version-0.1.3-blue.svg)
 
 ## Содержание
 - [Обзор](#обзор)
