@@ -13,6 +13,14 @@ import utils.TerminalUtils
 import device.EmulatorManager
 import utils.TerminalUtils.CommandResult
 
+/**
+ * Unit tests for [EmulatorManager].
+ *
+ * Verifies core behavior:
+ * - Ensuring Android Wi-Fi connectivity depending on platform/emulator state
+ * - Resolving emulator/simulator identifiers
+ * - Routing of start/stop calls per platform
+ */
 class EmulatorManagerTest {
 
     @Test

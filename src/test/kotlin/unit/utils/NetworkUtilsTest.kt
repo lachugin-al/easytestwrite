@@ -10,6 +10,14 @@ import java.net.InetAddress
 import java.net.ServerSocket
 import java.util.*
 
+/**
+ * Unit tests for [NetworkUtils].
+ *
+ * Verifies:
+ * - Resolving local/site-local addresses
+ * - Determining the active network interface
+ * - Obtaining a free TCP port with fallback on error
+ */
 class NetworkUtilsTest {
 
     @AfterEach

@@ -4,41 +4,39 @@ import app.config.AppConfig
 import app.model.Platform
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import java.lang.reflect.Field
-import java.net.URL
 
 /**
- * Модульные тесты для класса [AppConfig].
+ * Unit tests for [AppConfig].
  *
- * Тестирует основную функциональность конфигурационного класса:
- * - Загрузка конфигурации
- * - Получение параметров для разных платформ
- * - Проверка значений по умолчанию
+ * Tests the core functionality of the configuration class:
+ * - Loading configuration
+ * - Retrieving parameters for different platforms
+ * - Verifying default values
  */
 class AppConfigTest {
 
     /**
-     * Тестирует получение текущей платформы.
+     * Tests retrieval of the current platform.
      */
     @Test
     fun `test get platform`() {
-        // Получаем текущую платформу
+        // Get the current platform
         val platform = AppConfig.getPlatform()
 
-        // Проверяем, что платформа не null и является одним из допустимых значений
+        // Verify the platform is not null and is one of the allowed values
         assertNotNull(platform)
         assertTrue(platform in Platform.values())
     }
 
     /**
-     * Тестирует методы проверки текущей платформы.
+     * Tests helper methods for checking the current platform.
      */
     @Test
     fun `test platform check methods`() {
-        // Получаем текущую платформу
+        // Get the current platform
         val currentPlatform = AppConfig.getPlatform()
 
-        // Проверяем согласованность методов определения платформы
+        // Verify consistency of platform-detection methods
         when (currentPlatform) {
             Platform.ANDROID -> {
                 assertTrue(AppConfig.isAndroid())
@@ -51,35 +49,35 @@ class AppConfigTest {
             }
         }
 
-        // Проверяем, что getPlatform возвращает ожидаемую платформу
+        // Ensure getPlatform returns the expected platform
         assertEquals(currentPlatform, AppConfig.getPlatform())
     }
 
     /**
-     * Тестирует получение URL Appium-сервера.
+     * Tests retrieval of the Appium server URL.
      */
     @Test
     fun `test get appium url`() {
-        // Получаем URL Appium-сервера
+        // Get the Appium server URL
         val appiumUrl = AppConfig.getAppiumUrl()
 
-        // Проверяем, что URL не null и имеет правильный формат
+        // Verify the URL is not null and has the correct format
         assertNotNull(appiumUrl)
         assertTrue(appiumUrl.toString().startsWith("http://"))
     }
 
     /**
-     * Тестирует получение имени приложения для текущей платформы.
+     * Tests retrieval of the app name for the current platform.
      */
     @Test
     fun `test get app name for current platform`() {
-        // Получаем текущую платформу
+        // Get the current platform
         val currentPlatform = AppConfig.getPlatform()
 
-        // Получаем имя приложения
+        // Get the app name
         val appName = AppConfig.getAppName()
 
-        // Проверяем имя приложения в зависимости от текущей платформы
+        // Verify the app name depending on the current platform
         when (currentPlatform) {
             Platform.ANDROID, Platform.IOS -> {
                 assertNotNull(appName)
@@ -89,18 +87,18 @@ class AppConfigTest {
     }
 
     /**
-     * Тестирует получение настроек видеозаписи в зависимости от платформы.
+     * Tests retrieval of video recording settings depending on the platform.
      */
     @Test
     fun `test video recording settings`() {
-        // Проверяем настройки видеозаписи
+        // Check video recording settings
         val isEnabled = AppConfig.isVideoRecordingEnabled()
         val size = AppConfig.getVideoRecordingSize()
         val quality = AppConfig.getVideoRecordingQuality()
         val bitrate = AppConfig.getVideoRecordingBitrate()
         val outputDir = AppConfig.getVideoRecordingOutputDir()
 
-        // Проверяем, что все значения не null и имеют ожидаемый формат
+        // Verify all values are not null and have the expected format
         assertNotNull(size)
         assertTrue(size.matches(Regex("\\d+x\\d+")))
         assertTrue(quality in 0..100)
@@ -110,7 +108,7 @@ class AppConfigTest {
     }
 
     /**
-     * Вспомогательный метод для установки значения приватного поля.
+     * Helper method to set a private field's value.
      */
     private fun setPrivateField(clazz: Class<*>, fieldName: String, value: Any) {
         val field = clazz.getDeclaredField(fieldName)

@@ -36,7 +36,7 @@ package proxy
  * - Not recommended for production usage without additional improvements
  *   (e.g., security, error handling, logging).
  */
-class WebServer {
+class WebServerMain {
     /** Starts the server. If no port is specified, a random one will be chosen. */
     fun start() { /* ... */ }
 

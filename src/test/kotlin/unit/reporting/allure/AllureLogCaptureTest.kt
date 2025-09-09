@@ -10,6 +10,13 @@ import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import reporting.allure.AllureLogCapture
 
+/**
+ * Unit tests for [AllureLogCapture].
+ *
+ * Verifies:
+ * - Attaching buffered logs to the Allure report and clearing the buffer afterwards
+ * - Retrieving accumulated logs and clearing them
+ */
 class AllureLogCaptureTest {
 
     @BeforeEach
@@ -38,7 +45,6 @@ class AllureLogCaptureTest {
                 "txt"
             )
         }
-
     }
 
     @Test

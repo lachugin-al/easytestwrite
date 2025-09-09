@@ -7,7 +7,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.runs
 import io.mockk.slot
-import io.mockk.unmockkAll
 import io.mockk.verify
 import io.qameta.allure.Allure
 import io.qameta.allure.AllureLifecycle
@@ -22,13 +21,19 @@ import java.util.Optional
 import java.util.function.Consumer
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 @Suite("My Suite Name")
 private class AnnotatedTestClass
 
 private class NonAnnotatedTestClass
 
+/**
+ * Unit tests for [AllureExtension].
+ *
+ * Verifies:
+ * - Replacing the "suite" label when the test class has the @Suite annotation
+ * - Doing nothing when the @Suite annotation is absent
+ */
 class AllureExtensionTest {
 
     private fun prepareContext(klass: Class<*>): ExtensionContext {
@@ -55,7 +60,10 @@ class AllureExtensionTest {
         assertDoesNotThrow { AllureExtension().beforeEach(context) }
 
         val initial = TestResult()
-        initial.labels = mutableListOf(Label().apply { name = "suite"; value = "OldSuite" }, Label().apply { name = "other"; value = "x" })
+        initial.labels = mutableListOf(
+            Label().apply { name = "suite"; value = "OldSuite" },
+            Label().apply { name = "other"; value = "x" }
+        )
         assertNotNull(consumerSlot.captured)
         consumerSlot.captured.accept(initial)
 

@@ -10,38 +10,38 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 /**
- * Модульные тесты для класса [EventStorage].
+ * Unit tests for [EventStorage].
  *
- * Тестирует основную функциональность системы хранения событий:
- * - Добавление событий
- * - Отметка событий как сопоставленных
- * - Получение событий
- * - Очистка хранилища
+ * Tests the core functionality of the event storage system:
+ * - Adding events
+ * - Marking events as matched
+ * - Retrieving events
+ * - Clearing the storage
  */
 class EventStorageTest {
 
     @BeforeEach
     fun setUp() {
-        // Очищаем хранилище перед каждым тестом
+        // Clear storage before each test
         EventStorage.clear()
     }
 
     @AfterEach
     fun tearDown() {
-        // Очищаем хранилище после каждого теста
+        // Clear storage after each test
         EventStorage.clear()
     }
 
     @Test
     fun `test add events`() {
-        // Создаем тестовые события
+        // Create test events
         val event1 = createTestEvent(1, "test_event_1")
         val event2 = createTestEvent(2, "test_event_2")
 
-        // Добавляем события в хранилище
+        // Add events to storage
         EventStorage.addEvents(listOf(event1, event2))
 
-        // Проверяем, что события были добавлены
+        // Verify that events were added
         val events = EventStorage.getEvents()
         assertEquals(2, events.size)
         assertTrue(events.any { it.event_num == 1 && it.name == "test_event_1" })
@@ -50,15 +50,15 @@ class EventStorageTest {
 
     @Test
     fun `test add duplicate events`() {
-        // Создаем тестовые события с одинаковым номером события
+        // Create test events with the same event number
         val event1 = createTestEvent(1, "test_event_1")
         val event2 = createTestEvent(1, "test_event_duplicate")
 
-        // Добавляем события в хранилище
+        // Add events to storage
         EventStorage.addEvents(listOf(event1))
         EventStorage.addEvents(listOf(event2))
 
-        // Проверяем, что только первое событие было добавлено
+        // Verify that only the first event was added
         val events = EventStorage.getEvents()
         assertEquals(1, events.size)
         assertEquals("test_event_1", events[0].name)
@@ -66,51 +66,51 @@ class EventStorageTest {
 
     @Test
     fun `test mark event as matched`() {
-        // Создаем и добавляем тестовые события
+        // Create and add test events
         val event1 = createTestEvent(1, "test_event_1")
         val event2 = createTestEvent(2, "test_event_2")
         EventStorage.addEvents(listOf(event1, event2))
 
-        // Отмечаем событие как сопоставленное
+        // Mark event as matched
         EventStorage.markEventAsMatched(1)
 
-        // Проверяем, что событие отмечено как сопоставленное
+        // Verify matching flags
         assertTrue(EventStorage.isEventAlreadyMatched(1))
         assertFalse(EventStorage.isEventAlreadyMatched(2))
     }
 
     @Test
     fun `test get index events`() {
-        // Создаем и добавляем тестовые события
+        // Create and add test events
         val events = (1..5).map { createTestEvent(it, "test_event_$it") }
         EventStorage.addEvents(events)
 
-        // Отмечаем некоторые события как сопоставленные
+        // Mark some events as matched
         EventStorage.markEventAsMatched(2)
         EventStorage.markEventAsMatched(4)
 
-        // Получаем события начиная с индекса 0
+        // Retrieve events starting from index 0
         val indexEvents = EventStorage.getIndexEvents(0)
 
-        // Проверяем, что возвращаются только несопоставленные события
+        // Verify only unmatched events are returned
         assertEquals(3, indexEvents.size)
         assertTrue(indexEvents.any { it.event_num == 1 })
-        assertFalse(indexEvents.any { it.event_num == 2 }) // Сопоставлено, не должно быть включено
+        assertFalse(indexEvents.any { it.event_num == 2 }) // Matched; must be excluded
         assertTrue(indexEvents.any { it.event_num == 3 })
-        assertFalse(indexEvents.any { it.event_num == 4 }) // Сопоставлено, не должно быть включено
+        assertFalse(indexEvents.any { it.event_num == 4 }) // Matched; must be excluded
         assertTrue(indexEvents.any { it.event_num == 5 })
     }
 
     @Test
     fun `test get last event`() {
-        // Создаем и добавляем тестовые события
+        // Create and add test events
         val event1 = createTestEvent(1, "test_event_1")
         val event2 = createTestEvent(2, "test_event_2")
 
-        // Добавляем события в хранилище
+        // Add events to storage
         EventStorage.addEvents(listOf(event1, event2))
 
-        // Проверяем последнее событие
+        // Verify the last event
         val lastEvent = EventStorage.getLastEvent()
         assertNotNull(lastEvent)
         assertEquals(2, lastEvent?.event_num)
@@ -119,23 +119,23 @@ class EventStorageTest {
 
     @Test
     fun `test clear storage`() {
-        // Создаем и добавляем тестовые события
+        // Create and add test events
         val events = (1..3).map { createTestEvent(it, "test_event_$it") }
         EventStorage.addEvents(events)
 
-        // Отмечаем событие как сопоставленное
+        // Mark one event as matched
         EventStorage.markEventAsMatched(2)
 
-        // Очищаем хранилище
+        // Clear the storage
         EventStorage.clear()
 
-        // Проверяем, что хранилище пусто
+        // Verify storage is empty and matched flags are reset
         assertTrue(EventStorage.getEvents().isEmpty())
         assertFalse(EventStorage.isEventAlreadyMatched(2))
     }
 
     /**
-     * Вспомогательный метод для создания тестового события.
+     * Helper method to create a test event.
      */
     private fun createTestEvent(eventNum: Int, eventName: String): Event {
         return Event(

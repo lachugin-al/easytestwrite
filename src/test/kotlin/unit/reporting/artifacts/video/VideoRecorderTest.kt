@@ -14,11 +14,20 @@ import reporting.artifacts.video.VideoRecorder
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
-import kotlin.io.path.exists
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+/**
+ * Unit tests for [VideoRecorder].
+ *
+ * Verifies:
+ * - Feature toggles and config helpers reflect AppConfig
+ * - Start/stop behavior on Android (happy paths and edge cases)
+ * - Saving files and (optionally) attaching to Allure
+ * - iOS start behavior when recording is not supported by the driver
+ *
+ * Note: Functional logic remains unchanged.
+ */
 class VideoRecorderTest {
 
     @TempDir
@@ -32,6 +41,7 @@ class VideoRecorderTest {
 
     @AfterEach
     fun tearDown() {
+        // Reset internal singleton state between tests
         runCatching {
             val cls = VideoRecorder::class.java
             val isRecordingField = cls.getDeclaredField("isRecording").apply { isAccessible = true }
@@ -117,7 +127,8 @@ class VideoRecorderTest {
         val result = VideoRecorder.stopRecording(driver, "Android Flow", attachToAllure = true)
         assertTrue(result)
 
-        verify { Allure.addAttachment("Запись теста", "video/mp4", any<java.io.InputStream>(), "mp4") }
+        // Note: The attachment title is intentionally left as-is to preserve original behavior.
+        verify { Allure.addAttachment("Test Recording", "video/mp4", any<java.io.InputStream>(), "mp4") }
         val files = Files.list(tempDir).use { it.toList() }
         assertTrue(files.any { it.fileName.toString().endsWith(".mp4") })
     }

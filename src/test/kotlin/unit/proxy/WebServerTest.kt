@@ -1,6 +1,5 @@
 package unit.proxy
 
-import events.Event
 import events.EventStorage
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
@@ -11,28 +10,21 @@ import java.io.File
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
-import java.net.URL
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import java.lang.reflect.Field
 import java.net.URI
 
 /**
- * Модульные тесты для класса [WebServer].
+ * Unit tests for [WebServer].
  *
- * Тестирует основную функциональность веб-сервера:
- * - Запуск и остановка сервера
- * - Обслуживание файлов
- * - Обработка пакетных запросов
- * - Обработка ошибок
- * - Управление состоянием паузы
+ * Verifies the core functionality of the web server:
+ * - Starting and stopping the server
+ * - Serving files
+ * - Handling batch requests
+ * - Error handling
+ * - Managing the paused state
  */
 class WebServerTest {
 
@@ -41,38 +33,38 @@ class WebServerTest {
 
     @BeforeEach
     fun setUp() {
-        // Очищаем хранилище событий
+        // Clear the event storage
         EventStorage.clear()
 
-        // Создаем временный файл для тестирования обслуживания файлов
+        // Create a temporary file for testing file serving
         tempFile = File.createTempFile("test", ".txt")
         tempFile.writeText("Test file content")
 
-        // Инициализируем веб-сервер
+        // Initialize and start the web server
         webServer = WebServer()
         webServer.start()
     }
 
     @AfterEach
     fun tearDown() {
-        // Останавливаем веб-сервер
+        // Stop the web server
         webServer.close()
 
-        // Удаляем временный файл
+        // Delete the temporary file
         tempFile.delete()
 
-        // Очищаем хранилище событий
+        // Clear the event storage
         EventStorage.clear()
     }
 
     @Test
     fun `test server starts and returns valid URL`() {
-        // Проверяем, что URL сервера не null и имеет правильный формат
+        // Verify the server URL is not null and has the correct format
         val serverUrl = webServer.getServerUrl()
         assertNotNull(serverUrl)
         assertTrue(serverUrl!!.startsWith("http://"))
 
-        // Проверяем, что URL хостинга получен из URL сервера
+        // Verify that the hosting URL is derived from the server URL
         val hostingUrl = webServer.getHostingUrl()
         assertNotNull(hostingUrl)
         assertTrue(hostingUrl!!.startsWith(serverUrl))
@@ -81,29 +73,29 @@ class WebServerTest {
 
     @Test
     fun `test server can be closed and restarted`() {
-        // Получаем начальный URL сервера
+        // Get the initial server URL
         val initialUrl = webServer.getServerUrl()
 
-        // Закрываем сервер
+        // Close the server
         webServer.close()
 
-        // Проверяем, что URL сервера null после закрытия
+        // Verify the server URL is null after closing
         assertNull(webServer.getServerUrl())
 
-        // Перезапускаем сервер
+        // Restart the server
         webServer.start()
 
-        // Проверяем, что новый URL сервера не null
+        // Verify the new server URL is not null
         val newUrl = webServer.getServerUrl()
         assertNotNull(newUrl)
     }
 
     @Test
     fun `test batch endpoint processes events`() {
-        // Пропускаем, если URL сервера null
+        // Skip if server URL is null
         val serverUrl = webServer.getServerUrl() ?: return
 
-        // Создаем JSON пакетного запроса
+        // Create a JSON payload for the batch request
         val batchJson = buildJsonObject {
             putJsonObject("meta") {
                 put("app_version", "1.0.0")
@@ -122,7 +114,7 @@ class WebServerTest {
             }
         }.toString()
 
-        // Отправляем POST запрос на конечную точку batch
+        // Send a POST request to the batch endpoint
         val url = URI("$serverUrl/m/batch").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
@@ -131,10 +123,10 @@ class WebServerTest {
 
         connection.outputStream.use { it.write(batchJson.toByteArray()) }
 
-        // Проверяем ответ
+        // Verify the response
         assertEquals(200, connection.responseCode)
 
-        // Проверяем, что событие было сохранено
+        // Verify the event was stored
         val events = EventStorage.getEvents()
         assertEquals(1, events.size)
         assertEquals("test_event", events[0].name)
@@ -142,72 +134,74 @@ class WebServerTest {
 
     @Test
     fun `test file serving endpoint`() {
-        // Пропускаем, если URL сервера null
+        // Skip if server URL is null
         val serverUrl = webServer.getServerUrl() ?: return
 
-        // Получаем абсолютный путь к временному файлу
+        // Get the absolute path to the temporary file
         val filePath = tempFile.absolutePath
 
-        // Создаем URL для запроса файла
+        // Build the URL to request the file
         val url = URI("$serverUrl/file/$filePath").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
 
-        // Проверяем ответ
+        // Verify the response
         assertEquals(200, connection.responseCode)
 
-        // Читаем содержимое ответа
+        // Read the response content
         val content = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
 
-        // Проверяем, что содержимое соответствует содержимому файла
+        // Verify the content matches the file's content
         assertEquals("Test file content", content)
     }
 
     @Test
     fun `test server paused state`() {
-        // Пропускаем, если URL сервера null
+        // Skip if server URL is null
         val serverUrl = webServer.getServerUrl() ?: return
 
-        // Устанавливаем сервер в состояние паузы через рефлексию
+        // Set the server to a paused state via reflection
         val pausedField = WebServer::class.java.getDeclaredField("paused")
         pausedField.isAccessible = true
         pausedField.set(webServer, true)
 
         try {
-            // Создаем URL для запроса с таймаутом
+            // Create a URL for a request with a short timeout
             val url = URI("$serverUrl/file/${tempFile.absolutePath}").toURL()
             val connection = url.openConnection() as HttpURLConnection
-            connection.connectTimeout = 500 // Устанавливаем короткий таймаут
+            connection.connectTimeout = 500 // Short timeout
             connection.readTimeout = 500
             connection.requestMethod = "GET"
 
-            // Пытаемся получить ответ - должен быть таймаут из-за паузы
+            // Attempt to read the response — should time out due to pause
             val exception = assertThrows(Exception::class.java) {
                 connection.inputStream.use { it.readAllBytes() }
             }
 
-            // Проверяем, что произошла ошибка таймаута
-            assertTrue(exception.message?.contains("timed out") ?: false || 
-                       exception.message?.contains("timeout") ?: false)
+            // Verify a timeout-related error occurred
+            assertTrue(
+                exception.message?.contains("timed out") ?: false ||
+                        exception.message?.contains("timeout") ?: false
+            )
         } finally {
-            // Восстанавливаем состояние сервера
+            // Restore server state
             pausedField.set(webServer, false)
         }
     }
 
     @Test
     fun `test batch endpoint with multiple events`() {
-        // Пропускаем, если URL сервера null
+        // Skip if server URL is null
         val serverUrl = webServer.getServerUrl() ?: return
 
-        // Создаем JSON пакетного запроса с несколькими событиями
+        // Create a JSON payload with multiple events
         val batchJson = buildJsonObject {
             putJsonObject("meta") {
                 put("app_version", "1.0.0")
                 put("platform", "test")
             }
             putJsonArray("events") {
-                // Первое событие
+                // First event
                 add(buildJsonObject {
                     put("event_time", "2023-01-01T12:00:00Z")
                     put("event_num", 1)
@@ -216,7 +210,7 @@ class WebServerTest {
                         put("key1", "value1")
                     }
                 })
-                // Второе событие
+                // Second event
                 add(buildJsonObject {
                     put("event_time", "2023-01-01T12:01:00Z")
                     put("event_num", 2)
@@ -228,7 +222,7 @@ class WebServerTest {
             }
         }.toString()
 
-        // Отправляем POST запрос на конечную точку batch
+        // Send a POST request to the batch endpoint
         val url = URI("$serverUrl/m/batch").toURL()
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
@@ -237,10 +231,10 @@ class WebServerTest {
 
         connection.outputStream.use { it.write(batchJson.toByteArray()) }
 
-        // Проверяем ответ
+        // Verify the response
         assertEquals(200, connection.responseCode)
 
-        // Проверяем, что оба события были сохранены
+        // Verify both events were stored
         val events = EventStorage.getEvents()
         assertEquals(2, events.size)
         assertTrue(events.any { it.name == "test_event_1" && it.event_num == 1 })

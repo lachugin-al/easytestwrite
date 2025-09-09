@@ -5,21 +5,21 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 /**
- * Модульные тесты для перечисления [Platform].
+ * Unit tests for the [Platform] enum.
  *
- * Тестирует основную функциональность перечисления Platform:
- * - Проверка наличия всех ожидаемых значений
- * - Проверка количества значений
- * - Проверка корректности имен значений
+ * Verifies core functionality of the Platform enum:
+ * - Presence of all expected values
+ * - Expected number of values
+ * - Correct value names
  */
 class PlatformTest {
 
     /**
-     * Тестирует наличие всех ожидаемых значений в перечислении.
+     * Verifies that the enum contains all expected values.
      */
     @Test
     fun `test platform enum contains all expected values`() {
-        // Проверяем, что перечисление содержит все ожидаемые значения
+        // Ensure the enum contains all expected values
         val platforms = Platform.values()
 
         assertTrue(platforms.contains(Platform.ANDROID))
@@ -27,52 +27,52 @@ class PlatformTest {
     }
 
     /**
-     * Тестирует количество значений в перечислении.
+     * Verifies the number of values in the enum.
      */
     @Test
     fun `test platform enum has expected number of values`() {
-        // Проверяем, что перечисление содержит ожидаемое количество значений
+        // Ensure the enum has the expected number of values
         val platforms = Platform.values()
 
         assertEquals(2, platforms.size)
     }
 
     /**
-     * Тестирует корректность имен значений перечисления.
+     * Verifies the names of the enum values.
      */
     @Test
     fun `test platform enum values have correct names`() {
-        // Проверяем, что имена значений перечисления соответствуют ожидаемым
+        // Ensure the enum value names match expectations
         assertEquals("ANDROID", Platform.ANDROID.name)
         assertEquals("IOS", Platform.IOS.name)
     }
 
     /**
-     * Тестирует корректность порядка значений перечисления.
+     * Verifies the ordinals of the enum values.
      */
     @Test
     fun `test platform enum values have correct ordinals`() {
-        // Проверяем, что порядковые номера значений перечисления соответствуют ожидаемым
+        // Ensure the ordinal positions match expectations
         assertEquals(0, Platform.ANDROID.ordinal)
         assertEquals(1, Platform.IOS.ordinal)
     }
 
     /**
-     * Тестирует метод valueOf для перечисления.
+     * Verifies the valueOf method for the enum.
      */
     @Test
     fun `test platform enum valueOf method`() {
-        // Проверяем, что метод valueOf корректно возвращает значения перечисления
+        // Ensure valueOf returns the correct enum constants
         assertEquals(Platform.ANDROID, Platform.valueOf("ANDROID"))
         assertEquals(Platform.IOS, Platform.valueOf("IOS"))
     }
 
     /**
-     * Тестирует исключение при вызове valueOf с некорректным значением.
+     * Verifies that valueOf throws for an invalid value.
      */
     @Test
     fun `test platform enum valueOf throws exception for invalid value`() {
-        // Проверяем, что метод valueOf выбрасывает исключение при передаче некорректного значения
+        // Ensure valueOf throws when given an invalid name
         assertThrows(IllegalArgumentException::class.java) {
             Platform.valueOf("INVALID_PLATFORM")
         }

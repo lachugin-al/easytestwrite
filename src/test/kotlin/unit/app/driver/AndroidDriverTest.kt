@@ -6,38 +6,38 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Disabled
 
 /**
- * Модульные тесты для класса [AndroidDriver].
+ * Unit tests for [AndroidDriver].
  *
- * Тестирует основную функциональность драйвера Android:
- * - Создание экземпляра AndroidDriver с разными параметрами
- * - Проверка конструктора
+ * Tests the core functionality of the Android driver:
+ * - Creating an instance of AndroidDriver with different parameters
+ * - Verifying the constructor
  *
- * Примечание: Тесты не запускают реальный драйвер и не подключаются к Appium-серверу.
+ * Note: These tests do not start a real driver and do not connect to an Appium server.
  */
 class AndroidDriverTest {
 
     /**
-     * Тестирует создание экземпляра AndroidDriver.
+     * Tests creating an instance of AndroidDriver.
      */
     @Test
     fun `test android driver instance creation`() {
-        // Создаем экземпляр AndroidDriver с autoLaunch = true
+        // Create an AndroidDriver instance with autoLaunch = true
         val androidDriver = AndroidDriver(true)
 
-        // Проверяем, что экземпляр AndroidDriver создан
+        // Verify that the AndroidDriver instance is created
         assertNotNull(androidDriver)
     }
 
     /**
-     * Тестирует конструктор AndroidDriver с разными значениями autoLaunch.
+     * Tests the AndroidDriver constructor with different autoLaunch values.
      */
     @Test
     fun `test constructor with different autoLaunch values`() {
-        // Создаем экземпляры AndroidDriver с разными значениями autoLaunch
+        // Create AndroidDriver instances with different autoLaunch values
         val androidDriverWithAutoLaunchTrue = AndroidDriver(true)
         val androidDriverWithAutoLaunchFalse = AndroidDriver(false)
 
-        // Проверяем, что экземпляры созданы
+        // Verify that the instances are created
         assertNotNull(androidDriverWithAutoLaunchTrue)
         assertNotNull(androidDriverWithAutoLaunchFalse)
     }

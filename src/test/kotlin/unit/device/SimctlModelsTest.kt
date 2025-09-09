@@ -2,15 +2,25 @@ package unit.device
 
 import device.model.Simulator
 import device.model.SimulatorsResponse
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
+/**
+ * Unit tests for models used to parse `xcrun simctl list --json` output.
+ *
+ * Verifies:
+ * - Round-trip serialization/deserialization equality
+ * - Decoder behavior with unknown keys and empty maps
+ */
 class SimctlModelsTest {
 
-    private val json = Json { ignoreUnknownKeys = true; isLenient = true; encodeDefaults = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
 
     @Test
     fun `serialization and deserialization round trip works`() {

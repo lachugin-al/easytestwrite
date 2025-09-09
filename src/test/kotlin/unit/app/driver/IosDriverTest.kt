@@ -3,41 +3,40 @@ package unit.app.driver
 import app.driver.IosDriver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Disabled
 
 /**
- * Модульные тесты для класса [IosDriver].
+ * Unit tests for [IosDriver].
  *
- * Тестирует основную функциональность драйвера iOS:
- * - Создание экземпляра IosDriver с разными параметрами
- * - Проверка конструктора
+ * Tests the core functionality of the iOS driver:
+ * - Creating an instance of IosDriver with different parameters
+ * - Verifying the constructor
  *
- * Примечание: Тесты не запускают реальный драйвер и не подключаются к Appium-серверу.
+ * Note: These tests do not start a real driver and do not connect to an Appium server.
  */
 class IosDriverTest {
 
     /**
-     * Тестирует создание экземпляра IosDriver.
+     * Tests creating an instance of IosDriver.
      */
     @Test
     fun `test ios driver instance creation`() {
-        // Создаем экземпляр IosDriver с autoLaunch = true
+        // Create an IosDriver instance with autoLaunch = true
         val iosDriver = IosDriver(true)
 
-        // Проверяем, что экземпляр IosDriver создан
+        // Verify that the IosDriver instance is created
         assertNotNull(iosDriver)
     }
 
     /**
-     * Тестирует конструктор IosDriver с разными значениями autoLaunch.
+     * Tests the IosDriver constructor with different autoLaunch values.
      */
     @Test
     fun `test constructor with different autoLaunch values`() {
-        // Создаем экземпляры IosDriver с разными значениями autoLaunch
+        // Create IosDriver instances with different autoLaunch values
         val iosDriverWithAutoLaunchTrue = IosDriver(true)
         val iosDriverWithAutoLaunchFalse = IosDriver(false)
 
-        // Проверяем, что экземпляры созданы
+        // Verify that the instances are created
         assertNotNull(iosDriverWithAutoLaunchTrue)
         assertNotNull(iosDriverWithAutoLaunchFalse)
     }

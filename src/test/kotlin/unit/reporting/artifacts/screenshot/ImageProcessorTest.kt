@@ -10,6 +10,15 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+/**
+ * Unit tests for [ImageProcessor].
+ *
+ * Verifies:
+ * - PNG scaling preserves format signature and expected dimensions
+ * - Original bytes are returned on processing error
+ *
+ * Functionality and logic remain unchanged.
+ */
 class ImageProcessorTest {
 
     private fun pngBytes(width: Int = 10, height: Int = 10): ByteArray {

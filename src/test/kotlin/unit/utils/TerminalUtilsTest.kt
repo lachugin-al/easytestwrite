@@ -3,7 +3,6 @@ package unit.utils
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import utils.TerminalUtils
-import java.io.File
 import java.time.Duration
 
 class TerminalUtilsTest {
