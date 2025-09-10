@@ -1,7 +1,7 @@
 # EasyTestWrite – a framework for mobile application testing
 
-[![version](https://img.shields.io/badge/version-0.0.1-blue.svg)](CHANGELOG.md)
-[![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
+[![version](https://img.shields.io/badge/version-0.1.3-blue.svg)](CHANGELOG.md)
+[![License](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE.txt)
 
 ## Table of Contents
 - [Overview](#overview)
@@ -82,10 +82,12 @@ All source code is located in the `src/main/` folder and split by packages:
 * `dsl` - DSL classes for writing tests
 * `events` - classes for working with events and analytics
 * `proxy` - proxy server classes for intercepting and analyzing network traffic
-* `reporting` - 
+* `reporting` - reporting components and artifacts
+    * `artifacts` - test artifacts
+        * `screenshot` - screenshot capture utilities
+        * `video` - classes for test video recording
 * `utils` - utility classes
     * `allure` - Allure report extensions
-    * `video` - classes for test video recording
 
 All tests are located in the `src/test/` folder and split by packages:
 * `mobile` - test packages
@@ -206,6 +208,19 @@ Notes and diagnostics:
 - FFmpeg: before tests, `checkFfmpeg` is executed. Install FFmpeg (see the “Getting Started” section) if video recording is enabled.
 - Node.js: downloaded and used automatically. A global installation of Appium and drivers is not required.
 - You can also set the URL via `src/test/resources/config.properties` (`appium.url=...`). A CLI parameter `-Pappium.url=...` will override the config value for the current run.
+
+### Configuration sources and precedence
+Configuration values can be provided from multiple sources. Priority (highest first):
+1. JVM system properties (-Dkey=value) and Gradle -P parameters (forwarded as system properties by the build).
+2. .env file variables or environment variables (both key and UPPER_SNAKE_CASE forms are supported).
+3. src/test/resources/config.properties.
+4. Built-in defaults.
+
+Examples:
+- `-Pappium.url` or `-Dappium.url` overrides `APPIUM_URL`/.env and `config.properties`.
+- In .env, you can use `APPIUM_URL` or `appium.url`. Dotted names are also resolved in uppercase underscore form: `appium.url` -> `APPIUM_URL`.
+
+(See src/main/kotlin/app/config/AppConfig.kt for implementation details.)
 
 ### Running Tests with Tags
 To run tests with specific tags, use the `-Ptag` parameter:
