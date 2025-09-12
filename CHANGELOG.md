@@ -2,9 +2,6 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
-- MVP v1
-
 ## [0.1.3] - 2025-09-09
 - Documentation: update README to reflect version 0.1.3.
 
