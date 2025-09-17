@@ -134,6 +134,10 @@ object AppConfig {
         prop("screenshot.quality", "100").toIntOrNull()
             ?.coerceIn(1, 100) ?: 100
 
+    // Screenshots on/off flags
+    private val screenshotOnSuccess: Boolean = propBoolean("screenshot.on.success", false)
+    private val screenshotOnFailure: Boolean = propBoolean("screenshot.on.failure", false)
+
     // API
 
     /**
@@ -289,4 +293,14 @@ object AppConfig {
      * @return JPEG quality (Int)
      */
     fun getScreenshotQuality(): Int = screenshotQuality
+
+    /**
+     * @return Whether taking screenshots on successful steps/checks is enabled by default.
+     */
+    fun isScreenshotOnSuccess(): Boolean = screenshotOnSuccess
+
+    /**
+     * @return Whether taking screenshots on failures is enabled by default.
+     */
+    fun isScreenshotOnFailure(): Boolean = screenshotOnFailure
 }

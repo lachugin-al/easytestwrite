@@ -13,10 +13,10 @@ plugins {
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
     id("org.gradle.test-retry") version "1.6.2"
-//    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+    id("com.github.node-gradle.node") version "7.1.0"
     `java-library`
     `maven-publish`
-    id("com.github.node-gradle.node") version "7.1.0"
 }
 
 group = "wba"
@@ -78,6 +78,8 @@ tasks.test {
     val videoRecordingQualityProp = (project.findProperty("video.recording.quality") as String?).orEmpty()
     val videoRecordingBitrateProp = (project.findProperty("video.recording.bitrate") as String?).orEmpty()
     val videoRecordingOutputDirProp = (project.findProperty("video.recording.output.dir") as String?).orEmpty()
+    val screenshotOnSuccessProp = (project.findProperty("screenshot.on.success") as String?).orEmpty()
+    val screenshotOnFailureProp = (project.findProperty("screenshot.on.failure") as String?).orEmpty()
 
     // Configure JUnit Platform
     useJUnitPlatform {
@@ -115,7 +117,9 @@ tasks.test {
         "video.recording.size" to videoRecordingSizeProp,
         "video.recording.quality" to videoRecordingQualityProp,
         "video.recording.bitrate" to videoRecordingBitrateProp,
-        "video.recording.output.dir" to videoRecordingOutputDirProp
+        "video.recording.output.dir" to videoRecordingOutputDirProp,
+        "screenshot.on.success" to screenshotOnSuccessProp,
+        "screenshot.on.failure" to screenshotOnFailureProp
     ).forEach { (key, value) ->
         if (value.isNotBlank()) systemProperty(key, value)
     }
@@ -466,21 +470,22 @@ kotlin {
     jvmToolchain(21)
 }
 
-//detekt {
-//    buildUponDefaultConfig = true
-//    allRules = false
-//    config.setFrom(files("$projectDir/config/detekt/detekt.yml"))
-//    baseline = file("$projectDir/config/detekt/baseline.xml")
-//
-//    reports {
-//        html.required.set(true)
-//        xml.required.set(true)
-//        txt.required.set(true)
-//        sarif.required.set(true)
-//        md.required.set(true)
-//    }
-//}
+detekt {
+    autoCorrect = true
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom(files("$projectDir/config/detekt/detekt.yml"))
+    baseline = file("$projectDir/config/detekt/baseline.xml")
 
-//dependencies {
-//    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.5")
-//}
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(true)
+        sarif.required.set(true)
+        md.required.set(true)
+    }
+}
+
+dependencies {
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.5")
+}

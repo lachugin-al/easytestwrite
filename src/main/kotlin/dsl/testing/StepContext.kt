@@ -1,5 +1,6 @@
 package dsl.testing
 
+import app.config.AppConfig
 import io.qameta.allure.Allure.step
 import io.qameta.allure.Allure.ThrowableRunnable
 
@@ -38,8 +39,8 @@ class StepContext(override val driver: Any) : BaseContext() {
      * @param expectationRunnable Lambda containing checks inside the step.
      */
     operator fun String.invoke(
-        screenshotOnSuccess: Boolean = false,
-        screenshotOnFailure: Boolean = false,
+        screenshotOnSuccess: Boolean = AppConfig.isScreenshotOnSuccess(),
+        screenshotOnFailure: Boolean = AppConfig.isScreenshotOnFailure(),
         screenshotScale: Double = 0.5,
         screenshotQuality: Int = 100,
         expectationRunnable: ExpectationContext.() -> Unit
