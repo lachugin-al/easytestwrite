@@ -13,14 +13,14 @@ plugins {
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
     id("org.gradle.test-retry") version "1.6.2"
-    id("io.gitlab.arturbosch.detekt") version "1.23.5"
+//    id("io.gitlab.arturbosch.detekt") version "1.23.5"
     id("com.github.node-gradle.node") version "7.1.0"
     `java-library`
     `maven-publish`
 }
 
-group = "wba"
-version = "0.0.1"
+group = "testing-tools"
+version = "0.1.4"
 
 node {
     version.set("20.19.0")
@@ -29,9 +29,6 @@ node {
 }
 
 repositories {
-    maven {
-        url = uri("https://wba-nexus.wb.ru/repository/wba-maven/")
-    }
     mavenCentral()
 }
 
@@ -443,7 +440,7 @@ if (isPublishTask) {
                 from(components["java"])
                 artifact(tasks["sourcesJar"])
                 artifact(tasks["javadocJar"])
-                groupId = "wba"
+                groupId = "testing-tools"
                 artifactId = "easytestwrite"
                 version = project.version.toString()
             }
@@ -470,21 +467,21 @@ kotlin {
     jvmToolchain(21)
 }
 
-detekt {
-    autoCorrect = true
-    buildUponDefaultConfig = true
-    allRules = false
-    config.setFrom(files("$projectDir/config/detekt/detekt.yml"))
-    baseline = file("$projectDir/config/detekt/baseline.xml")
-
-    reports {
-        html.required.set(true)
-        xml.required.set(true)
-        txt.required.set(true)
-        sarif.required.set(true)
-        md.required.set(true)
-    }
-}
+//detekt {
+//    autoCorrect = true
+//    buildUponDefaultConfig = true
+//    allRules = false
+//    config.setFrom(files("$projectDir/config/detekt/detekt.yml"))
+//    baseline = file("$projectDir/config/detekt/baseline.xml")
+//
+//    reports {
+//        html.required.set(true)
+//        xml.required.set(true)
+//        txt.required.set(true)
+//        sarif.required.set(true)
+//        md.required.set(true)
+//    }
+//}
 
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.5")

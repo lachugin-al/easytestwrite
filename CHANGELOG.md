@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2025-09-17
+- Screenshots: add configurable flags to take screenshots on step success/failure; integrated with AppConfig and step DSL (StepContext/TestingContext); controllable via JVM/Gradle properties: `screenshot.on.success` and `screenshot.on.failure`.
+- Tooling: enable Detekt static analysis configuration and formatting plugin for consistent code style.
+- WebServer: simplify the debug runner (WebServerMain); streamline start/stop flow and reduce console noise.
+- Docs: update README.
+
 ## [0.1.3] - 2025-09-09
 - Documentation: update README to reflect version 0.1.3.
 

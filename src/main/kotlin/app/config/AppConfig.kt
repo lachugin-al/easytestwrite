@@ -84,7 +84,7 @@ object AppConfig {
     private val iosVersion: String = prop("ios.version", "18.4")
 
     // Device names
-    private val androidDeviceName: String = prop("android.device.name", "WBA16")
+    private val androidDeviceName: String = prop("android.device.name", "Pixel_XL")
     private val iosDeviceName: String = prop("ios.device.name", "iPhone 16 Plus")
 
     // Application paths

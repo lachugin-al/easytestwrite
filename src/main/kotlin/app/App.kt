@@ -9,6 +9,7 @@ import io.appium.java_client.MobileElement
 import org.openqa.selenium.WebDriverException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import proxy.ProxyInspector
 import proxy.WebServer
 
 /**
@@ -74,11 +75,23 @@ class App() : AutoCloseable {
             Platform.ANDROID -> {
                 logger.info("Initializing Android driver")
                 driver = AndroidDriver(autoLaunch = true).getAndroidDriver(3)
+                // After the session starts, print emulator proxy settings
+                try {
+                    ProxyInspector.logAndroidProxy()
+                } catch (e: Exception) {
+                    logger.warn("Failed to print Android proxy settings: ${e.message}")
+                }
             }
 
             Platform.IOS -> {
                 logger.info("Initializing iOS driver")
                 driver = IosDriver(autoLaunch = true).getIOSDriver(3)
+                // After the session starts, print simulator (macOS) proxy settings
+                try {
+                    ProxyInspector.logIosSimulatorProxy()
+                } catch (e: Exception) {
+                    logger.warn("Failed to print iOS proxy settings: ${e.message}")
+                }
             }
         }
     }
