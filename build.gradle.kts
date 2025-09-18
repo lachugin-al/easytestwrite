@@ -483,6 +483,6 @@ kotlin {
 //    }
 //}
 
-dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.5")
-}
+//dependencies {
+//    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.5")
+//}
