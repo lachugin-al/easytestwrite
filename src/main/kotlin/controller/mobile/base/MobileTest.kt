@@ -2,6 +2,7 @@ package controller.mobile.base
 
 import app.App
 import app.config.AppConfig
+import app.driver.appium.AppiumServerManager
 import app.model.Platform
 import controller.mobile.alert.AlertActions
 import controller.mobile.core.AppContext
@@ -81,6 +82,14 @@ open class MobileTest:
         @BeforeAll
         @JvmStatic
         fun setUpAll() {
+            // Start or adopt Appium server and begin monitoring
+            try {
+                AppiumServerManager.ensureStartedAndMonitored()
+            } catch (e: Exception) {
+                logger.error("Failed to start or detect Appium server: ${e.message}", e)
+                throw e
+            }
+
             // Check if emulator auto-start is enabled
             if (AppConfig.isEmulatorAutoStartEnabled()) {
                 // Start emulator before all tests
@@ -97,6 +106,13 @@ open class MobileTest:
         @AfterAll
         @JvmStatic
         fun tearDownAll() {
+            // Stop Appium server (only if it was started by us)
+            try {
+                AppiumServerManager.shutdown()
+            } catch (e: Exception) {
+                logger.warn("Failed to stop Appium server cleanly: ${e.message}", e)
+            }
+
             // Check if emulator auto-shutdown is enabled
             if (AppConfig.isEmulatorAutoShutdownEnabled()) {
                 // Stop emulator after all tests
