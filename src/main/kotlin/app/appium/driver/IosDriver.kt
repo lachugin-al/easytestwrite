@@ -1,4 +1,4 @@
-package app.driver
+package app.appium.driver
 
 import app.config.AppConfig
 import io.appium.java_client.AppiumDriver
@@ -28,13 +28,13 @@ class IosDriver(private val autoLaunch: Boolean) {
     private val logger: Logger = LoggerFactory.getLogger(IosDriver::class.java)
 
     /**
-     * Creates an instance of [io.appium.java_client.AppiumDriver] for the iOS platform.
+     * Creates an instance of [AppiumDriver] for the iOS platform.
      *
      * In case of session creation errors, retries the initialization for the number of attempts
      * defined by [retryCount].
      *
      * @param retryCount Number of remaining initialization attempts.
-     * @return Instance of [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]> for iOS.
+     * @return Instance of [AppiumDriver]<[MobileElement]> for iOS.
      * @throws RuntimeException if all attempts are exhausted or other initialization errors occur.
      */
     fun getIOSDriver(retryCount: Int): AppiumDriver<MobileElement> {
@@ -72,7 +72,7 @@ class IosDriver(private val autoLaunch: Boolean) {
     }
 
     /**
-     * Builds the [org.openqa.selenium.remote.DesiredCapabilities] object for creating the iOS driver session.
+     * Builds the [DesiredCapabilities] object for creating the iOS driver session.
      *
      * Sets launch parameters, automatic alert handling, keyboard settings, and other
      * options specific to iOS testing.

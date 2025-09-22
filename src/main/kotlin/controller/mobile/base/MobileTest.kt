@@ -2,7 +2,7 @@ package controller.mobile.base
 
 import app.App
 import app.config.AppConfig
-import app.driver.appium.AppiumServerManager
+import app.appium.server.AppiumServerManager
 import app.model.Platform
 import controller.mobile.alert.AlertActions
 import controller.mobile.core.AppContext

@@ -1,4 +1,4 @@
-package app.driver.appium
+package app.appium.server
 
 import app.config.AppConfig
 import kotlinx.coroutines.CoroutineScope

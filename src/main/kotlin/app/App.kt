@@ -1,8 +1,8 @@
 package app
 
 import app.config.AppConfig
-import app.driver.AndroidDriver
-import app.driver.IosDriver
+import app.appium.driver.AndroidDriver
+import app.appium.driver.IosDriver
 import app.model.Platform
 import io.appium.java_client.AppiumDriver
 import io.appium.java_client.MobileElement

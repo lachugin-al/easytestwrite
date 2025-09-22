@@ -1,9 +1,8 @@
 package unit.app.driver
 
-import app.driver.AndroidDriver
+import app.appium.driver.AndroidDriver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Disabled
 
 /**
  * Unit tests for [AndroidDriver].

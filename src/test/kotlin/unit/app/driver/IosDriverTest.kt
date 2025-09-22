@@ -1,6 +1,6 @@
 package unit.app.driver
 
-import app.driver.IosDriver
+import app.appium.driver.IosDriver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

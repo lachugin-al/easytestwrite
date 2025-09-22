@@ -1,4 +1,4 @@
-package app.driver
+package app.appium.driver
 
 import app.config.AppConfig
 import io.appium.java_client.AppiumDriver
@@ -28,13 +28,13 @@ class AndroidDriver(private val autoLaunch: Boolean) {
     private val logger: Logger = LoggerFactory.getLogger(AndroidDriver::class.java)
 
     /**
-     * Initializes an instance of [io.appium.java_client.AppiumDriver] for Android.
+     * Initializes an instance of [AppiumDriver] for Android.
      *
      * If a session creation error (SessionNotCreatedException) occurs, the method will perform
      * retries according to the [retryCount] value. For other error types, it fails immediately.
      *
      * @param retryCount remaining number of attempts to initialize the driver
-     * @return a properly initialized instance of [io.appium.java_client.AppiumDriver]<[io.appium.java_client.MobileElement]>
+     * @return a properly initialized instance of [AppiumDriver]<[MobileElement]>
      * @throws RuntimeException if the session cannot be created after all attempts
      */
     fun getAndroidDriver(retryCount: Int): AppiumDriver<MobileElement> {
@@ -60,12 +60,12 @@ class AndroidDriver(private val autoLaunch: Boolean) {
     }
 
     /**
-     * Builds and returns a [org.openqa.selenium.remote.DesiredCapabilities] object for Android device configuration.
+     * Builds and returns a [DesiredCapabilities] object for Android device configuration.
      *
      * Sets parameters for the APK path, platform version, device name, and session behavior
      * (timeouts, auto-launch, auto-grant permissions, etc.).
      *
-     * @return an instance of [org.openqa.selenium.remote.DesiredCapabilities] ready to create an Appium session
+     * @return an instance of [DesiredCapabilities] ready to create an Appium session
      * @throws RuntimeException if the app APK file is not found at the expected location
      */
     private fun getCapabilities(): DesiredCapabilities {
