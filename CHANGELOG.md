@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2025-09-22
+- Appium: migrate from standalone Node-based runner to embedded Kotlin Appium server management (`AppiumServerManager`). The server is started automatically if `appium.url` is not reachable, monitored for health, auto-restarted on failure, and shut down after tests only if started by the framework.
+- Prerequisites: require Appium CLI and platform drivers to be installed and available on PATH (e.g., `npm i -g appium`, `appium driver install uiautomator2`, `appium driver install xcuitest`).
+- Docs: update README to reflect new flow and configuration.
+
 ## [0.1.4] - 2025-09-17
 - Screenshots: add configurable flags to take screenshots on step success/failure; integrated with AppConfig and step DSL (StepContext/TestingContext); controllable via JVM/Gradle properties: `screenshot.on.success` and `screenshot.on.failure`.
 - Tooling: enable Detekt static analysis configuration and formatting plugin for consistent code style.
