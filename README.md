@@ -10,7 +10,7 @@
     - [Project Structure](#project-structure)
 - [Running Tests](#running-tests)
     - [Local Run](#local-run-of-e2e-tests)
-    - [Automatic Appium Startup](#automatic-appium-startup)
+    - [Embedded Appium server management (Kotlin)](#embedded-appium-server-management-kotlin)
     - [Running with Tags](#running-tests-with-tags)
     - [Running with Emulator Management](#running-tests-with-automatic-emulator-management)
 - [Writing Tests](#writing-tests)
@@ -100,7 +100,7 @@ All tests are located in the `src/test/` folder and split by packages:
 ### Local Run of E2E Tests
 
 #### Preparation for Launch
-1. For mobile tests, you need to start the Appium server. In the terminal, run:
+1. Optional: you can start the Appium server manually (otherwise the framework will start a local Appium automatically when tests begin). In the terminal, you can run:
    ```bash
    appium server --allow-cors
    ```
@@ -157,57 +157,48 @@ All tests are located in the `src/test/` folder and split by packages:
 ```
 3. Select the folder with tests or specific tests to run, open the context menu, and click `Run ...`
 
-### Automatic Appium Startup
-The framework supports automatically starting and stopping a local Appium server without requiring a global installation of Appium and drivers. This is done via the `appium-runner` (Node.js) subproject, and a Gradle plugin automatically downloads the required Node.js version and manages the lifecycle.
+### Embedded Appium server management (Kotlin)
+The framework now manages the Appium server directly from Kotlin code via `AppiumServerManager` — no separate Node.js subproject or Gradle tasks are required.
 
-How it works when running `./gradlew test`:
-- If auto-start is enabled (default), Gradle performs:
-    1) `nodeRunnerSetup` — installs npm dependencies in `appium-runner` (equivalent to `npm install`)
-    2) `startAppiumLocal` — starts Appium (`npm start` inside `appium-runner`) and waits for `/status` to be ready for up to 60s
-    3) `ensureAppium` — additionally checks availability of `/status` (up to 10 attempts, 1s interval)
-    4) After tests finish — `stopAppiumLocal` (if enabled) stops the local Appium process
+How it works when you run tests (`./gradlew test`):
+- At test startup (`@BeforeAll` in `MobileTest`), the framework reads `appium.url` from config/ENV/JVM props.
+- If an Appium server at that URL responds as healthy (`/status`), the framework adopts it and starts background health monitoring.
+- If no server is available, the framework starts a local Appium process using the `appium` CLI with `--address <host> --port <port>`, waits for readiness (up to ~30s), and continues.
+- During the run, a monitor checks health every ~3s and will automatically attempt a restart if the process becomes unhealthy (after a small failure threshold).
+- At test shutdown (`@AfterAll`), the framework stops the Appium process only if it was started by the framework; if you connected to an already running server, it is left as-is.
 
-Key Gradle properties (defaults in parentheses):
-- `-Pappium.auto.start=true|false` (**true**) — enable/disable the entire Appium auto-start mechanism
-- `-Pappium.local.start=true|false` (**true**) — whether to start local Appium before tests
-- `-Pappium.local.stop=true|false` (**true**) — whether to stop local Appium after tests
-- `-Pappium.url=http://localhost:4723/` — base Appium URL (default `http://localhost:4723/`)
-- `-PskipAppiumCheck=true|false` (**false**) — skip Appium availability check (`ensureAppium`)
+Prerequisites:
+- Appium CLI installed and available on PATH (global install):
+  ```bash
+  npm i -g appium
+  ```
+- Required platform drivers installed for your use case (examples):
+  ```bash
+  appium driver install uiautomator2
+  appium driver install xcuitest
+  ```
+- FFmpeg must be installed if video recording is enabled (see Getting Started).
 
-Ready-to-use run scenarios:
-- Local auto-start (default):
+Configuration and usage:
+- Base URL: `appium.url` (default: `http://localhost:4723/`). You can set it via:
+  - Gradle: `./gradlew test -Pappium.url=http://localhost:4723/`
+  - JVM: `-Dappium.url=http://localhost:4723/`
+  - .env: `APPIUM_URL=http://localhost:4723/`
+  - `src/test/resources/config.properties`.
+- Local run (default):
   ```bash
   ./gradlew test -Pplatform=ANDROID
   ```
-- Use an already running or remote Appium instance:
+- Remote Appium:
   ```bash
-  ./gradlew test -Pappium.auto.start=false -Pappium.url=http://remote-host:4723/ -Pplatform=ANDROID
+  ./gradlew test -Pappium.url=http://remote-host:4723/ -Pplatform=ANDROID
   ```
-- Keep local Appium running after tests:
-  ```bash
-  ./gradlew test -Pappium.local.stop=false
-  ```
-- Pre-install npm dependencies (useful with unstable network/CI cache):
-  ```bash
-  ./gradlew nodeRunnerSetup
-  ```
-- Manually start/stop Appium without running tests:
-  ```bash
-  ./gradlew startAppiumLocal
-  ./gradlew stopAppiumLocal
-  ```
+  Note: the framework does not start remote servers. It will attempt to start a local Appium bound to the specified host/port if the URL is unhealthy. For remote usage, ensure the remote Appium is already running and reachable.
 
 Notes and diagnostics:
-- Port and drivers: local startup uses the `npm start` script from `appium-runner` (Appium + `uiautomator2`, `xcuitest`) and listens on port `4723`.  
-  For a custom port, run manually:
-  ```bash
-  cd appium-runner && npm start -- --port 4725
-  ```
-  and specify `-Pappium.url=http://localhost:4725/` when running the tests.
-- Timeouts: `startAppiumLocal` waits for readiness for ~60s, `ensureAppium` — up to ~10s. If the server doesn’t start in time, the build will fail with a hint.
-- FFmpeg: before tests, `checkFfmpeg` is executed. Install FFmpeg (see the “Getting Started” section) if video recording is enabled.
-- Node.js: downloaded and used automatically. A global installation of Appium and drivers is not required.
-- You can also set the URL via `src/test/resources/config.properties` (`appium.url=...`). A CLI parameter `-Pappium.url=...` will override the config value for the current run.
+- Start timeout: ~30s; health poll interval: ~3s; automatic restart on repeated health check failures.
+- Logs from the embedded Appium process are forwarded to the test logs with the `[appium]` prefix at DEBUG level.
+- You can still set `appium.url` in `config.properties`; CLI `-Pappium.url` or JVM `-Dappium.url` will override it for the current run.
 
 ### Configuration sources and precedence
 Configuration values can be provided from multiple sources. Priority (highest first):

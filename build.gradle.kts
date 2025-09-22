@@ -1,32 +1,14 @@
-import org.gradle.api.GradleException
-import java.net.HttpURLConnection
-import java.util.concurrent.TimeUnit
-import com.github.gradle.node.npm.task.NpmTask
-import org.gradle.api.tasks.testing.Test
-import java.net.URI
-import com.github.gradle.node.NodeExtension
-import java.io.File
-import java.io.BufferedWriter
-import java.io.FileWriter
-
 plugins {
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
     id("org.gradle.test-retry") version "1.6.2"
 //    id("io.gitlab.arturbosch.detekt") version "1.23.5"
-    id("com.github.node-gradle.node") version "7.1.0"
     `java-library`
     `maven-publish`
 }
 
 group = "testing-tools"
-version = "0.1.4"
-
-node {
-    version.set("20.19.0")
-    download.set(true)
-    // (optional) nodeProjectDir.set(file("appium-runner"))
-}
+version = "0.1.5"
 
 repositories {
     mavenCentral()
@@ -157,251 +139,75 @@ tasks.register("checkFfmpeg") {
 
 /* -------------------------------  Appium utils  ------------------------------- */
 
-// Base Appium URL with default value
-fun appiumBaseUrl(project: Project): String =
-    (project.findProperty("appium.url") as String?).orEmpty().ifBlank { "http://localhost:4723/" }
-
-// Check if Appium is alive (GET /status)
-fun isAppiumRunning(project: Project): Boolean {
-    val baseUrl = appiumBaseUrl(project)
-    val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
-    return try {
-        val conn = statusUrl.openConnection() as HttpURLConnection
-        conn.connectTimeout = 1000
-        conn.readTimeout = 1000
-        conn.requestMethod = "GET"
-        val code = conn.responseCode
-        val body = (if (code in 200..299) conn.inputStream else conn.errorStream)
-            ?.bufferedReader()?.use { it.readText() }.orEmpty()
-        conn.disconnect()
-        code == 200 && body.isNotBlank()
-    } catch (_: Exception) {
-        false
-    }
-}
-
-// Get path to npm from node-gradle (no reflection)
-fun resolvedNpmPath(project: org.gradle.api.Project): String {
-    val nodeExt = project.extensions.getByType(NodeExtension::class.java)
-    val nodeDir = nodeExt.resolvedNodeDir.get().asFile
-    val isWin = System.getProperty("os.name").lowercase().contains("win")
-    return if (isWin) File(nodeDir, "npm.cmd").absolutePath
-    else File(File(nodeDir, "bin"), "npm").absolutePath
-}
-
-/* ----------------------------------------------------------------------------- */
-
-tasks.register("ensureAppium") {
+tasks.register("checkAppium") {
     doLast {
-        val skip = (project.findProperty("skipAppiumCheck") as String?)?.toBoolean() == true
-        if (skip) {
-            println("Skipping Appium check (skipAppiumCheck=true)")
-            return@doLast
-        }
-        val baseUrl = appiumBaseUrl(project)
-        val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
+        val osName = System.getProperty("os.name").lowercase()
+        val whichCmd = if (osName.contains("win")) "where" else "which"
 
-        var ok = false
-        val attempts = 10
-        val delayMs = 1000L
-        repeat(attempts) { idx ->
-            try {
-                val conn = statusUrl.openConnection() as HttpURLConnection
-                conn.connectTimeout = 1500
-                conn.readTimeout = 1500
-                conn.requestMethod = "GET"
-                val code = conn.responseCode
-                val stream = (if (code in 200..299) conn.inputStream else conn.errorStream)
-                val body = stream?.bufferedReader()?.use { it.readText() } ?: ""
-                if (code == 200 && body.isNotBlank()) {
-                    println("Appium status response: HTTP $code")
-                    ok = true
-                } else {
-                    println("Appium not ready yet (attempt ${idx + 1}/$attempts, code=$code)")
-                }
-                conn.disconnect()
-            } catch (e: Exception) {
-                println("Appium check failed (attempt ${idx + 1}/$attempts): ${e.message}")
-            }
-            if (!ok) Thread.sleep(delayMs)
+        // Check that `appium` CLI is available
+        val appiumWhich = exec {
+            isIgnoreExitValue = true
+            commandLine(whichCmd, "appium")
         }
-        if (!ok) {
+        if (appiumWhich.exitValue != 0) {
             throw GradleException(
                 """
-                Appium server is not reachable at $statusUrl.
-                Start it via:
-                  cd appium-runner && npm run setup && npm start
-                Or skip this check with -PskipAppiumCheck=true
+                Appium CLI is not installed or not found in PATH!
+
+                Please install Appium first (requires Node.js):
+                  npm install -g appium
+
+                Verify with: appium -v
                 """.trimIndent()
             )
+        } else {
+            println("Appium CLI found in PATH.")
+        }
+
+        // Check that required drivers are installed: uiautomator2 and xcuitest
+        val uiAutoCmd = if (osName.contains("win")) {
+            listOf("cmd", "/c", "appium driver list --installed | findstr /i uiautomator2")
+        } else {
+            listOf("sh", "-c", "appium driver list --installed | grep -i uiautomator2")
+        }
+        val xcuiCmd = if (osName.contains("win")) {
+            listOf("cmd", "/c", "appium driver list --installed | findstr /i xcuitest")
+        } else {
+            listOf("sh", "-c", "appium driver list --installed | grep -i xcuitest")
+        }
+
+        val uiaResult = exec {
+            isIgnoreExitValue = true
+            commandLine(uiAutoCmd)
+        }
+        val xcuiResult = exec {
+            isIgnoreExitValue = true
+            commandLine(xcuiCmd)
+        }
+
+        val haveUiAutomator2 = uiaResult.exitValue == 0
+        val haveXcuitest = xcuiResult.exitValue == 0
+
+        if (!haveUiAutomator2 || !haveXcuitest) {
+            val missing = buildList {
+                if (!haveUiAutomator2) add("uiautomator2")
+                if (!haveXcuitest) add("xcuitest")
+            }.joinToString(", ")
+            throw GradleException(
+                """
+                Required Appium drivers are missing: $missing
+
+                Install them with:
+                  appium driver install uiautomator2
+                  appium driver install xcuitest
+
+                Then verify with: appium driver list --installed
+                """.trimIndent()
+            )
+        } else {
+            println("Appium drivers check passed: uiautomator2 and xcuitest are installed.")
         }
     }
-}
-
-// Flags to auto-start/stop Appium
-val autoStartAppium: Boolean = (project.findProperty("appium.auto.start") as String?)?.toBoolean() ?: true
-val startAppiumLocalProp: Boolean = (project.findProperty("appium.local.start") as String?)?.toBoolean() ?: true
-val stopAppiumLocalProp: Boolean = (project.findProperty("appium.local.stop") as String?)?.toBoolean() ?: true
-
-val nodeRunnerDir = file("appium-runner")
-
-tasks.register<NpmTask>("nodeRunnerSetup") {
-    workingDir.set(file("appium-runner"))
-    args.set(listOf("run", "setup"))
-}
-
-// Local Appium process if we started it ourselves
-val appiumProcKey = "__appiumProc__"
-val appiumLogFileKey = "__appiumLogFile__"
-val appiumLogWriterKey = "__appiumLogWriter__"
-val appiumLogThreadKey = "__appiumLogThread__"
-
-tasks.register("startAppiumLocal") {
-    onlyIf {
-        autoStartAppium && startAppiumLocalProp && !isAppiumRunning(project)
-    }
-    dependsOn("nodeRunnerSetup")
-    doFirst {
-        val npmPath = resolvedNpmPath(project)
-        project.extensions.extraProperties.set("npmBinPath", npmPath)
-    }
-    doLast {
-        val npm = project.extensions.extraProperties.get("npmBinPath") as String
-        val baseUrl = appiumBaseUrl(project)
-        val statusUrl = URI.create(baseUrl.trimEnd('/') + "/status").toURL()
-
-        fun isUp(): Boolean = isAppiumRunning(project)
-
-        // Prepare log file
-        val logsDir = File(buildDir, "appium-logs")
-        logsDir.mkdirs()
-        val logFile = File(logsDir, "appium-${System.currentTimeMillis()}.log")
-        project.extensions.extraProperties.set(appiumLogFileKey, logFile.absolutePath)
-        println("Appium logs → ${logFile.absolutePath}")
-
-        println("Starting Appium from node-runner (npm start)…")
-        val pb = ProcessBuilder(npm, "start")
-        pb.directory(nodeRunnerDir)
-        pb.redirectErrorStream(true)
-
-        // Add node/bin to PATH so npm can find node (especially on *nix)
-        val env = pb.environment()
-        val pathKey = env.keys.firstOrNull { it.equals("Path", ignoreCase = true) } ?: "PATH"
-        val nodeBin = File(npm).parentFile.absolutePath
-        env[pathKey] = nodeBin + File.pathSeparator + (env[pathKey] ?: "")
-
-        val process = pb.start()
-        project.extensions.extraProperties.set(appiumProcKey, process)
-
-        // Log forwarder that mirrors process stdout to file and Gradle console
-        val writer = BufferedWriter(FileWriter(logFile, true))
-        val t = Thread({
-            process.inputStream.bufferedReader().useLines { seq ->
-                seq.forEach { line ->
-                    try {
-                        writer.appendLine(line)
-                        writer.flush()
-                    } catch (_: Exception) {}
-                    println("[appium] $line")
-                }
-            }
-        }, "appium-log-forwarder")
-        t.isDaemon = true
-        t.start()
-        project.extensions.extraProperties.set(appiumLogWriterKey, writer)
-        project.extensions.extraProperties.set(appiumLogThreadKey, t)
-
-        // Wait for readiness
-        val attempts = 60
-        val delayMs = 1000L
-        var ok = false
-        repeat(attempts) {
-            if (isUp()) { ok = true; return@repeat }
-            Thread.sleep(delayMs)
-        }
-        if (!ok) {
-            println("Appium failed to start in time, stopping process…")
-            try { process.destroy() } catch (_: Exception) {}
-            // Close writer
-            try { writer.close() } catch (_: Exception) {}
-            throw GradleException("Failed to start Appium at $statusUrl within ${(attempts * delayMs) / 1000}s")
-        }
-        println("Appium started and is reachable at $statusUrl")
-    }
-}
-
-tasks.register("stopAppiumLocal") {
-    // Keep the global flag — but the task becomes a no-op if we didn't start anything
-    onlyIf { autoStartAppium && stopAppiumLocalProp }
-    doLast {
-        val extra = project.extensions.extraProperties
-
-        val hasProc     = extra.has(appiumProcKey)
-        val hasWriter   = extra.has(appiumLogWriterKey)
-        val hasLogFile  = extra.has(appiumLogFileKey)
-        val hasLogThread= extra.has(appiumLogThreadKey)
-
-        // If we didn’t start locally (no process or log resources) — do nothing
-        if (!hasProc && !hasWriter && !hasLogFile && !hasLogThread) {
-            println("No locally started Appium process to stop.")
-            return@doLast
-        }
-
-        // Close logger (if present)
-        if (hasWriter) {
-            (extra.get(appiumLogWriterKey) as? java.io.BufferedWriter)?.let {
-                try { it.flush() } catch (_: Exception) {}
-                try { it.close() } catch (_: Exception) {}
-            }
-            try { extra.set(appiumLogWriterKey, null) } catch (_: Exception) {}
-        }
-
-        // Clean the mirror thread reference (daemon; no need to stop explicitly)
-        if (hasLogThread) {
-            try { extra.set(appiumLogThreadKey, null) } catch (_: Exception) {}
-        }
-
-        // Stop locally started process (if any)
-        if (hasProc) {
-            val proc = extra.get(appiumProcKey)
-            if (proc is Process && proc.isAlive) {
-                println("Stopping local Appium process...")
-                proc.destroy()
-                try {
-                    if (!proc.waitFor(5, TimeUnit.SECONDS)) {
-                        println("Appium did not stop gracefully, destroying forcibly...")
-                        proc.destroyForcibly()
-                    }
-                } catch (_: Exception) {}
-            }
-            try { extra.set(appiumProcKey, null) } catch (_: Exception) {}
-        }
-
-        // Print log path (if present) and clear the key
-        if (hasLogFile) {
-            val lastLog = (extra.get(appiumLogFileKey) as? String).orEmpty()
-            if (lastLog.isNotBlank()) println("Last Appium log file: $lastLog")
-            try { extra.set(appiumLogFileKey, null) } catch (_: Exception) {}
-        }
-    }
-}
-
-tasks.named("ensureAppium") {
-    mustRunAfter("startAppiumLocal")
-}
-
-tasks.named<Test>("test") {
-    dependsOn("checkFfmpeg")
-    if (autoStartAppium && startAppiumLocalProp) {
-        dependsOn("startAppiumLocal")
-    }
-    dependsOn("ensureAppium")
-    if (autoStartAppium && stopAppiumLocalProp) {
-        finalizedBy("stopAppiumLocal")
-    }
-    systemProperty("appium.auto.start", autoStartAppium.toString())
-    systemProperty("appium.local.start", startAppiumLocalProp.toString())
-    systemProperty("appium.local.stop", stopAppiumLocalProp.toString())
 }
 
 /* ------------------------------  publishing  ------------------------------ */

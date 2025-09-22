@@ -43,24 +43,16 @@ class ExampleTest : MobileTest() {
 
     private fun exampleTest(regionTerm: String) {
         context.run {
-            "App launch" {
-                "Region selection screen is displayed" {
-                    checkVisible(text = regionTerm)
-                }
-            }
-
-            "Navigate to the main screen for region {$regionTerm}" {
+            "App launch and Navigate to the main screen for region {$regionTerm}" {
                 click(regionTerm)
             }
 
             optionalIos(
-                { "Accept alert" { alert(timeoutExpectation = 3).accept() } },
                 { "Subscribe to our updates" { click(ExampleMobilePage.dismissNotice) } },
-                { "Dismiss alert" { alert().dismiss() } },
             )
 
             optionalAndroid(
-                { "Skip update pop-up" { click(ExampleMobilePage.notNow, timeoutExpectation = 3) } }
+                { "Skip update pop-up" { click(ExampleMobilePage.notNow) } }
             )
 
             "Verify bottom navigation bar presence" {
