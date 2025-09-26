@@ -41,6 +41,7 @@
     - [Emulator Management](#automatic-management-of-emulators-and-simulators)
     - [Parameterized Testing](#parameterized-testing)
     - [Video Recording](#video-recording-settings)
+- [API Documentation](#api-documentation-dokka)
 - [Conclusion](#conclusion)
 
 ## Overview
@@ -1196,6 +1197,18 @@ emulator.auto.start=true
 # Automatic emulator/simulator shutdown after tests
 emulator.auto.shutdown=true
 ```
+
+## API Documentation (Dokka)
+
+This project supports automatic API documentation generation using Dokka.
+
+How to generate:
+- Run: `./gradlew dokkaHtml` (or the alias: `./gradlew generateApiDocs`)
+- After the task completes, open: `build/dokka/html/index.html`
+
+Notes:
+- When publishing artifacts, the `javadocJar` is built from the Dokka HTML output, so consumers get a documentation artifact.
+- Dokka tasks do not require additional configuration by default; they scan sources from `src/main/kotlin`.
 
 ## Conclusion
 

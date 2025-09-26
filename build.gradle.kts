@@ -2,13 +2,14 @@ plugins {
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
     id("org.gradle.test-retry") version "1.6.2"
+    id("org.jetbrains.dokka") version "1.9.20"
 //    id("io.gitlab.arturbosch.detekt") version "1.23.5"
     `java-library`
     `maven-publish`
 }
 
 group = "testing-tools"
-version = "0.1.5"
+version = "0.1.6"
 
 repositories {
     mavenCentral()
@@ -110,8 +111,10 @@ tasks.register<Jar>("sourcesJar") {
 }
 
 tasks.register<Jar>("javadocJar") {
+    dependsOn(tasks.named("dokkaHtml"))
     archiveClassifier.set("javadoc")
-    from(tasks.getByName("javadoc"))
+    // Package Dokka HTML output as the javadoc artifact
+    from(layout.buildDirectory.dir("dokka/html"))
 }
 
 tasks.register("checkFfmpeg") {
@@ -208,6 +211,13 @@ tasks.register("checkAppium") {
             println("Appium drivers check passed: uiautomator2 and xcuitest are installed.")
         }
     }
+}
+
+// Convenience task to generate API docs
+tasks.register("generateApiDocs") {
+    group = "documentation"
+    description = "Generates API documentation using Dokka (HTML)"
+    dependsOn("dokkaHtml")
 }
 
 /* ------------------------------  publishing  ------------------------------ */
