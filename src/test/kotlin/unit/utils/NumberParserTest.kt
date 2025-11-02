@@ -1,0 +1,81 @@
+package unit.utils
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Test
+import utils.NumberParser
+
+/**
+ * Unit tests for [NumberParser].
+ *
+ * Verifies parsing of:
+ * - Plain and spaced integers
+ * - Decimals with dot or comma
+ * - Values embedded in text (e.g., with currency suffix)
+ * - Narrow no-break space (\u202F) as thousands separator
+ * - Locale-like formats: "1,234.56" and "1.234,56"
+ * - Signed numbers
+ * - Null/absent numbers
+ *
+ * Functionality and logic remain unchanged.
+ */
+class NumberParserTest {
+
+    private fun assertDoubleEquals(expected: Double?, actual: Double?, eps: Double = 1e-9) {
+        if (expected == null || actual == null) {
+            if (expected == null && actual == null) return
+            throw AssertionError("One of values is null: expected=$expected actual=$actual")
+        }
+        assertEquals(expected!!, actual!!, eps)
+    }
+
+    @Test
+    fun `parse plain integer`() {
+        assertDoubleEquals(1232.0, NumberParser.parseNumber("1232"))
+    }
+
+    @Test
+    fun `parse spaced integer`() {
+        assertDoubleEquals(122323.0, NumberParser.parseNumber("1 22323"))
+    }
+
+    @Test
+    fun `parse decimal with dot`() {
+        assertDoubleEquals(12.2323, NumberParser.parseNumber("12.2323"))
+    }
+
+    @Test
+    fun `parse text with currency tail`() {
+        assertDoubleEquals(12.0, NumberParser.parseNumber("стоимость 12 р"))
+    }
+
+    @Test
+    fun `parse narrow-nbsp and comma decimal`() {
+        // Example: "1 234,56" where the thousands separator is a narrow no-break space (\u202F)
+        val s = "1\u202F234,56"
+        assertDoubleEquals(1234.56, NumberParser.parseNumber(s))
+    }
+
+    @Test
+    fun `parse en-US style with thousands and dot decimal`() {
+        assertDoubleEquals(1234.56, NumberParser.parseNumber("1,234.56"))
+    }
+
+    @Test
+    fun `parse de-RU style with thousands dot and comma decimal`() {
+        assertDoubleEquals(1234.56, NumberParser.parseNumber("1.234,56"))
+    }
+
+    @Test
+    fun `parse signed numbers`() {
+        assertDoubleEquals(1000.0, NumberParser.parseNumber("+1 000"))
+        assertDoubleEquals(-99.9, NumberParser.parseNumber("-99,9"))
+    }
+
+    @Test
+    fun `return null when no numbers`() {
+        assertNull(NumberParser.parseNumber("abc"))
+        assertNull(NumberParser.parseNumber("   "))
+        assertNull(NumberParser.parseNumber(null))
+    }
+}

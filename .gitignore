@@ -1,0 +1,143 @@
+### Kotlin / Gradle Project ###
+
+# Compiled class files
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.apk
+*.ap_
+
+# Virtual machine crash logs
+hs_err_pid*
+
+# Kotlin specific
+*.kotlin_metadata
+*.kotlin_module
+*.kotlin_builtins
+
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+build/
+captures/
+.navigation/
+.gradle/
+local.properties
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Kotlin Symbol Processing (KSP)
+ksp/
+
+# Jetpack Compose compiler cache
+.compose-cache/
+
+# Micronaut / Ktor / Spring Boot temp dirs
+tmp/
+logs/
+*.tmp
+
+# Kotlin Multiplatform / Native
+*.klib
+.konan/
+nativeBuild/
+xcuserdata/
+DerivedData/
+
+# Android
+*.dex
+*.apk
+*.aab
+*.ap_
+*.keystore
+*.jks
+*.cxx/
+.externalNativeBuild/
+*.so
+androidTest-results/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.nfs*
+
+# VSCode
+.vscode/
+
+# JetBrains Fleet
+.fleet/
+
+# Run / Debug / Coverage
+*.hprof
+*.prof
+*.gcno
+*.gcda
+*.gcov
+*.ec
+*.exec
+
+# Environment and secrets
+.env
+.env.*
+*.env.local
+*.secret
+*.secrets
+*.credentials
+*.key
+*.pem
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Test artifacts
+test-results/
+reports/
+jacoco/
+coverage/
+allure-results/
+allure-report/
+
+# CI/CD cache
+.ci/
+cache/
+.artifacts/
+
+# Local development
+*.local.yml
+*.local.json
+*.local.properties
